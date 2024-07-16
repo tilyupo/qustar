@@ -1,5 +1,5 @@
 import {writeFileSync} from 'fs';
-import {Database} from 'sqlite3';
+import sqlite3 from 'sqlite3';
 import {materialize} from '../src/data-source';
 import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
 import {collection} from '../src/dx';
@@ -10,7 +10,7 @@ import {Query} from '../src/expr/query';
 import {optimize} from '../src/sql/optimizer';
 
 function init() {
-  const db = new Database(':memory:');
+  const db = new sqlite3.Database(':memory:');
   const provider = new Sqlite3DataSource(db);
 
   db.exec(EXAMPLE_SCHEMA_INIT_SQL);
@@ -88,7 +88,7 @@ function init() {
 
 (async () => {
   // connect to your favorite database
-  const db = new Database(':memory:');
+  const db = new sqlite3.Database(':memory:');
   const dataSource = new Sqlite3DataSource(db);
 
   // run the query

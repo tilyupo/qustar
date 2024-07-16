@@ -1,15 +1,27 @@
 {
-  "name": "ts-orm",
-  "version": "0.0.0",
-  "description": "",
+  "name": "qustar",
+  "version": "0.0.3",
+  "description": "TypeScript SQL query builder",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
+  "repository": "github:tilyupo/qustar",
+  "type": "module",
   "files": [
     "build/src"
   ],
-  "license": "Apache-2.0",
-  "keywords": [],
+  "exports": {
+    ".": "./build/src/index.js"
+  },
+  "license": "MIT",
+  "keywords": [
+    "sql",
+    "typescript",
+    "db",
+    "query",
+    "orm"
+  ],
   "scripts": {
+    "prepublish": "npm run compile",
     "start": "tsx ./scripts/playground.ts",
     "test": "NON_GEN=1 vitest",
     "gen": "GEN=1 vitest",
