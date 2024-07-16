@@ -1,5 +1,5 @@
+import {FilterFn} from 'qustar';
 import {SuiteContext} from '..';
-import {FilterFn} from '../../../qustar/src/types';
 import {Post} from '../utils';
 
 export function describeFilter({

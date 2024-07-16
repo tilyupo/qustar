@@ -188,7 +188,7 @@ export type Expand<T> =
     : T extends Date
       ? T
       : T extends infer O
-        ? {[K in keyof O]: Expand<O[K]>}
+        ? {[K in keyof O]: O[K]}
         : never;
 
 export type __TestQuery = [

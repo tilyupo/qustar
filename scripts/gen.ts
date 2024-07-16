@@ -1,12 +1,12 @@
 import {writeFileSync} from 'fs';
 import {Database} from 'sqlite3';
-import {materialize} from '../packages/qustar/src/data-source';
-import {Sqlite3DataSource} from '../packages/qustar/src/data-sources/sqlite3';
-import {EXAMPLE_SCHEMA_INIT_SQL} from '../packages/qustar/src/example-schema';
-import {CompilationError, compileQuery} from '../packages/qustar/src/expr/compiler';
-import {QueryTerminatorExpr} from '../packages/qustar/src/expr/expr';
-import {Query} from '../packages/qustar/src/expr/query';
-import {optimize} from '../packages/qustar/src/sql/optimizer';
+import {materialize} from '../src/data-source';
+import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
+import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
+import {CompilationError, compileQuery} from '../src/expr/compiler';
+import {QueryTerminatorExpr} from '../src/expr/expr';
+import {Query} from '../src/expr/query';
+import {optimize} from '../src/sql/optimizer';
 
 function init() {
   const db = new Database(':memory:');
@@ -66,7 +66,7 @@ function init() {
 
         console.log();
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof CompilationError) {
         writeFileSync(
           './debug/sql.json',

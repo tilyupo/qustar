@@ -1,5 +1,5 @@
+import {Expr} from 'qustar';
 import {SuiteContext} from '..';
-import {Expr} from '../../../qustar/src';
 import {SingleLiteralValue} from '../../../qustar/src/literal';
 import {ExecuteOptions} from '../utils';
 

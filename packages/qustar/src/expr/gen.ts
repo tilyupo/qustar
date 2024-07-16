@@ -1,6 +1,5 @@
 import seedrandom, {PRNG} from 'seedrandom';
 import {match} from 'ts-pattern';
-import {staticComments, staticPosts, staticUsers} from '../example-schema';
 import {ScalarType, SingleLiteralValue, SingleScalarType} from '../literal';
 import {ArrayItemType} from '../types';
 import {assert, deepEqual, startsWith} from '../utils';
@@ -85,6 +84,7 @@ export class GenContext {
   constructor(
     public readonly rand: PRNG,
     public readonly deps: Deps,
+    public readonly rootQueries: readonly Query<any>[],
     options: Partial<GenerationOptions>,
     public readonly queryDepth = 0
   ) {
@@ -100,6 +100,7 @@ export class GenContext {
     return new GenContext(
       this.rand,
       combineDeps(this.deps, deps),
+      this.rootQueries,
       this.options
     );
   }
@@ -128,6 +129,7 @@ export class GenContext {
     return new GenContext(
       this.rand,
       this.deps,
+      this.rootQueries,
       this.options,
       this.queryDepth + 1
     );
@@ -135,14 +137,16 @@ export class GenContext {
 }
 
 export function gen(
+  queries: Query<any>[],
   options?: {seed?: string} & Partial<GenerationOptions>
 ): Query<any> {
   const ctx = new GenContext(
     seedrandom(options?.seed ?? Math.random().toString()),
     {
       expr: [],
-      queries: [staticComments, staticUsers, staticPosts],
+      queries,
     },
+    queries,
     options ?? {}
   );
 
@@ -528,7 +532,7 @@ function genQuerySource(
 
 function genRootQuery(ctx: GenContext): Query<any> {
   return ctx.select(
-    ctx.select(staticComments, staticPosts),
+    ctx.select(...ctx.rootQueries),
     ctx.select(...ctx.deps.queries)
   );
 }

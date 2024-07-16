@@ -1,9 +1,4 @@
 {
   "extends": "../../tsconfig.json",
-  "include": [
-    "src/**/*.ts",
-    "scripts/minimal.ts",
-    "scripts/gen.ts",
-    "scripts/playground.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }
