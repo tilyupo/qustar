@@ -1,14 +1,13 @@
 import {expect} from 'vitest';
-import {EXAMPLE_DB} from '../../qustar/src/example-schema';
+import {SuiteContext} from '.';
 import {compileQuery} from '../../qustar/src/expr/compiler';
 import {gen} from '../../qustar/src/expr/gen';
 import {interpretQuery} from '../../qustar/src/expr/interpreter';
 import {renderSqlite} from '../../qustar/src/render/sqlite';
-import {describeOrm} from '../utils';
+import {EXAMPLE_DB} from './db';
 
-describeOrm(
-  'fuzzing',
-  async ({execute, test}) => {
+export function describeFuzzing({describe, execute, test}: SuiteContext) {
+  describe('fuzzing', async () => {
     test('query', async () => {
       for (let i = 1; i < 1024; i += 1) {
         const seed = i.toString();
@@ -25,7 +24,7 @@ describeOrm(
           });
 
           expect(actual).to.deep.equal(expected);
-        } catch (err) {
+        } catch (err: any) {
           if (
             err.code === 'SQLITE_ERROR' &&
             err.message.startsWith('SQLITE_ERROR: parser stack overflow')
@@ -40,6 +39,5 @@ describeOrm(
         }
       }
     });
-  },
-  {gen: true}
-);
+  });
+}

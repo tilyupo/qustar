@@ -1,6 +1,16 @@
 import {DataSource} from '../../qustar/src/data-source';
+import {describeFuzzing} from './fuzzing';
 import {describeCombination} from './integration/combination';
 import {describeExpr} from './integration/expr';
+import {describeFlatMap} from './integration/flat-map';
+import {describeGroupBy} from './integration/group-by';
+import {describeJoin} from './integration/join';
+import {describeMap} from './integration/map';
+import {describeOrder} from './integration/order';
+import {describePagination} from './integration/pagination';
+import {describeSql} from './integration/sql';
+import {describeTerminator} from './integration/terminator';
+import {describeUnique} from './integration/unique';
 import {buildUtils, DescribeOrmUtils} from './utils';
 
 export interface TestApi {
@@ -8,7 +18,15 @@ export interface TestApi {
   describe: (name: string, f: () => Promise<void> | void) => void;
 }
 
-export function describeDataSource(api: TestApi, provider: DataSource) {
+export interface TestSuiteOptions {
+  fuzzing: boolean;
+}
+
+export function describeDataSource(
+  api: TestApi,
+  provider: DataSource,
+  {fuzzing}: TestSuiteOptions
+) {
   init(provider);
 
   const ctx: SuiteContext = {
@@ -18,6 +36,19 @@ export function describeDataSource(api: TestApi, provider: DataSource) {
 
   describeCombination(ctx);
   describeExpr(ctx);
+  describeFlatMap(ctx);
+  describeGroupBy(ctx);
+  describeJoin(ctx);
+  describeMap(ctx);
+  describeOrder(ctx);
+  describePagination(ctx);
+  describeSql(ctx);
+  describeTerminator(ctx);
+  describeUnique(ctx);
+
+  if (fuzzing) {
+    describeFuzzing(ctx);
+  }
 }
 
 export interface SuiteContext extends DescribeOrmUtils {

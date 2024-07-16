@@ -1,7 +1,13 @@
 import {mkdirSync, writeFileSync} from 'fs';
 import {expect} from 'vitest';
 import {TestApi} from '.';
-import {DataSource, materialize} from '../src/data-source';
+import {Query} from '../../qustar/src';
+import {DataSource, materialize} from '../../qustar/src/data-source';
+import {compileQuery} from '../../qustar/src/expr/compiler';
+import {QueryTerminatorExpr} from '../../qustar/src/expr/expr';
+import {SingleLiteralValue} from '../../qustar/src/literal';
+import {renderSqlite} from '../../qustar/src/render/sqlite';
+import {optimize} from '../../qustar/src/sql/optimizer';
 import {
   Comment,
   Post,
@@ -12,13 +18,9 @@ import {
   staticPosts,
   staticUsers,
   users,
-} from '../src/example-schema';
-import {compileQuery} from '../src/expr/compiler';
-import {QueryTerminatorExpr} from '../src/expr/expr';
-import {Query} from '../src/expr/query';
-import {SingleLiteralValue} from '../src/literal';
-import {renderSqlite} from '../src/render/sqlite';
-import {optimize} from '../src/sql/optimizer';
+} from './db';
+
+export {Comment, Post, User};
 
 function indent(s: string, depth = 1): string {
   return s
@@ -152,7 +154,7 @@ export interface DescribeOrmUtils {
 
 export function buildUtils(
   provider: DataSource,
-  {test, describe}: TestApi
+  {test}: TestApi
 ): DescribeOrmUtils {
   async function execute<T>(
     query: Query<T> | QueryTerminatorExpr<any>,

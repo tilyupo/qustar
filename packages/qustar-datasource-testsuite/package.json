@@ -23,7 +23,9 @@
         "compile": "npm run clean && tsc",
         "fix": "gts fix"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "vitest": "^2.0.3"
+    },
     "dependencies": {
         "better-sqlite3": "^9.6.0",
         "seedrandom": "^3.0.5",

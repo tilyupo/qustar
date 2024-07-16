@@ -13,6 +13,7 @@
     "mergeable",
     "modificators",
     "nosql",
+    "qustar",
     "seedrandom",
     "Subquery",
     "timestamptz",

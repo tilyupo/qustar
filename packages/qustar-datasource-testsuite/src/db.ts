@@ -1,5 +1,4 @@
-import {collection} from './dx';
-import {Query} from './expr/query';
+import {Query, collection} from '../../qustar/src';
 
 export interface User {
   id: number;

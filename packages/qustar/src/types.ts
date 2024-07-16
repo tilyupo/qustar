@@ -54,7 +54,7 @@ type EntityHandle<T extends object> = {
       : [T[K]] extends [EntityValue<T[K]>]
         ? EntityHandle<T[K]>
         : never;
-} & {__brand?: 'entity_handle'};
+};
 export type __TestEntityHandle = Assert<
   Equal<
     {a: ScalarHandle<number>; b: ScalarHandle<string>},
@@ -124,7 +124,13 @@ export type __TestInferScalarValue = Assert<
 >;
 
 type CleanMappingEntityValue<T> = {
-  [K in keyof T]: [T[K]] extends [Scalar] ? T[K] : never;
+  [K in keyof T]: [T[K]] extends [Scalar]
+    ? T[K]
+    : [T[K]] extends [Query<any>]
+      ? T[K]
+      : [T[K]] extends [CleanMappingEntityValue<T[K]>]
+        ? T[K]
+        : never;
 };
 export type __TestToCleanObjectValue = Assert<
   [
@@ -132,12 +138,23 @@ export type __TestToCleanObjectValue = Assert<
       CleanMappingEntityValue<{a: number; b: string}>,
       {a: number; b: string}
     >,
-    Equal<CleanMappingEntityValue<{a: number; b: {}}>, {a: number; b: never}>,
+    Equal<
+      CleanMappingEntityValue<{a: number; b: {c: number}}>,
+      {a: number; b: {c: number}}
+    >,
   ]
 >;
 
+type InferEntityProp<T> = [T] extends [Scalar]
+  ? InferScalarValue<T>
+  : [T] extends [Query<any>]
+    ? QueryValue<T>[]
+    : [T] extends [CleanMappingEntityValue<T>]
+      ? ConvertEntityMappingToObjectValue<T>
+      : never;
+
 type ConvertEntityMappingToObjectValue<T extends CleanMappingEntityValue<T>> = {
-  [K in keyof T]: InferScalarValue<T[K]>;
+  [K in keyof T]: InferEntityProp<T[K]>;
 };
 export type __TestConvertObjectMappingToObjectValue = Assert<
   [
@@ -171,7 +188,7 @@ export type Expand<T> =
     : T extends Date
       ? T
       : T extends infer O
-        ? {[K in keyof O]: O[K]}
+        ? {[K in keyof O]: Expand<O[K]>}
         : never;
 
 export type __TestQuery = [
@@ -184,6 +201,20 @@ export type __TestQuery = [
       Equal<QueryValue<typeof x1>, {b: number}>,
       Equal<QueryValue<typeof x2>, User>,
       Equal<QueryValue<typeof x3>, Post>,
+      Equal<QueryValue<typeof x4>, Comment>,
+      Equal<QueryValue<typeof x5>, {a: number; b: {c: number}}>,
+      Equal<
+        QueryValue<typeof x6>,
+        {
+          id: number;
+          author_id: number;
+          text: string;
+          author: User;
+          post: Post;
+          title: string;
+          comments: Comment[];
+        }
+      >,
     ]
   >,
 ];
@@ -195,6 +226,7 @@ type QueryValue<T extends Query<any>> = T extends Query<infer R> ? R : never;
 interface User {
   id: number;
   posts: Post[];
+  comments: Comment[];
 }
 
 interface Post {
@@ -203,6 +235,16 @@ interface Post {
   title: string;
 
   author: User;
+  comments: Comment[];
+}
+
+interface Comment {
+  id: number;
+  author_id: number;
+  text: string;
+
+  author: User;
+  post: Post;
 }
 
 const q: Query<Post> = 1 as any;
@@ -210,3 +252,6 @@ const q: Query<Post> = 1 as any;
 const x1 = q.map(x => ({b: x.author.posts.map(y => y.id).first(y => y)}));
 const x2 = q.map(x => x.author);
 const x3 = q.flatMap(x => x.author.posts);
+const x4 = q.flatMap(x => x.comments).map(x => ({...x}));
+const x5 = q.map(() => ({a: 1, b: {c: 2}}));
+const x6 = q.flatMap(x => x.comments).map(x => ({...x.post, ...x}));
