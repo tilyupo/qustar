@@ -6,7 +6,7 @@ export default defineConfig({
     coverage: {
       exclude: [
         ...(configDefaults.coverage.exclude ?? []),
-        'run.ts',
+        'scripts/**/*',
         'src/types.ts',
       ],
     },

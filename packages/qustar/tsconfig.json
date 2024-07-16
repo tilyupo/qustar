@@ -1,14 +1,5 @@
 {
-  "extends": "./node_modules/gts/tsconfig-google.json",
-  "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "build",
-    "esModuleInterop": true,
-    "noErrorTruncation": true,
-    "declaration": true,
-    // "noPropertyAccessFromIndexSignature": true,
-    // "noUncheckedIndexedAccess": true
-  },
+  "extends": "../../tsconfig.json",
   "include": [
     "src/**/*.ts",
     "scripts/minimal.ts",

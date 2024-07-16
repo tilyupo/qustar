@@ -1,8 +1,7 @@
-import {expect, test} from 'vitest';
-import {compare, deepEntries, deepEqual, like, setPath} from '../../src/utils';
-import {describeOrm} from '../utils';
+import {describe, expect, test} from 'vitest';
+import {compare, deepEntries, deepEqual, like, setPath} from '../src/utils';
 
-describeOrm('utils', async () => {
+describe('utils', async () => {
   test('deepEqual', () => {
     expect(deepEqual({a: 1, b: [1, 2]}, {a: 1, b: [1, 2]})).to.equal(true);
     expect(deepEqual({a: 1, b: [1, 2]}, {a: 1, b: [2, 1]})).to.equal(false);

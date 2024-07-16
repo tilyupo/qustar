@@ -1,9 +1,9 @@
 import {expect} from 'vitest';
-import {EXAMPLE_DB} from '../../src/example-schema';
-import {compileQuery} from '../../src/expr/compiler';
-import {gen} from '../../src/expr/gen';
-import {interpretQuery} from '../../src/expr/interpreter';
-import {renderSqlite} from '../../src/render/sqlite';
+import {EXAMPLE_DB} from '../../qustar/src/example-schema';
+import {compileQuery} from '../../qustar/src/expr/compiler';
+import {gen} from '../../qustar/src/expr/gen';
+import {interpretQuery} from '../../qustar/src/expr/interpreter';
+import {renderSqlite} from '../../qustar/src/render/sqlite';
 import {describeOrm} from '../utils';
 
 describeOrm(

@@ -37,26 +37,6 @@ export function formatDateTime(date: Date): string {
   return `${formatDate(date)} ${formatTime(date)}`;
 }
 
-export function promisify<TArgs extends any[], TValue>(
-  f: (...args: [...TArgs, (err: any, value: TValue) => void]) => void
-): (...args: TArgs) => Promise<TValue> {
-  return (...args: TArgs) =>
-    new Promise((resolve, reject) =>
-      f(
-        ...[
-          ...args,
-          (err: any, value: TValue) => {
-            if (err) {
-              reject(err);
-            }
-
-            resolve(value);
-          },
-        ]
-      )
-    );
-}
-
 export function indent(s: string, depth = 1): string {
   return s
     .split('\n')

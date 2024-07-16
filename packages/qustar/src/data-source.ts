@@ -2,13 +2,10 @@ import {match} from 'ts-pattern';
 import {
   SCALAR_COLUMN_ALIAS,
   SYSTEM_COLUMN_PREFIX,
-  compileQuery,
   deserializePropPath,
 } from './expr/compiler';
 import {Projection, PropPath} from './expr/projection';
-import {Query} from './expr/query';
 import {Literal} from './literal';
-import {optimize} from './sql/optimizer';
 import {QuerySql} from './sql/sql';
 import {arrayEqual, deepEntries, setPath} from './utils';
 
@@ -29,10 +26,6 @@ export namespace SqlCommand {
 export interface DataSource {
   render(query: QuerySql): SqlCommand;
   execute(query: SqlCommand): Promise<any[]>;
-}
-
-export interface Connection {
-  execute<T>(query: Query<T>): Promise<T[]>;
 }
 
 interface FlatRowColumn {
@@ -146,20 +139,6 @@ export function materialize(row: any, projection: Projection): any {
       return result;
     })
     .exhaustive();
-}
-
-export class ProviderConnection implements Connection {
-  constructor(private readonly provider: DataSource) {}
-
-  async execute<T>(query: Query<T>): Promise<T[]> {
-    const compiledQuery = compileQuery(query);
-    const optimizedQuery = optimize(compiledQuery);
-    const renderedQuery = this.provider.render(optimizedQuery);
-    const rows = await this.provider.execute(renderedQuery);
-
-    const projection = query.projection;
-    return rows.map(x => materialize(x, projection));
-  }
 }
 
 export function cmd(

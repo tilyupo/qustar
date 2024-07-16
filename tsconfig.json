@@ -1,0 +1,13 @@
+{
+  "extends": "./node_modules/gts/tsconfig-google.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "build",
+    "esModuleInterop": true,
+    "noErrorTruncation": true,
+    "declaration": true,
+    "noImplicitAny": false
+    // "noPropertyAccessFromIndexSignature": true,
+    // "noUncheckedIndexedAccess": true
+  }
+}
