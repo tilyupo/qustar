@@ -1,0 +1,44 @@
+{
+  "name": "ts-orm",
+  "version": "0.0.0",
+  "description": "",
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "files": [
+    "build/src"
+  ],
+  "license": "Apache-2.0",
+  "keywords": [],
+  "scripts": {
+    "start": "tsx ./scripts/playground.ts",
+    "test": "NON_GEN=1 vitest",
+    "gen": "GEN=1 vitest",
+    "coverage": "npm run clean && vitest run --coverage",
+    "lint": "gts lint",
+    "clean": "gts clean && rimraf coverage",
+    "compile": "npm run clean && tsc",
+    "fix": "gts fix",
+    "madge": "madge --circular --extensions ts ./src"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.7",
+    "@types/node": "20.8.2",
+    "@types/seedrandom": "^3.0.8",
+    "@vitest/coverage-v8": "^1.6.0",
+    "flatted": "^3.3.1",
+    "gts": "^5.2.0",
+    "madge": "^7.0.0",
+    "prettier": "^3.3.2",
+    "prettier-plugin-organize-imports": "^3.2.3",
+    "rimraf": "^5.0.7",
+    "tsx": "^4.15.6",
+    "typescript": "~5.1.0",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "seedrandom": "^3.0.5",
+    "sqlite3": "^5.1.7",
+    "ts-pattern": "^5.2.0"
+  }
+}

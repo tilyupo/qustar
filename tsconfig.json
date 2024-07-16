@@ -1,0 +1,17 @@
+{
+  "extends": "./node_modules/gts/tsconfig-google.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "build",
+    "esModuleInterop": true,
+    "noErrorTruncation": true,
+    "declaration": true,
+    "types": "index.d.ts"
+    // "noPropertyAccessFromIndexSignature": true,
+    // "noUncheckedIndexedAccess": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "scripts/playground.ts"
+  ]
+}

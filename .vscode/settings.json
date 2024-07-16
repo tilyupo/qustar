@@ -1,0 +1,24 @@
+{
+  // "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "editor.formatOnSave": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cSpell.words": [
+    "concat",
+    "Dima",
+    "firestore",
+    "mergeable",
+    "modificators",
+    "nosql",
+    "seedrandom",
+    "Subquery",
+    "timestamptz",
+    "timetz",
+    "unmangle",
+    "unselection"
+  ]
+}

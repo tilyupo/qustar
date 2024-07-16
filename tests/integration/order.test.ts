@@ -1,0 +1,51 @@
+import {describe} from 'vitest';
+import {MapScalarFn, ScalarMapping} from '../../src/types';
+import {Post, describeOrm} from '../utils';
+
+describeOrm('query', async ({expectQuery, testFactory, test}) => {
+  describe('order by', () => {
+    const testOrderBy = testFactory(
+      <Result extends ScalarMapping>(
+        {posts},
+        orderBy: MapScalarFn<Post, Result>
+      ) => {
+        return posts
+          .orderByAsc(orderBy)
+          .limit(3)
+          .select(x => x.title);
+      }
+    );
+
+    testOrderBy('id', x => x.id, ['TypeScript', 'rust', 'C#']);
+    testOrderBy('name', x => x.title, ['C#', 'C++', 'Python']);
+    testOrderBy('author.name', x => x.author.name.concat(x.id.toString()), [
+      'Ruby',
+      'C++',
+      'TypeScript',
+    ]);
+
+    test('user id asc post id desc', async ({posts}) => {
+      const query = posts
+        .orderByAsc(x => x.author_id)
+        .thenByDesc(x => x.id)
+        .map(x => x.id);
+
+      await expectQuery(query, [3, 2, 1, 5, 4, 6]);
+    });
+
+    test('user id desc post id asc', async ({posts}) => {
+      const query = posts
+        .orderByDesc(x => x.author_id)
+        .thenByAsc(x => x.id)
+        .map(x => x.id);
+
+      await expectQuery(query, [6, 4, 5, 1, 2, 3]);
+    });
+
+    test('order by select', async ({posts}) => {
+      const query = posts.map(x => x.comments.count()).orderByAsc(x => x);
+
+      await expectQuery(query, [0, 0, 0, 0, 1, 3]);
+    });
+  });
+});

@@ -1,0 +1,78 @@
+roadmap:
+  - type system
+  - intent between query and sql:
+      - doesn't have refs
+      - aliases instead of locator.root
+      - group by => aggregation + projection [+ filter]
+  - intent type checker
+
+bugs:
+  - ref can become nullable after, for example, left join for the right entity,
+    now we assume that ref condition always takes non-null entities
+
+features:
+  - support alias usage in raw sql
+  - unselection support
+  - typescript support
+  - support schema aliases
+  - migrations from schema
+  - insert/delete/update
+  - transactions
+  - array support
+  - allow nested wildcards because they sometimes can be optimized out later
+
+tech:
+  - refactor combine query compiler
+  - noPropertyAccessFromIndexSignature
+  - noUncheckedIndexedAccess
+  - no-explicit-any
+
+interpreter:
+  - group by
+  - aggregation functions
+
+gen:
+  - aggregation functions
+  - all expressions
+  - gen bad queries and check that fails gracefully
+
+testing:
+  - fix better-sqlite3 tests
+  - run tests on CI
+  - run gen tests on CI for 5 minutes
+  - expr interpreter
+  - sql interpreter
+  - optimizer canonical tests
+
+query compiler:
+  - use one join for all props from the same ref
+
+sql optimizer:
+  - no join for x.parent.id, just use parent_id
+  - remove inner (FROM/JOIN) order by if outer has its own order by
+  - don't lift select from with order if parent is combination
+  - relax group by opt constraint
+  - relax limit opt constraint
+  - remove useless joins after optimization
+  - optimize non inner joins
+
+release:
+  - check all `new Error`
+  - check all `assertNever`
+  - fix all errors (throw, assertions)
+  - JSDoc
+  - README.md
+  - website
+
+renderers:
+  sql:
+    - done: sqlite
+    - postgres
+    - mysql
+    - sql server
+    - oracle
+    - mariadb
+    - cosmosdb
+    - casandra
+    - firebird
+    - cockroachdb
