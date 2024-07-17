@@ -1,10 +1,13 @@
 {
   "name": "qustar-testsuite",
-  "version": "0.0.3",
+  "version": "0.0.1",
   "description": "Qustar DataSource test suite",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
-  "repository": "github:tilyupo/qustar",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tilyupo/qustar.git"
+  },
   "type": "module",
   "files": [
     "build/src"
@@ -14,19 +17,13 @@
   },
   "license": "MIT",
   "scripts": {
-    "prepublish": "npm run compile",
-    "release:major": "npm version $(semver $npm_package_version -i major) && npm publish --tag latest",
-    "release:minor": "npm version $(semver $npm_package_version -i minor) && npm publish --tag latest",
-    "release:patch": "npm version $(semver $npm_package_version -i patch) && npm publish --tag latest",
-    "test": "node -e 0",
-    "lint": "gts lint",
-    "clean": "gts clean && rimraf coverage",
+    "clean": "rimraf build",
     "build": "npm run clean && tsc",
-    "fix": "gts fix"
+    "deploy": "npm run build && node ../../deploy.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "vitest": "^2.0.3",
-    "qustar": "^0.0.3",
-    "ts-pattern": "^5.2.0"
+    "qustar": "^0.0.1"
   }
 }

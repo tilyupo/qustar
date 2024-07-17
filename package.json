@@ -5,23 +5,23 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "install_all": "npm install --workspaces",
+    "bootstrap": "npm run build && npm install --workspaces",
+    "deploy": "npm run deploy --workspaces",
     "test": "npm test --workspaces"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.7",
     "@types/node": "20.8.2",
-    "@types/seedrandom": "^3.0.8",
     "@vitest/coverage-v8": "^1.6.0",
-    "flatted": "^3.3.1",
     "gts": "^5.2.0",
-    "madge": "^7.0.0",
     "prettier": "^3.3.2",
     "prettier-plugin-organize-imports": "^3.2.3",
     "rimraf": "^5.0.7",
-    "semver": "^7.6.2",
     "tsx": "^4.15.6",
     "typescript": "~5.1.0",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "semver": "^7.6.3",
+    "axios": "^1.7.2"
   }
 }
