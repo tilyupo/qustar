@@ -16,6 +16,12 @@
     ".": "./build/src/index.js"
   },
   "license": "MIT",
+  "keywords": [
+    "qustar",
+    "sqlite",
+    "sql",
+    "typescript"
+  ],
   "scripts": {
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
