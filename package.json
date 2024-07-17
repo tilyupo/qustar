@@ -1,27 +1,27 @@
 {
-    "name": "qustar-monorepo",
-    "workspaces": [
-        "packages/*"
-    ],
-    "scripts": {
-        "build": "npm run build:package-a && npm run build:package-b",
-        "build:package-a": "cd packages/package-a && npm run build",
-        "build:package-b": "cd packages/package-b && npm run build"
-    },
-    "devDependencies": {
-        "@types/better-sqlite3": "^7.6.7",
-        "@types/node": "20.8.2",
-        "@types/seedrandom": "^3.0.8",
-        "@vitest/coverage-v8": "^1.6.0",
-        "flatted": "^3.3.1",
-        "gts": "^5.2.0",
-        "madge": "^7.0.0",
-        "prettier": "^3.3.2",
-        "prettier-plugin-organize-imports": "^3.2.3",
-        "rimraf": "^5.0.7",
-        "semver": "^7.6.2",
-        "tsx": "^4.15.6",
-        "typescript": "~5.1.0",
-        "vitest": "^1.6.0"
-    }
+  "name": "qustar-monorepo",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "compile": "npm run compile:qustar && npm run compile:qustar-testsuite",
+    "compile:qustar": "cd packages/qustar && npm run compile",
+    "compile:qustar-testsuite": "cd packages/qustar-testsuite && npm run compile"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.7",
+    "@types/node": "20.8.2",
+    "@types/seedrandom": "^3.0.8",
+    "@vitest/coverage-v8": "^1.6.0",
+    "flatted": "^3.3.1",
+    "gts": "^5.2.0",
+    "madge": "^7.0.0",
+    "prettier": "^3.3.2",
+    "prettier-plugin-organize-imports": "^3.2.3",
+    "rimraf": "^5.0.7",
+    "semver": "^7.6.2",
+    "tsx": "^4.15.6",
+    "typescript": "~5.1.0",
+    "vitest": "^1.6.0"
+  }
 }

@@ -1,4 +1,4 @@
-import {isObject, isPrimitive} from './literal';
+import {isObject, isPrimitive} from './literal.js';
 
 export function assertNever(x: never, message: string): never {
   throw new Error(message + ' | ' + x);

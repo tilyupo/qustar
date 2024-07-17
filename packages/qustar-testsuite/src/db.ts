@@ -1,4 +1,4 @@
-import {Query, collection} from '../../qustar/src';
+import {Query, collection} from 'qustar';
 
 export interface User {
   id: number;

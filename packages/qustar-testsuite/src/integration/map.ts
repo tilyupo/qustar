@@ -1,6 +1,6 @@
 import {MapValueFn, Mapping} from 'qustar';
-import {SuiteContext} from '..';
-import {Post} from '../utils';
+import {SuiteContext} from '../index.js';
+import {Post} from '../utils.js';
 
 export function describeMap({
   describe,

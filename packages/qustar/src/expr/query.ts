@@ -1,8 +1,8 @@
 import {match} from 'ts-pattern';
-import {DataSource} from '../data-source';
-import {SingleLiteralValue} from '../literal';
-import {renderSqlite} from '../render/sqlite';
-import {optimize} from '../sql/optimizer';
+import {DataSource} from '../data-source.js';
+import {SingleLiteralValue} from '../literal.js';
+import {renderSqlite} from '../render/sqlite.js';
+import {optimize} from '../sql/optimizer.js';
 import {
   ConvertMappingToValue,
   ConvertScalarMappingToScalarValue,
@@ -17,16 +17,16 @@ import {
   Mapping,
   ScalarMapping,
   Value,
-} from '../types';
-import {arrayEqual, assert, assertNever, startsWith} from '../utils';
-import {compileQuery} from './compiler';
+} from '../types.js';
+import {arrayEqual, assert, assertNever, startsWith} from '../utils.js';
+import {compileQuery} from './compiler.js';
 import {
   Expr,
   LocatorExpr,
   Nullable,
   QueryTerminatorExpr,
   ScalarOperand,
-} from './expr';
+} from './expr.js';
 import {
   ObjectProjection,
   Projection,
@@ -34,8 +34,15 @@ import {
   PropProjection,
   ScalarProjection,
   SinglePropProjection,
-} from './projection';
-import {ChildrenRef, Collection, ParentRef, Ref, Schema, View} from './schema';
+} from './projection.js';
+import {
+  ChildrenRef,
+  Collection,
+  ParentRef,
+  Ref,
+  Schema,
+  View,
+} from './schema.js';
 
 export type JoinType = 'inner' | 'left' | 'right' | 'full';
 

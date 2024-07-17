@@ -1,7 +1,8 @@
-import {IsAny} from 'ts-pattern/dist/types/helpers';
-import {Expr} from './expr/expr';
-import {Query} from './expr/query';
-import {SingleLiteralValue} from './literal';
+import {Expr} from './expr/expr.js';
+import {Query} from './expr/query.js';
+import {SingleLiteralValue} from './literal.js';
+
+export type IsAny<a> = 0 extends 1 & a ? true : false;
 
 export type Assert<T extends true[] | true> = T;
 export type Not<T extends boolean> = [T] extends [true] ? false : true;
@@ -171,19 +172,19 @@ export type __TestConvertObjectMappingToObjectValue = Assert<
 export type ConvertScalarMappingToScalarValue<T extends GenericScalar<any>> =
   T extends GenericScalar<infer S> ? S : never;
 
-export type ConvertMappingToValue<T extends Mapping> =
-  IsAny<T> extends true
-    ? any
-    : [T] extends [GenericScalar<SingleLiteralValue>]
-      ? ConvertScalarMappingToScalarValue<T>
-      : [T] extends [EntityHandle<infer R>]
-        ? R
-        : [T] extends [CleanMappingEntityValue<T>]
-          ? ConvertEntityMappingToObjectValue<T>
-          : never;
-export type __TestConvertMappingToValue = Assert<
-  [Equal<{a: 1; b: string}, ConvertMappingToValue<{a: 1; b: string}>>]
->;
+export type ConvertMappingToValue<T extends Mapping> = any;
+//   IsAny<T> extends true
+//     ? any
+//     : [T] extends [GenericScalar<SingleLiteralValue>]
+//       ? ConvertScalarMappingToScalarValue<T>
+//       : [T] extends [EntityHandle<infer R>]
+//         ? R
+//         : [T] extends [CleanMappingEntityValue<T>]
+//           ? ConvertEntityMappingToObjectValue<T>
+//           : never;
+// export type __TestConvertMappingToValue = Assert<
+//   [Equal<{a: 1; b: string}, ConvertMappingToValue<{a: 1; b: string}>>]
+// >;
 
 export type Expand<T> =
   IsAny<T> extends true

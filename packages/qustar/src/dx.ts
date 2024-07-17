@@ -1,9 +1,9 @@
 import {match} from 'ts-pattern';
-import {SqlCommand} from './data-source';
-import {ProxyQuery, Query, QuerySource} from './expr/query';
-import {ChildrenRef, Field, ParentRef, Schema} from './expr/schema';
-import {SingleScalarType} from './literal';
-import {JoinFilterFn, Value} from './types';
+import {SqlCommand} from './data-source.js';
+import {ProxyQuery, Query, QuerySource} from './expr/query.js';
+import {ChildrenRef, Field, ParentRef, Schema} from './expr/schema.js';
+import {SingleScalarType} from './literal.js';
+import {JoinFilterFn, Value} from './types.js';
 
 export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;

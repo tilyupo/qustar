@@ -1,7 +1,6 @@
-import {Expr} from 'qustar';
-import {SuiteContext} from '..';
-import {SingleLiteralValue} from '../../../qustar/src/literal';
-import {ExecuteOptions} from '../utils';
+import {Expr, SingleLiteralValue} from 'qustar';
+import {SuiteContext} from '../index.js';
+import {ExecuteOptions} from '../utils.js';
 
 function formatDate(date: Date): string {
   const year = date.getFullYear();

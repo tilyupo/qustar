@@ -1,17 +1,17 @@
-import {DataSource} from '../../qustar/src/data-source';
-import {describeFuzzing} from './fuzzing';
-import {describeCombination} from './integration/combination';
-import {describeExpr} from './integration/expr';
-import {describeFlatMap} from './integration/flat-map';
-import {describeGroupBy} from './integration/group-by';
-import {describeJoin} from './integration/join';
-import {describeMap} from './integration/map';
-import {describeOrder} from './integration/order';
-import {describePagination} from './integration/pagination';
-import {describeSql} from './integration/sql';
-import {describeTerminator} from './integration/terminator';
-import {describeUnique} from './integration/unique';
-import {buildUtils, DescribeOrmUtils} from './utils';
+import {DataSource} from 'qustar';
+import {describeFuzzing} from './fuzzing.js';
+import {describeCombination} from './integration/combination.js';
+import {describeExpr} from './integration/expr.js';
+import {describeFlatMap} from './integration/flat-map.js';
+import {describeGroupBy} from './integration/group-by.js';
+import {describeJoin} from './integration/join.js';
+import {describeMap} from './integration/map.js';
+import {describeOrder} from './integration/order.js';
+import {describePagination} from './integration/pagination.js';
+import {describeSql} from './integration/sql.js';
+import {describeTerminator} from './integration/terminator.js';
+import {describeUnique} from './integration/unique.js';
+import {buildUtils, DescribeOrmUtils} from './utils.js';
 
 export interface TestApi {
   test: (name: string, f: () => Promise<void> | void) => void;

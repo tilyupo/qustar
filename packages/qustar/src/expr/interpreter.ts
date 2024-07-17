@@ -1,6 +1,13 @@
 import {P, match} from 'ts-pattern';
-import {Value} from '../types';
-import {assert, assertNever, compare, deepEqual, like, setPath} from '../utils';
+import {Value} from '../types.js';
+import {
+  assert,
+  assertNever,
+  compare,
+  deepEqual,
+  like,
+  setPath,
+} from '../utils.js';
 import {
   BinaryExpr,
   CaseExpr,
@@ -10,8 +17,8 @@ import {
   LocatorExpr,
   QueryTerminatorExpr,
   UnaryExpr,
-} from './expr';
-import {ObjectProjection, Projection, ScalarProjection} from './projection';
+} from './expr.js';
+import {ObjectProjection, Projection, ScalarProjection} from './projection.js';
 import {
   CombineQuery,
   FilterQuery,
@@ -26,8 +33,8 @@ import {
   QuerySource,
   UniqueQuery,
   createHandle,
-} from './query';
-import {ChildrenRef, Collection, ParentRef, Ref} from './schema';
+} from './query.js';
+import {ChildrenRef, Collection, ParentRef, Ref} from './schema.js';
 
 type Dynamic = any;
 

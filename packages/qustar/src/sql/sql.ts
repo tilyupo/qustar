@@ -1,6 +1,6 @@
-import {SqlCommand} from '../data-source';
-import {JoinType, OrderByNulls, OrderByType} from '../expr/query';
-import {Literal} from '../literal';
+import {SqlCommand} from '../data-source.js';
+import {JoinType, OrderByNulls, OrderByType} from '../expr/query.js';
+import {Literal} from '../literal.js';
 
 export type Sql =
   | AliasSql

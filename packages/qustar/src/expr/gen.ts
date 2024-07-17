@@ -1,9 +1,15 @@
-import seedrandom, {PRNG} from 'seedrandom';
 import {match} from 'ts-pattern';
-import {ScalarType, SingleLiteralValue, SingleScalarType} from '../literal';
-import {ArrayItemType} from '../types';
-import {assert, deepEqual, startsWith} from '../utils';
-import {Expr, LiteralExpr, LocatorExpr, isChar, isFloat, isInt} from './expr';
+import {ScalarType, SingleLiteralValue, SingleScalarType} from '../literal.js';
+import {ArrayItemType} from '../types.js';
+import {assert, deepEqual, startsWith} from '../utils.js';
+import {
+  Expr,
+  LiteralExpr,
+  LocatorExpr,
+  isChar,
+  isFloat,
+  isInt,
+} from './expr.js';
 import {
   ObjectProjection,
   Projection,
@@ -12,7 +18,7 @@ import {
   ScalarProjection,
   SinglePropProjection,
   WildcardPropProjection,
-} from './projection';
+} from './projection.js';
 import {
   CombineQuery,
   FilterQuery,
@@ -27,8 +33,8 @@ import {
   QuerySource,
   UniqueQuery,
   createHandle,
-} from './query';
-import {ChildrenRef} from './schema';
+} from './query.js';
+import {ChildrenRef} from './schema.js';
 
 // shapes
 
@@ -82,7 +88,7 @@ export class GenContext {
   public readonly options: GenerationOptions;
 
   constructor(
-    public readonly rand: PRNG,
+    public readonly rand: () => number,
     public readonly deps: Deps,
     public readonly rootQueries: readonly Query<any>[],
     options: Partial<GenerationOptions>,
@@ -136,12 +142,40 @@ export class GenContext {
   }
 }
 
+function createRand(seed) {
+  // Simple hash function to turn the seed string into a numeric value
+  function xmur3(str: string) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      (h = Math.imul(h ^ str.charCodeAt(i), 3432918353)),
+        (h = (h << 13) | (h >>> 19));
+    }
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= h >>> 16) >>> 0;
+  }
+
+  // LCG constants
+  const a = 1664525;
+  const c = 1013904223;
+  const m = 2 ** 32;
+
+  // Initialize the seed using the hash function
+  let state = xmur3(seed);
+
+  return function () {
+    // Linear congruential generator formula
+    state = (a * state + c) % m;
+    return state / m;
+  };
+}
+
 export function gen(
   queries: Query<any>[],
   options?: {seed?: string} & Partial<GenerationOptions>
 ): Query<any> {
   const ctx = new GenContext(
-    seedrandom(options?.seed ?? Math.random().toString()),
+    createRand(options?.seed ?? Math.random().toString()),
     {
       expr: [],
       queries,

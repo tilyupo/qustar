@@ -1,17 +1,14 @@
+import {compileQuery, gen, interpretQuery, renderSqlite} from 'qustar';
 import {expect} from 'vitest';
-import {SuiteContext} from '.';
-import {compileQuery} from '../../qustar/src/expr/compiler';
-import {gen} from '../../qustar/src/expr/gen';
-import {interpretQuery} from '../../qustar/src/expr/interpreter';
-import {renderSqlite} from '../../qustar/src/render/sqlite';
-import {EXAMPLE_DB} from './db';
+import {EXAMPLE_DB, staticComments, staticPosts} from './db.js';
+import {SuiteContext} from './index.js';
 
 export function describeFuzzing({describe, execute, test}: SuiteContext) {
   describe('fuzzing', async () => {
     test('query', async () => {
       for (let i = 1; i < 1024; i += 1) {
         const seed = i.toString();
-        const query = gen({
+        const query = gen([staticComments, staticPosts], {
           seed,
           disableFlatMap: true,
           disableGroupBy: true,

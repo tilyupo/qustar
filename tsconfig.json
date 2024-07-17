@@ -3,10 +3,13 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "noErrorTruncation": true,
     "declaration": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "noEmitOnError": false
     // "noPropertyAccessFromIndexSignature": true,
     // "noUncheckedIndexedAccess": true
   }

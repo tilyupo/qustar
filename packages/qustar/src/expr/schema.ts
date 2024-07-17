@@ -1,8 +1,8 @@
-import {SqlCommand} from '../data-source';
-import {SingleScalarType} from '../literal';
-import {JoinFilterFn} from '../types';
-import {PropPath} from './projection';
-import {Query} from './query';
+import {SqlCommand} from '../data-source.js';
+import {SingleScalarType} from '../literal.js';
+import {JoinFilterFn} from '../types.js';
+import {PropPath} from './projection.js';
+import {Query} from './query.js';
 
 export interface Field {
   readonly scalarType: SingleScalarType;

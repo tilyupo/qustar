@@ -1,11 +1,9 @@
 import {Database as BetterSqliteDb} from 'better-sqlite3';
-import {DataSource, SqlCommand} from '../data-source';
-import {SqliteManger, renderSqlite} from '../render/sqlite';
-import {QuerySql} from '../sql/sql';
+import {DataSource, SqlCommand} from '../data-source.js';
+import {renderSqlite} from '../render/sqlite.js';
+import {QuerySql} from '../sql/sql.js';
 
 export class BetterSqlite3DataSource implements DataSource {
-  private readonly mangler = new SqliteManger();
-
   constructor(private readonly db: BetterSqliteDb) {}
 
   render(query: QuerySql): SqlCommand {
@@ -18,7 +16,7 @@ export class BetterSqlite3DataSource implements DataSource {
       .map((x: any) => {
         const result: any = {};
         for (const key of Object.keys(x)) {
-          result[this.mangler.unmangle(key)] = x[key];
+          result[key] = x[key];
         }
         return result;
       });

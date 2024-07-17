@@ -1,6 +1,6 @@
 import {FilterFn} from 'qustar';
-import {SuiteContext} from '..';
-import {Post} from '../utils';
+import {SuiteContext} from '../index.js';
+import {Post} from '../utils.js';
 
 export function describeFilter({
   describe,

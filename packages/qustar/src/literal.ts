@@ -1,4 +1,4 @@
-import {assertNever} from './utils';
+import {assertNever} from './utils.js';
 
 export interface GenericScalarType<TType extends string> {
   readonly type: TType;

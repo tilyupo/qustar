@@ -5,11 +5,11 @@ import {
   ScalarType,
   SingleLiteralValue,
   inferLiteral,
-} from '../literal';
-import {Assert, Equal} from '../types';
-import {arrayEqual, assert, assertNever} from '../utils';
-import {Projection, PropPath, ScalarProjection} from './projection';
-import {Query, QuerySource} from './query';
+} from '../literal.js';
+import {Assert, Equal} from '../types.js';
+import {arrayEqual, assert, assertNever} from '../utils.js';
+import {Projection, PropPath, ScalarProjection} from './projection.js';
+import {Query, QuerySource} from './query.js';
 
 // expr
 

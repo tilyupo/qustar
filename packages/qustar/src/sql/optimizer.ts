@@ -1,7 +1,7 @@
 import {match} from 'ts-pattern';
-import {SYSTEM_COLUMN_PREFIX} from '../expr/compiler';
-import {assert, assertNever, compose} from '../utils';
-import {ID_SQL_MAPPER, mapQuery, mapSelect, mapSql} from './mapper';
+import {SYSTEM_COLUMN_PREFIX} from '../expr/compiler.js';
+import {assert, assertNever, compose} from '../utils.js';
+import {ID_SQL_MAPPER, mapQuery, mapSelect, mapSql} from './mapper.js';
 import {
   BinarySql,
   LookupSql,
@@ -11,7 +11,7 @@ import {
   Sql,
   falseLiteral,
   trueLiteral,
-} from './sql';
+} from './sql.js';
 
 export function optimize(sql: QuerySql): QuerySql {
   let result = mapQuery(sql, {

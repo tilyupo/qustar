@@ -1,7 +1,7 @@
 {
-  "name": "qustar",
+  "name": "qustar-testsuite",
   "version": "0.0.3",
-  "description": "TypeScript SQL query builder",
+  "description": "Qustar DataSource test suite",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "repository": "github:tilyupo/qustar",
@@ -13,33 +13,24 @@
     ".": "./build/src/index.js"
   },
   "license": "MIT",
-  "keywords": [
-    "sql",
-    "typescript",
-    "db",
-    "query",
-    "orm"
-  ],
   "scripts": {
     "prepublish": "npm run compile",
     "release:major": "npm version $(semver $npm_package_version -i major) && npm publish --tag latest",
     "release:minor": "npm version $(semver $npm_package_version -i minor) && npm publish --tag latest",
     "release:patch": "npm version $(semver $npm_package_version -i patch) && npm publish --tag latest",
-    "start": "tsx ./scripts/playground.ts",
-    "test": "NON_GEN=1 vitest",
-    "gen": "GEN=1 vitest",
-    "coverage": "npm run clean && NON_GEN=1 vitest run --coverage",
     "lint": "gts lint",
     "clean": "gts clean && rimraf coverage",
     "compile": "npm run clean && tsc",
-    "fix": "gts fix",
-    "madge": "madge --circular --extensions ts ./src"
+    "fix": "gts fix"
   },
   "devDependencies": {
-    "vitest": "^1.6.0"
+    "@types/node": "^20.14.11",
+    "vitest": "^2.0.3"
   },
   "dependencies": {
     "better-sqlite3": "^9.6.0",
+    "qustar": "^0.0.3",
+    "seedrandom": "^3.0.5",
     "sqlite3": "^5.1.7",
     "ts-pattern": "^5.2.0"
   }

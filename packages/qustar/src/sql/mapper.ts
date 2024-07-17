@@ -17,7 +17,7 @@ import {
   Sql,
   SqlSource,
   UnarySql,
-} from './sql';
+} from './sql.js';
 
 function idMapper<T>(x: T): T {
   return x;

@@ -3,11 +3,11 @@ import {
   SCALAR_COLUMN_ALIAS,
   SYSTEM_COLUMN_PREFIX,
   deserializePropPath,
-} from './expr/compiler';
-import {Projection, PropPath} from './expr/projection';
-import {Literal} from './literal';
-import {QuerySql} from './sql/sql';
-import {arrayEqual, deepEntries, setPath} from './utils';
+} from './expr/compiler.js';
+import {Projection, PropPath} from './expr/projection.js';
+import {Literal} from './literal.js';
+import {QuerySql} from './sql/sql.js';
+import {arrayEqual, deepEntries, setPath} from './utils.js';
 
 export interface SqlCommand {
   readonly src: string;

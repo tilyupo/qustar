@@ -1,5 +1,5 @@
-import {SuiteContext} from '..';
-import {collection} from '../../../qustar/src';
+import {collection} from 'qustar';
+import {SuiteContext} from '../index.js';
 
 export function describeSql({describe, expectQuery, test}: SuiteContext) {
   describe('query', () => {

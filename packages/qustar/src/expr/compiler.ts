@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {inferLiteral} from '../literal';
+import {inferLiteral} from '../literal.js';
 import {
   AliasSql,
   BinarySql,
@@ -15,8 +15,8 @@ import {
   falseLiteral,
   oneLiteral,
   trueLiteral,
-} from '../sql/sql';
-import {arrayEqual, assert, assertNever, uniqueBy} from '../utils';
+} from '../sql/sql.js';
+import {arrayEqual, assert, assertNever, uniqueBy} from '../utils.js';
 import {
   BinaryExpr,
   CaseExpr,
@@ -28,8 +28,8 @@ import {
   SqlExpr,
   UnaryExpr,
   binaryOpIsLogical,
-} from './expr';
-import {ObjectProjection, PropPath, ScalarProjection} from './projection';
+} from './expr.js';
+import {ObjectProjection, PropPath, ScalarProjection} from './projection.js';
 import {
   CombineQuery,
   FilterQuery,
@@ -44,7 +44,7 @@ import {
   QuerySource,
   UniqueQuery,
   createHandle,
-} from './query';
+} from './query.js';
 
 export interface CompilationOptions {
   readonly withParameters?: boolean;

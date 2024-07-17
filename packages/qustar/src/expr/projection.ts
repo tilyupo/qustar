@@ -1,6 +1,6 @@
-import {ScalarType, SingleScalarType} from '../literal';
-import {Expr, LocatorExpr} from './expr';
-import {Ref} from './schema';
+import {ScalarType, SingleScalarType} from '../literal.js';
+import {Expr, LocatorExpr} from './expr.js';
+import {Ref} from './schema.js';
 
 export type Projection = ScalarProjection | ObjectProjection;
 

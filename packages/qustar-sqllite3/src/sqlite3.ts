@@ -1,14 +1,15 @@
+import {
+  DataSource,
+  QuerySql,
+  SqlCommand,
+  convertToArgument,
+  renderSqlite,
+} from 'qustar';
 import {Database as Sqlite3Db} from 'sqlite3';
-import {DataSource, SqlCommand} from '../data-source';
-import {convertToArgument} from '../render/sql';
-import {SqliteManger, renderSqlite} from '../render/sqlite';
-import {QuerySql} from '../sql/sql';
-import {indent} from '../utils';
+import {indent} from './utils.js';
 
 // vitest doesn't crash with segmentation error while using sqlite3
 export class Sqlite3DataSource implements DataSource {
-  private readonly mangler = new SqliteManger();
-
   constructor(private readonly db: Sqlite3Db) {}
 
   render(query: QuerySql): SqlCommand {
@@ -34,7 +35,7 @@ export class Sqlite3DataSource implements DataSource {
                 for (const key of Object.keys(x)) {
                   // SQLite uses :<num> for duplicates
                   if (key.indexOf(':') !== -1) continue;
-                  result[this.mangler.unmangle(key)] = x[key];
+                  result[key] = x[key];
                 }
                 return result;
               })

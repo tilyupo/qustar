@@ -1,4 +1,4 @@
-import {SuiteContext} from '..';
+import {SuiteContext} from '../index.js';
 
 export function describeJoin({describe, expectQuery, test}: SuiteContext) {
   describe('query', () => {

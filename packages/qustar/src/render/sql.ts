@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
-import {SqlCommand, cmd} from '../data-source';
-import {isNumeric} from '../expr/expr';
+import {SqlCommand, cmd} from '../data-source.js';
+import {isNumeric} from '../expr/expr.js';
 import {
   ArrayLiteral,
   DateLiteral,
@@ -10,7 +10,7 @@ import {
   assertArrayLiteral,
   assertSingleLiteral,
   inferLiteral,
-} from '../literal';
+} from '../literal.js';
 import {
   AliasSql,
   BinarySql,
@@ -25,8 +25,8 @@ import {
   Sql,
   SqlOrderBy,
   UnarySql,
-} from '../sql/sql';
-import {assertNever, formatDate, formatDateTime, indent} from '../utils';
+} from '../sql/sql.js';
+import {assertNever, formatDate, formatDateTime, indent} from '../utils.js';
 
 export function convertToArgument(literal: Literal): LiteralValue {
   if (literal.type.type === 'date') {
@@ -35,21 +35,11 @@ export function convertToArgument(literal: Literal): LiteralValue {
     return literal.value;
   }
 }
-
-export interface Mangler {
-  mangle(id: string): string;
-  unmangle(id: string): string;
-}
-
 class RenderingContext {
   constructor(readonly options: SqlRenderingOptions) {}
 
-  mangle(id: string): string {
-    return this.options.mangler.mangle(id);
-  }
-
-  unmangle(id: string): string {
-    return this.options.mangler.unmangle(id);
+  escapeId(id: string): string {
+    return this.options.escapeId(id);
   }
 }
 
@@ -57,7 +47,7 @@ export interface SqlRenderingOptions {
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
   emulateXor?: boolean;
-  mangler: Mangler;
+  escapeId: (id: string) => string;
 }
 
 export function renderSql(sql: Sql, options: SqlRenderingOptions): SqlCommand {
@@ -140,7 +130,7 @@ function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
 
 function renderAlias(sql: AliasSql, ctx: RenderingContext): SqlCommand {
   return {
-    src: ctx.mangle(sql.name),
+    src: ctx.escapeId(sql.name),
     args: [],
   };
 }
@@ -354,7 +344,7 @@ function renderLiteral(
 }
 
 function renderLookup(sql: LookupSql, ctx: RenderingContext): SqlCommand {
-  return cmd`${render(sql.subject, ctx)}.${ctx.mangle(sql.prop)}`;
+  return cmd`${render(sql.subject, ctx)}.${ctx.escapeId(sql.prop)}`;
 }
 
 function indentCommand(
@@ -398,7 +388,7 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
         if (column.expr.type === 'lookup' && column.expr.prop === column.as) {
           return cmd`${expr}`;
         } else {
-          return cmd`${expr} AS ${ctx.mangle(column.as)}`;
+          return cmd`${expr} AS ${ctx.escapeId(column.as)}`;
         }
       } else if (column.type === 'wildcard') {
         return cmd`${column.subject.name}.*`;
@@ -417,16 +407,16 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
       .with(
         {type: 'query'},
         ({query: queryIR, as: alias}) =>
-          cmd`FROM\n  (\n${indentCommand(render(queryIR, ctx), 2, ctx)}\n  ) AS ${ctx.mangle(alias)}`
+          cmd`FROM\n  (\n${indentCommand(render(queryIR, ctx), 2, ctx)}\n  ) AS ${ctx.escapeId(alias)}`
       )
       .with(
         {type: 'table'},
-        ({table, as: alias}) => cmd`FROM\n  ${table} AS ${ctx.mangle(alias)}`
+        ({table, as: alias}) => cmd`FROM\n  ${table} AS ${ctx.escapeId(alias)}`
       )
       .with(
         {type: 'sql'},
         sql =>
-          cmd`FROM\n  (\n${indentCommand(sql.command, 2, ctx)}\n  ) AS ${ctx.mangle(sql.as)}`
+          cmd`FROM\n  (\n${indentCommand(sql.command, 2, ctx)}\n  ) AS ${ctx.escapeId(sql.as)}`
       )
       .exhaustive();
 
@@ -459,7 +449,7 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
       )
       .exhaustive();
 
-    select = cmd`${select}\n  ${joinType} ${right} AS ${ctx.mangle(join.right.as)}`;
+    select = cmd`${select}\n  ${joinType} ${right} AS ${ctx.escapeId(join.right.as)}`;
     if (join.condition) {
       select = cmd`${select} ON ${straight(render(join.condition, ctx))}`;
     }

@@ -1,13 +1,15 @@
 import {mkdirSync, writeFileSync} from 'fs';
+import {
+  DataSource,
+  Query,
+  QueryTerminatorExpr,
+  SingleLiteralValue,
+  compileQuery,
+  materialize,
+  optimize,
+  renderSqlite,
+} from 'qustar';
 import {expect} from 'vitest';
-import {TestApi} from '.';
-import {Query} from '../../qustar/src';
-import {DataSource, materialize} from '../../qustar/src/data-source';
-import {compileQuery} from '../../qustar/src/expr/compiler';
-import {QueryTerminatorExpr} from '../../qustar/src/expr/expr';
-import {SingleLiteralValue} from '../../qustar/src/literal';
-import {renderSqlite} from '../../qustar/src/render/sqlite';
-import {optimize} from '../../qustar/src/sql/optimizer';
 import {
   Comment,
   Post,
@@ -18,7 +20,8 @@ import {
   staticPosts,
   staticUsers,
   users,
-} from './db';
+} from './db.js';
+import {TestApi} from './index.js';
 
 export {Comment, Post, User};
 
