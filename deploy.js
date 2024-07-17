@@ -62,10 +62,7 @@ function publishPackage() {
 async function publishPatch() {
   try {
     const currentVersion = await getCurrentVersion();
-    const nextVersion = semver.inc(
-      semver.inc(currentVersion, 'patch'),
-      'patch'
-    );
+    const nextVersion = semver.inc(currentVersion, 'patch');
 
     console.log(`Next version: ${nextVersion}`);
 
