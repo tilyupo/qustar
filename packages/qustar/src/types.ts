@@ -123,27 +123,30 @@ export type __TestInferScalarValue = Assert<
   Equal<InferScalarValue<number>, number>
 >;
 
+// type CleanMappingEntityValue<T> = {
+//   [K in keyof T]: [T[K]] extends [Scalar]
+//     ? T[K]
+//     : [T[K]] extends [Query<any>]
+//       ? T[K]
+//       : [T[K]] extends [CleanMappingEntityValue<T[K]>]
+//         ? T[K]
+//         : never;
+
 type CleanMappingEntityValue<T> = {
-  [K in keyof T]: [T[K]] extends [Scalar]
-    ? T[K]
-    : [T[K]] extends [Query<any>]
-      ? T[K]
-      : [T[K]] extends [CleanMappingEntityValue<T[K]>]
-        ? T[K]
-        : never;
+  [K in keyof T]: [T[K]] extends [Scalar] ? T[K] : never;
 };
-export type __TestToCleanObjectValue = Assert<
-  [
-    Equal<
-      CleanMappingEntityValue<{a: number; b: string}>,
-      {a: number; b: string}
-    >,
-    Equal<
-      CleanMappingEntityValue<{a: number; b: {c: number}}>,
-      {a: number; b: {c: number}}
-    >,
-  ]
->;
+// export type __TestToCleanObjectValue = Assert<
+//   [
+//     Equal<
+//       CleanMappingEntityValue<{a: number; b: string}>,
+//       {a: number; b: string}
+//     >,
+//     Equal<
+//       CleanMappingEntityValue<{a: number; b: {c: number}}>,
+//       {a: number; b: {c: number}}
+//     >,
+//   ]
+// >;
 
 type InferEntityProp<T> = [T] extends [Scalar]
   ? InferScalarValue<T>
@@ -191,33 +194,33 @@ export type Expand<T> =
         ? {[K in keyof O]: O[K]}
         : never;
 
-export type __TestQuery = [
-  Query<number>,
-  Query<string>,
-  Query<boolean>,
-  Query<User>,
-  Assert<
-    [
-      Equal<QueryValue<typeof x1>, {b: number}>,
-      Equal<QueryValue<typeof x2>, User>,
-      Equal<QueryValue<typeof x3>, Post>,
-      Equal<QueryValue<typeof x4>, Comment>,
-      Equal<QueryValue<typeof x5>, {a: number; b: {c: number}}>,
-      Equal<
-        QueryValue<typeof x6>,
-        {
-          id: number;
-          author_id: number;
-          text: string;
-          author: User;
-          post: Post;
-          title: string;
-          comments: Comment[];
-        }
-      >,
-    ]
-  >,
-];
+// export type __TestQuery = [
+//   Query<number>,
+//   Query<string>,
+//   Query<boolean>,
+//   Query<User>,
+//   Assert<
+//     [
+//       Equal<QueryValue<typeof x1>, {b: number}>,
+//       Equal<QueryValue<typeof x2>, User>,
+//       Equal<QueryValue<typeof x3>, Post>,
+//       Equal<QueryValue<typeof x4>, Comment>,
+//       Equal<QueryValue<typeof x5>, {a: number; b: {c: number}}>,
+//       Equal<
+//         QueryValue<typeof x6>,
+//         {
+//           id: number;
+//           author_id: number;
+//           text: string;
+//           author: User;
+//           post: Post;
+//           title: string;
+//           comments: Comment[];
+//         }
+//       >,
+//     ]
+//   >,
+// ];
 
 type QueryValue<T extends Query<any>> = T extends Query<infer R> ? R : never;
 

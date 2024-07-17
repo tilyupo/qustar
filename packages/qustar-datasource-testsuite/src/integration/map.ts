@@ -1,5 +1,5 @@
+import {MapValueFn, Mapping} from 'qustar';
 import {SuiteContext} from '..';
-import {MapValueFn, Mapping} from '../../../qustar/src/types';
 import {Post} from '../utils';
 
 export function describeMap({
