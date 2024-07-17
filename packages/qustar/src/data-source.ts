@@ -25,7 +25,8 @@ export namespace SqlCommand {
 
 export interface DataSource {
   render(query: QuerySql): SqlCommand;
-  execute(query: SqlCommand): Promise<any[]>;
+  select(query: SqlCommand): Promise<any[]>;
+  execute(statement: string): Promise<void>;
 }
 
 interface FlatRowColumn {

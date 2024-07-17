@@ -24,16 +24,16 @@
     "coverage": "npm run clean && NON_GEN=1 vitest run --coverage",
     "lint": "gts lint",
     "clean": "gts clean && rimraf coverage",
-    "compile": "npm run clean && tsc",
+    "build": "npm run clean && tsc",
     "fix": "gts fix",
     "madge": "madge --circular --extensions ts ./src"
   },
   "dependencies": {
-    "qustar-testsuite": "^0.0.3",
     "qustar": "^0.0.3",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "qustar-testsuite": "^0.0.3"
   }
 }

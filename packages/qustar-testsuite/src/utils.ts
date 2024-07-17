@@ -171,7 +171,7 @@ export function buildUtils(
     }
     const referenceCommand = renderSqlite(sql);
     const referenceRows = await provider
-      .execute(referenceCommand)
+      .select(referenceCommand)
       .then((rows: any[]) => rows.map(x => materialize(x, projection)));
 
     if (options?.ignoreOrder) {
@@ -187,7 +187,7 @@ export function buildUtils(
 
         const command = renderSqlite(sql);
         const rows = await provider
-          .execute(command)
+          .select(command)
           .then((rows: any[]) => rows.map(x => materialize(x, projection)));
 
         if (options?.ignoreOrder) {

@@ -105,5 +105,5 @@ export async function init(provider: DataSource) {
       (8, 'nah', 2, 3, 1, 5);
   `;
 
-  provider.execute({args: [], src: sql});
+  await provider.execute(sql);
 }

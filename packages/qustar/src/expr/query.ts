@@ -228,12 +228,12 @@ export abstract class Query<T extends Value<T>> {
     )(this);
   }
 
-  execute(target: DataSource): Promise<T[]> {
+  execute(dataSource: DataSource): Promise<T[]> {
     return this.pipe(
       compileQuery,
       optimize,
       renderSqlite,
-      target.execute.bind(target)
+      dataSource.select.bind(dataSource)
     );
   }
 

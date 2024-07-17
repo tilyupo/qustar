@@ -4,9 +4,9 @@
     "packages/*"
   ],
   "scripts": {
-    "compile": "npm run compile:qustar && npm run compile:qustar-testsuite",
-    "compile:qustar": "cd packages/qustar && npm run compile",
-    "compile:qustar-testsuite": "cd packages/qustar-testsuite && npm run compile"
+    "build": "npm run build --workspaces",
+    "install_all": "npm install --workspaces",
+    "test": "npm test --workspaces"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.7",
