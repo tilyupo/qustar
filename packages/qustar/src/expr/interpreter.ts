@@ -63,7 +63,7 @@ class IntContext {
 export function interpretQuery<T extends SingleLiteralValue>(
   expr: QueryTerminatorExpr<T>,
   options: InterpretOptions
-): T;
+): [T];
 export function interpretQuery<T extends Value<T>>(
   query: Query<T>,
   options: InterpretOptions
@@ -77,7 +77,7 @@ export function interpretQuery(
   if (query instanceof Query) {
     return intQuery(query, ctx);
   } else {
-    return intQueryTerminator(query, ctx);
+    return [intQueryTerminator(query, ctx)];
   }
 }
 
@@ -941,22 +941,32 @@ function intQueryTerminator(
     })
     .with('max', () =>
       agg(items => {
-        const numbers = items.filter((x): x is number => typeof x === 'number');
-        if (numbers.length < items.length) {
-          throw new Error('max query terminator works only on numbers');
+        const comparableItems = items.filter(
+          (x): x is number | string =>
+            typeof x === 'number' || typeof x === 'string'
+        );
+        if (comparableItems.length < items.length) {
+          throw new Error(
+            'max query terminator works only on numbers or strings'
+          );
         }
 
-        return Math.max(...numbers);
+        return comparableItems.sort((a, b) => (a > b ? -1 : 1))[0];
       })
     )
     .with('min', () =>
       agg(items => {
-        const numbers = items.filter((x): x is number => typeof x === 'number');
-        if (numbers.length < items.length) {
-          throw new Error('min query terminator works only on numbers');
+        const comparableItems = items.filter(
+          (x): x is number | string =>
+            typeof x === 'number' || typeof x === 'string'
+        );
+        if (comparableItems.length < items.length) {
+          throw new Error(
+            'min query terminator works only on numbers or strings'
+          );
         }
 
-        return Math.min(...numbers);
+        return comparableItems.sort((a, b) => (a > b ? 1 : -1))[0];
       })
     )
     .with('sum', () =>

@@ -20,12 +20,13 @@ export interface TestApi {
 
 export interface TestSuiteOptions {
   fuzzing: boolean;
+  rawSql: boolean;
 }
 
 export function describeDataSourceInternal(
   api: TestApi,
   provider: DataSource | undefined,
-  {fuzzing}: TestSuiteOptions
+  options: TestSuiteOptions
 ) {
   if (provider) {
     init(provider);
@@ -44,11 +45,14 @@ export function describeDataSourceInternal(
   describeMap(ctx);
   describeOrder(ctx);
   describePagination(ctx);
-  describeSql(ctx);
   describeTerminator(ctx);
   describeUnique(ctx);
 
-  if (fuzzing) {
+  if (options.rawSql) {
+    describeSql(ctx);
+  }
+
+  if (options.fuzzing) {
     describeFuzzing(ctx);
   }
 }
@@ -56,9 +60,13 @@ export function describeDataSourceInternal(
 export function describeDataSource(
   api: TestApi,
   provider: DataSource | undefined,
-  options: TestSuiteOptions
+  options: Partial<TestSuiteOptions>
 ) {
-  describeDataSourceInternal(api, provider, options);
+  describeDataSourceInternal(api, provider, {
+    fuzzing: true,
+    rawSql: true,
+    ...options,
+  });
 }
 
 export interface SuiteContext extends DescribeOrmUtils {
