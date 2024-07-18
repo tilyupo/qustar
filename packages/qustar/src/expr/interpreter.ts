@@ -850,20 +850,27 @@ function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
         throw new Error('unsupported value for toString: ' + x);
       })
       .with('substring', () => {
+        const target = intExpr(expr.args[0], ctx);
         const start = intExpr(expr.args[1], ctx);
-        const end = intExpr(expr.args[2], ctx) ?? undefined;
+        const end = intExpr(expr.args[2], ctx);
+
+        assert(target === null || typeof target === 'string');
 
         assert(
-          typeof start === 'number',
+          start === null || typeof start === 'number',
           'substring first argument must be a number'
         );
 
         assert(
-          typeof end === 'number' || typeof end === 'undefined',
+          end === null || typeof end === 'number',
           'substring second argument must be a number or undefined'
         );
 
-        return (intExpr(expr.args[0], ctx) as string).substring(start, end);
+        if (target === null || start === null || end === null) {
+          return null;
+        }
+
+        return (target as string).substring(start, end);
       })
       .exhaustive()
   );
