@@ -787,93 +787,90 @@ function intCase(expr: CaseExpr<Dynamic>, ctx: IntContext): unknown {
 }
 
 function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
-  return (
-    match(expr.func)
-      .with(P.union('avg', 'count', 'max', 'min', 'sum'), () => {
-        throw new Error('aggregation functions can not be interpreted');
-      })
-      .with('concat', () =>
-        expr.args
-          .map(x => intExpr(x, ctx))
-          .reduce((a, b) => {
-            if (typeof a !== 'string' || typeof b !== 'string') {
-              throw new Error('concat works only with strings');
-            }
+  return match(expr.func)
+    .with(P.union('avg', 'count', 'max', 'min', 'sum'), () => {
+      throw new Error('aggregation functions can not be interpreted');
+    })
+    .with('concat', () =>
+      expr.args
+        .map(x => intExpr(x, ctx))
+        .reduce((a, b) => {
+          if (typeof a !== 'string' || typeof b !== 'string') {
+            throw new Error('concat works only with strings');
+          }
 
-            return a.concat(b);
-          })
-      )
-      // todo: format Date instead of toString
-      .with('to_string', () => {
-        const x = intExpr(expr.args[0], ctx);
-        if (x === null) return null;
-        if (x === true) return 'true';
-        if (x === false) return 'false';
-        if (
-          typeof x === 'number' ||
-          typeof x === 'object' ||
-          typeof x === 'string'
-        ) {
-          return x.toString();
-        }
+          return a.concat(b);
+        })
+    )
+    .with('to_string', () => {
+      const x = intExpr(expr.args[0], ctx);
+      if (x === null) return null;
+      if (x === true) return 'true';
+      if (x === false) return 'false';
+      if (
+        typeof x === 'number' ||
+        typeof x === 'object' ||
+        typeof x === 'string'
+      ) {
+        return x.toString();
+      }
 
-        throw new Error('unsupported value for toString: ' + x);
-      })
-      .with('to_int', () => {
-        const x = intExpr(expr.args[0], ctx);
-        if (x === null) return null;
-        if (x === true) return 1;
-        if (x === false) return 0;
-        if (typeof x === 'string') {
-          // at least zero
-          return Number.parseInt('0' + x.trim());
-        }
-        if (typeof x === 'number') {
-          return Math.trunc(x);
-        }
+      throw new Error('unsupported value for toString: ' + x);
+    })
+    .with('to_int', () => {
+      const x = intExpr(expr.args[0], ctx);
+      if (x === null) return null;
+      if (x === true) return 1;
+      if (x === false) return 0;
+      if (typeof x === 'string') {
+        // at least zero
+        return Number.parseInt('0' + x.trim());
+      }
+      if (typeof x === 'number') {
+        return Math.trunc(x);
+      }
 
-        throw new Error('unsupported value for toString: ' + x);
-      })
-      .with('to_float', () => {
-        const x = intExpr(expr.args[0], ctx);
-        if (x === null) return null;
-        if (x === true) return 1;
-        if (x === false) return 0;
-        if (typeof x === 'string') {
-          // at least zero
-          return Number.parseFloat('0' + x.trim());
-        }
-        if (typeof x === 'number') {
-          return x;
-        }
+      throw new Error('unsupported value for toString: ' + x);
+    })
+    .with('to_float', () => {
+      const x = intExpr(expr.args[0], ctx);
+      if (x === null) return null;
+      if (x === true) return 1;
+      if (x === false) return 0;
+      if (typeof x === 'string') {
+        // at least zero
+        return Number.parseFloat('0' + x.trim());
+      }
+      if (typeof x === 'number') {
+        return x;
+      }
 
-        throw new Error('unsupported value for toString: ' + x);
-      })
-      .with('substring', () => {
-        const target = intExpr(expr.args[0], ctx);
-        const start = intExpr(expr.args[1], ctx);
-        const end = intExpr(expr.args[2], ctx);
+      throw new Error('unsupported value for toString: ' + x);
+    })
+    .with('substring', () => {
+      const target = intExpr(expr.args[0], ctx);
+      const start = intExpr(expr.args[1], ctx);
+      const end = intExpr(expr.args[2], ctx);
 
-        assert(target === null || typeof target === 'string');
+      assert(target === null || typeof target === 'string');
 
-        assert(
-          start === null || typeof start === 'number',
-          'substring first argument must be a number'
-        );
+      assert(
+        start === null || typeof start === 'number',
+        'substring first argument must be a number'
+      );
 
-        assert(
-          end === null || typeof end === 'number',
-          'substring second argument must be a number or undefined'
-        );
+      assert(
+        end === null || typeof end === 'number',
+        'substring second argument must be a number or undefined'
+      );
 
-        if (target === null || start === null || end === null) {
-          return null;
-        }
+      if (target === null || start === null || end === null) {
+        return null;
+      }
 
-        return (target as string).substring(start, end);
-      })
-      .exhaustive()
-  );
+      return (target as string).substring(start, end);
+    })
+    .exhaustive();
 }
 
 function nullish(x: unknown): boolean {
