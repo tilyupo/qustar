@@ -12,7 +12,7 @@ export function describeUnique({describe, testFactory}: SuiteContext) {
       );
 
       testUnique('id', x => x.id, [1, 2, 3, 4, 5, 6] as any);
-      testUnique('id / 2', x => x.id.div(2), [0, 1, 2, 3] as any);
+      testUnique('id / 2', x => x.id.div(2).toInt(), [0, 1, 2, 3] as any);
       testUnique('author name', x => x.author.name, [
         'Dima',
         'Anna',

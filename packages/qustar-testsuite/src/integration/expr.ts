@@ -56,7 +56,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       (['div', 'divide'] as const).forEach(method => {
         describe(method, () => {
           testExpr('2 / 2 is 1', Expr[method](2, 2), 1);
-          testExpr('7 / 2 is 3', Expr[method](7, 2), 3);
+          testExpr('7 / 2 is 3', Expr[method](7, 2), 3.5);
           testExpr('7.2 / 2 is 3.6', Expr[method](7.2, 2), 3.6);
           testExpr('null / 2 is null', Expr[method](null, 2), null);
           testExpr('7.2 / null is null', Expr[method](7.2, null), null);
@@ -291,6 +291,11 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
 
       describe('toString', () => {
         testExpr('toString(null) is null', Expr.from(null).toString(), null);
+        testExpr(
+          "toString(new Date(2024, 11, 11)) is '2024-12-11'",
+          Expr.from(new Date(2024, 11, 11)).toString(),
+          '2024-12-11'
+        );
         testExpr(
           "toString('some text') is 'some text'",
           Expr.from('some text').toString(),
