@@ -1,8 +1,11 @@
 import {Database as BetterSqliteDb} from 'better-sqlite3';
-import {DataSource, SqlCommand} from '../data-source.js';
-import {convertToArgument} from '../render/sql.js';
-import {renderSqlite} from '../render/sqlite.js';
-import {QuerySql} from '../sql/sql.js';
+import {
+  DataSource,
+  QuerySql,
+  SqlCommand,
+  convertToArgument,
+  renderSqlite,
+} from 'qustar';
 
 export class BetterSqlite3DataSource implements DataSource {
   constructor(private readonly db: BetterSqliteDb) {}

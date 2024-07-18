@@ -1,13 +1,13 @@
 {
-  "name": "qustar-sqlite3",
+  "name": "qustar-better-sqlite3",
   "version": "0.0.1",
-  "description": "sqlite3 data source for qustar",
+  "description": "better-sqlite3 data source for qustar",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tilyupo/qustar.git",
-    "directory": "packages/qustar-sqlite3"
+    "directory": "packages/qustar-better-sqlite3"
   },
   "type": "module",
   "files": [
@@ -20,7 +20,7 @@
   "keywords": [
     "qustar",
     "sqlite",
-    "sqlite3",
+    "better-sqlite3",
     "sql",
     "typescript"
   ],
@@ -31,10 +31,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "qustar": "^0.0.1",
-    "sqlite3": "^5.1.7"
+    "better-sqlite3": "^9.6.0",
+    "qustar": "^0.0.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.7",
     "vitest": "^1.6.0",
     "qustar-testsuite": "^0.0.1"
   }

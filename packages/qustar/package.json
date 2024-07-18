@@ -6,7 +6,8 @@
   "types": "build/src/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tilyupo/qustar.git"
+    "url": "git+https://github.com/tilyupo/qustar.git",
+    "directory": "packages/qustar"
   },
   "type": "module",
   "files": [
@@ -30,11 +31,9 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.7",
     "vitest": "^1.6.0"
   },
   "dependencies": {
-    "better-sqlite3": "^9.6.0",
     "ts-pattern": "^5.2.0"
   }
 }
