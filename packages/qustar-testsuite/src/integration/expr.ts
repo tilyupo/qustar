@@ -266,23 +266,87 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
     });
 
     describe('func', () => {
-      testExpr(
-        "substring('01234', 1, 3) is '12'",
-        Expr.substring(Expr.from('01234'), 1, 3),
-        '12'
-      );
-      testExpr("tostring(1234) is '1234'", Expr.from(1234).toString(), '1234');
+      describe('substring', () => {
+        testExpr(
+          "substring('01234', 1, 3) is '12'",
+          Expr.substring(Expr.from('01234'), 1, 3),
+          '12'
+        );
+        testExpr(
+          "substring(null, 1, 3) is '12'",
+          Expr.substring(null, 1, 3),
+          null
+        );
+        testExpr(
+          "substring('01234', null, 3) is null",
+          Expr.substring(Expr.from('01234'), null, 3),
+          null
+        );
+        testExpr(
+          "substring('01234', 1, null) is null",
+          Expr.substring(Expr.from('01234'), 1, null),
+          null
+        );
+      });
+
+      describe('toString', () => {
+        testExpr('toString(null) is null', Expr.from(null).toString(), null);
+        testExpr(
+          "toString('some text') is 'some text'",
+          Expr.from('some text').toString(),
+          'some text'
+        );
+        testExpr(
+          "toString(1234) is '1234'",
+          Expr.from(1234).toString(),
+          '1234'
+        );
+        testExpr(
+          "toString(true) is 'true'",
+          Expr.from(true).toString(),
+          'true'
+        );
+        testExpr(
+          "toString(false) is 'false'",
+          Expr.from(false).toString(),
+          'false'
+        );
+      });
+
+      describe('toInt', () => {
+        testExpr('toInt(null) is null', Expr.from(null).toInt(), null);
+        testExpr("toInt('1234') is 1234", Expr.from('1234').toInt(), 1234);
+        testExpr(
+          "toInt('1234suffix') is 1234",
+          Expr.from('1234suffix').toInt(),
+          1234
+        );
+        testExpr(
+          "toInt('prefix1234') is 0",
+          Expr.from('prefix1234').toInt(),
+          0
+        );
+        testExpr("toInt('') is 0", Expr.from('').toInt(), 0);
+        testExpr('toInt(1234) is 1234', Expr.from(1234).toInt(), 1234);
+        testExpr('toInt(true) is 1', Expr.from(true).toInt(), 1);
+        testExpr('toInt(false) is 0', Expr.from(false).toInt(), 0);
+      });
     });
 
     describe('composition', () => {
       testExpr('(3 + 6) / 3 is 3', Expr.div(Expr.add(3, 6), 3), 3);
       testExpr(
-        '1 >= 2 and 4 == 4 is 0',
+        '1 >= 2 and 4 == 4 is false',
         Expr.and(Expr.gte(1, 2), Expr.eq(4, 4)),
         false
       );
       testExpr(
-        '1 >= 2 or 4 == 4 is 0',
+        '1 <= 2 and 4 == 4 is false',
+        Expr.and(Expr.lte(1, 2), Expr.eq(4, 4)),
+        true
+      );
+      testExpr(
+        '1 >= 2 or 4 == 4 is false',
         Expr.or(Expr.gte(1, 2), Expr.eq(4, 4)),
         true
       );

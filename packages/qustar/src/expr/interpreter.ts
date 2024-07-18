@@ -774,53 +774,84 @@ function intCase(expr: CaseExpr<Dynamic>, ctx: IntContext): unknown {
 }
 
 function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
-  return match(expr.func)
-    .with(P.union('avg', 'count', 'max', 'min', 'sum'), () => {
-      throw new Error('aggregation functions can not be interpreted');
-    })
-    .with('concat', () =>
-      expr.args
-        .map(x => intExpr(x, ctx))
-        .reduce((a, b) => {
-          if (typeof a !== 'string' || typeof b !== 'string') {
-            throw new Error('concat works only with strings');
-          }
+  return (
+    match(expr.func)
+      .with(P.union('avg', 'count', 'max', 'min', 'sum'), () => {
+        throw new Error('aggregation functions can not be interpreted');
+      })
+      .with('concat', () =>
+        expr.args
+          .map(x => intExpr(x, ctx))
+          .reduce((a, b) => {
+            if (typeof a !== 'string' || typeof b !== 'string') {
+              throw new Error('concat works only with strings');
+            }
 
-          return a.concat(b);
-        })
-    )
-    .with('to_string', () => {
-      const x = intExpr(expr.args[0], ctx);
-      if (x === null) return null;
-      if (x === true) return 'true';
-      if (x === false) return 'false';
-      if (
-        typeof x === 'number' ||
-        typeof x === 'object' ||
-        typeof x === 'string'
-      ) {
-        return x.toString();
-      }
+            return a.concat(b);
+          })
+      )
+      // todo: format Date instead of toString
+      .with('to_string', () => {
+        const x = intExpr(expr.args[0], ctx);
+        if (x === null) return null;
+        if (x === true) return 'true';
+        if (x === false) return 'false';
+        if (
+          typeof x === 'number' ||
+          typeof x === 'object' ||
+          typeof x === 'string'
+        ) {
+          return x.toString();
+        }
 
-      throw new Error('unsupported value for toString: ' + x);
-    })
-    .with('substring', () => {
-      const start = intExpr(expr.args[1], ctx);
-      const end = intExpr(expr.args[2], ctx) ?? undefined;
+        throw new Error('unsupported value for toString: ' + x);
+      })
+      .with('to_int', () => {
+        const x = intExpr(expr.args[0], ctx);
+        if (x === null) return null;
+        if (x === true) return 1;
+        if (x === false) return 0;
+        if (typeof x === 'string') {
+          return Number.parseInt(x);
+        }
+        if (typeof x === 'number') {
+          return Math.trunc(x);
+        }
 
-      assert(
-        typeof start === 'number',
-        'substring first argument must be a number'
-      );
+        throw new Error('unsupported value for toString: ' + x);
+      })
+      .with('to_float', () => {
+        const x = intExpr(expr.args[0], ctx);
+        if (x === null) return null;
+        if (x === true) return 1;
+        if (x === false) return 0;
+        if (typeof x === 'string') {
+          return Number.parseFloat(x);
+        }
+        if (typeof x === 'number') {
+          return x;
+        }
 
-      assert(
-        typeof end === 'number' || typeof end === 'undefined',
-        'substring second argument must be a number or undefined'
-      );
+        throw new Error('unsupported value for toString: ' + x);
+      })
+      .with('substring', () => {
+        const start = intExpr(expr.args[1], ctx);
+        const end = intExpr(expr.args[2], ctx) ?? undefined;
 
-      return (intExpr(expr.args[0], ctx) as string).substring(start, end);
-    })
-    .exhaustive();
+        assert(
+          typeof start === 'number',
+          'substring first argument must be a number'
+        );
+
+        assert(
+          typeof end === 'number' || typeof end === 'undefined',
+          'substring second argument must be a number or undefined'
+        );
+
+        return (intExpr(expr.args[0], ctx) as string).substring(start, end);
+      })
+      .exhaustive()
+  );
 }
 
 function nullish(x: unknown): boolean {

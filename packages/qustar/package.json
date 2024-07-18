@@ -2,20 +2,6 @@
   "name": "qustar",
   "version": "0.0.1",
   "description": "TypeScript SQL query builder",
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tilyupo/qustar.git",
-    "directory": "packages/qustar"
-  },
-  "type": "module",
-  "files": [
-    "build/src"
-  ],
-  "exports": {
-    ".": "./build/src/index.js"
-  },
   "license": "MIT",
   "keywords": [
     "sql",
@@ -24,9 +10,24 @@
     "query",
     "orm"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tilyupo/qustar.git",
+    "directory": "packages/qustar"
+  },
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "files": [
+    "build/src"
+  ],
+  "exports": {
+    ".": "./build/src/index.js"
+  },
+  "type": "module",
   "scripts": {
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
+    "build:watch": "npm run clean && tsc -w",
     "deploy": "npm run build && node ../../deploy.js",
     "test": "vitest run"
   },

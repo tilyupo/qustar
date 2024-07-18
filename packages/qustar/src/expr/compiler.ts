@@ -764,7 +764,7 @@ function _compileExpr(
     case: x => compileCaseExpr(x, ctx),
     locator: x => compileScalarLocatorExpr(x, ctx),
     queryTerminator: x => _compileQueryTerminatorExpr(x, ctx),
-    func: x => compileScalarFuncExpr(x, ctx),
+    func: x => compileFuncExpr(x, ctx),
     sql: x => compileSqlExpr(x),
   });
 }
@@ -1056,11 +1056,57 @@ function compileScalarLocatorExpr(
   };
 }
 
-function compileScalarFuncExpr(
+function compileFuncExpr(
   expr: FuncExpr<any>,
   ctx: CompilationContext
 ): ExprCompilationResult {
   const args = expr.args.map(x => _compileExpr(x, ctx));
+
+  if (expr.func === 'to_string') {
+    const proj = expr.args[0].projection();
+    assert(proj.type === 'scalar');
+    console.log('!!SuPEORT TYPE:', proj.scalarType.type);
+    if (proj.scalarType.type === 'boolean') {
+      return {
+        sql: {
+          type: 'case',
+          whens: [
+            {
+              condition: {
+                type: 'literal',
+                literal: inferLiteral(true),
+                parameter: false,
+              },
+              result: {
+                type: 'literal',
+                literal: inferLiteral('true'),
+                parameter: false,
+              },
+            },
+            {
+              condition: {
+                type: 'literal',
+                literal: inferLiteral(false),
+                parameter: false,
+              },
+              result: {
+                type: 'literal',
+                literal: inferLiteral('false'),
+                parameter: false,
+              },
+            },
+          ],
+          fallback: {
+            type: 'func',
+            func: expr.func,
+            args: args.map(x => x.sql),
+          },
+          subject: args[0].sql,
+        },
+        joins: args.flatMap(x => x.joins),
+      };
+    }
+  }
 
   return {
     sql: {

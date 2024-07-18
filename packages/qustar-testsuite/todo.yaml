@@ -1,2 +1,3 @@
 - add test on InMemory data source based on interpreter
 - add date tests
+- remove vitest dependency, use some lib for assertions

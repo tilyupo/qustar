@@ -38,6 +38,8 @@ export type FuncSql = GenericFuncSql<
   | 'count'
   | 'sum'
   | 'to_string'
+  | 'to_int'
+  | 'to_float'
   | 'coalesce'
 >;
 

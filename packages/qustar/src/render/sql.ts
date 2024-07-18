@@ -71,7 +71,11 @@ function render(sql: Sql, ctx: RenderingContext): SqlCommand {
 }
 
 function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
-  if (sql.func === 'to_string') {
+  if (sql.func === 'to_int') {
+    return cmd`CAST(${render(sql.args[0], ctx)} as INT)`;
+  } else if (sql.func === 'to_float') {
+    return cmd`CAST(${render(sql.args[0], ctx)} as REAL)`;
+  } else if (sql.func === 'to_string') {
     return cmd`CAST(${render(sql.args[0], ctx)} as TEXT)`;
   } else {
     const {fn, args} = match(sql.func)

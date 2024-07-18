@@ -5,7 +5,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "bootstrap": "npm run build && npm install --workspaces",
+    "bootstrap": "npm install && npm install --workspaces && npm run build",
     "deploy": "npm run deploy --workspaces",
     "test": "npm test --workspaces"
   },

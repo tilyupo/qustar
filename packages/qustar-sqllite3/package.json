@@ -2,20 +2,6 @@
   "name": "qustar-sqlite3",
   "version": "0.0.1",
   "description": "sqlite3 data source for qustar",
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tilyupo/qustar.git",
-    "directory": "packages/qustar-sqlite3"
-  },
-  "type": "module",
-  "files": [
-    "build/src"
-  ],
-  "exports": {
-    ".": "./build/src/index.js"
-  },
   "license": "MIT",
   "keywords": [
     "qustar",
@@ -24,9 +10,24 @@
     "sql",
     "typescript"
   ],
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "files": [
+    "build/src"
+  ],
+  "exports": {
+    ".": "./build/src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tilyupo/qustar.git",
+    "directory": "packages/qustar-sqlite3"
+  },
+  "type": "module",
   "scripts": {
     "clean": "rimraf build",
     "build": "npm run clean && tsc",
+    "build:watch": "npm run clean && tsc -w",
     "deploy": "npm run build && node ../../deploy.js",
     "test": "vitest run"
   },

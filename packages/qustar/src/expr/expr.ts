@@ -385,6 +385,18 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return Expr.from(lhs).toString();
   }
 
+  static toFloat<T extends Nullable<SingleLiteralValue>>(
+    lhs: ScalarOperand<T>
+  ): Expr<NullPropagate<T, number>> {
+    return Expr.from(lhs).toFloat();
+  }
+
+  static toInt<T extends Nullable<SingleLiteralValue>>(
+    lhs: ScalarOperand<T>
+  ): Expr<NullPropagate<T, number>> {
+    return Expr.from(lhs).toInt();
+  }
+
   static concat<T extends Nullable<string>>(
     first: ScalarOperand<T>,
     ...operands: ScalarOperand<T>[]
@@ -624,6 +636,14 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return new FuncExpr<NullPropagate<T, string>>('to_string', [this]);
   }
 
+  toFloat(): Expr<NullPropagate<T, number>> {
+    return new FuncExpr<NullPropagate<T, number>>('to_float', [this]);
+  }
+
+  toInt(): Expr<NullPropagate<T, number>> {
+    return new FuncExpr<NullPropagate<T, number>>('to_int', [this]);
+  }
+
   concat<R extends Nullable<string>>(
     ...operands: ScalarOperand<R>[]
   ): Expr<NullPropagate<R, T>> {
@@ -666,6 +686,8 @@ export type Func =
   | 'substring'
   | 'concat'
   | 'to_string'
+  | 'to_float'
+  | 'to_int'
   | 'avg'
   | 'count'
   | 'sum'
@@ -716,6 +738,24 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
         type: 'scalar',
         scalarType: {
           type: 'varchar',
+          nullable,
+        },
+        expr: this,
+      };
+    } else if (this.func === 'to_float') {
+      return {
+        type: 'scalar',
+        scalarType: {
+          type: 'f32',
+          nullable,
+        },
+        expr: this,
+      };
+    } else if (this.func === 'to_int') {
+      return {
+        type: 'scalar',
+        scalarType: {
+          type: 'i32',
           nullable,
         },
         expr: this,

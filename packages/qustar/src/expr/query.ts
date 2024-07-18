@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {DataSource} from '../data-source.js';
+import {DataSource, SqlCommand} from '../data-source.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
@@ -228,13 +228,19 @@ export abstract class Query<T extends Value<T>> {
     )(this);
   }
 
-  execute(dataSource: DataSource): Promise<T[]> {
+  render(dialect: 'sqlite'): SqlCommand {
     return this.pipe(
       compileQuery,
       optimize,
-      renderSqlite,
-      dataSource.select.bind(dataSource)
+      match(dialect)
+        .with('sqlite', () => renderSqlite)
+        .exhaustive()
     );
+  }
+
+  execute(dataSource: DataSource): Promise<T[]> {
+    const command = dataSource.render(this.pipe(compileQuery, optimize));
+    return dataSource.select(command);
   }
 
   exec(target: DataSource): Promise<T[]> {
