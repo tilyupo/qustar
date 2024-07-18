@@ -1,7 +1,7 @@
 import {compileQuery, gen, interpretQuery, renderSqlite} from 'qustar';
 import {expect} from 'vitest';
 import {EXAMPLE_DB, staticComments, staticPosts} from './db.js';
-import {SuiteContext} from './index.js';
+import {SuiteContext} from './describe.js';
 
 export function describeFuzzing({describe, execute, test}: SuiteContext) {
   describe('fuzzing', async () => {

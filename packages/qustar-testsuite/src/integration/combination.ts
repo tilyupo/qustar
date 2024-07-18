@@ -1,4 +1,4 @@
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 
 export function describeCombination({
   test,

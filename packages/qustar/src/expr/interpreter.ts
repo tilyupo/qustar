@@ -1,4 +1,5 @@
 import {P, match} from 'ts-pattern';
+import {SingleLiteralValue} from '../literal.js';
 import {Value} from '../types.js';
 import {
   assert,
@@ -59,13 +60,25 @@ class IntContext {
   }
 }
 
+export function interpretQuery<T extends SingleLiteralValue>(
+  expr: QueryTerminatorExpr<T>,
+  options: InterpretOptions
+): T;
 export function interpretQuery<T extends Value<T>>(
   query: Query<T>,
   options: InterpretOptions
-): T[] {
+): T[];
+export function interpretQuery(
+  query: Query<any> | QueryTerminatorExpr<any>,
+  options: InterpretOptions
+): any {
   const ctx = new IntContext(options, new Map());
 
-  return intQuery(query, ctx) as T[];
+  if (query instanceof Query) {
+    return intQuery(query, ctx);
+  } else {
+    return intQueryTerminator(query, ctx);
+  }
 }
 
 function intQuery(query: Query<any>, ctx: IntContext): unknown[] {

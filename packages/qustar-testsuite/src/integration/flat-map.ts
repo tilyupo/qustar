@@ -1,4 +1,4 @@
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 
 export function describeFlatMap({describe, test, expectQuery}: SuiteContext) {
   describe('query', () => {

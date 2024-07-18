@@ -1,5 +1,5 @@
 import {MapScalarFn, ScalarMapping} from 'qustar';
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 import {Post} from '../utils.js';
 
 export function describeOrder({

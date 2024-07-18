@@ -1,5 +1,5 @@
 import {Expr, SingleLiteralValue} from 'qustar';
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 import {ExecuteOptions} from '../utils.js';
 
 function formatDate(date: Date): string {

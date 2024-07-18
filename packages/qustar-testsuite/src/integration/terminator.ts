@@ -1,5 +1,5 @@
 import {Query, QueryTerminatorExpr, SingleLiteralValue} from 'qustar';
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 import {Post, QuerySet} from '../utils.js';
 
 export function describeTerminator({describe, testFactory}: SuiteContext) {

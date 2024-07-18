@@ -5,6 +5,7 @@ import {
   QueryTerminatorExpr,
   SingleLiteralValue,
   compileQuery,
+  interpretQuery,
   materialize,
   optimize,
   renderSqlite,
@@ -12,6 +13,7 @@ import {
 import {expect} from 'vitest';
 import {
   Comment,
+  EXAMPLE_DB,
   Post,
   User,
   comments,
@@ -21,7 +23,7 @@ import {
   staticUsers,
   users,
 } from './db.js';
-import {TestApi} from './index.js';
+import {TestApi} from './describe.js';
 
 export {Comment, Post, User};
 
@@ -156,20 +158,25 @@ export interface DescribeOrmUtils {
 }
 
 export function buildUtils(
-  provider: DataSource,
-  {test}: TestApi
+  {test}: TestApi,
+  provider: DataSource | undefined
 ): DescribeOrmUtils {
-  async function execute<T>(
-    query: Query<T> | QueryTerminatorExpr<any>,
+  async function checkProvider(
+    query: Query<any> | QueryTerminatorExpr<any>,
+    expectedRows: any[],
     options?: ExecuteOptions
-  ): Promise<T[]> {
+  ) {
+    if (!provider) {
+      return;
+    }
+
     const projection =
       query instanceof Query ? query.projection : query.projection();
     let sql = compileQuery(query, {withParameters: false});
     if (options?.optOnly) {
       sql = optimize(sql);
     }
-    const referenceCommand = renderSqlite(sql);
+    const referenceCommand = provider.render(sql);
     const referenceRows = await provider
       .select(referenceCommand)
       .then((rows: any[]) => rows.map(x => materialize(x, projection)));
@@ -177,6 +184,8 @@ export function buildUtils(
     if (options?.ignoreOrder) {
       canonSort(referenceRows);
     }
+
+    expect(referenceRows).to.deep.equal(expectedRows);
 
     for (const withOptimization of options?.optOnly ? [true] : [true, false]) {
       for (const withParameters of [true, false]) {
@@ -219,8 +228,24 @@ export function buildUtils(
         }
       }
     }
+  }
 
-    return referenceRows;
+  async function execute<T>(
+    query: Query<T> | QueryTerminatorExpr<any>,
+    options?: ExecuteOptions
+  ): Promise<T[]> {
+    const expectedRows =
+      query instanceof Query
+        ? interpretQuery(query, {db: EXAMPLE_DB})
+        : interpretQuery(query, {db: EXAMPLE_DB});
+
+    if (options?.ignoreOrder) {
+      canonSort(expectedRows);
+    }
+
+    checkProvider(query, expectedRows, options);
+
+    return expectedRows;
   }
 
   const staticSources = [

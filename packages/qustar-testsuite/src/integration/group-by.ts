@@ -1,5 +1,5 @@
 import {Expr, FilterFn, MapValueFn, Mapping} from 'qustar';
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 
 export function describeGroupBy({describe, testFactory}: SuiteContext) {
   describe('query', () => {

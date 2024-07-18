@@ -1,5 +1,5 @@
 import {Mapping, MapValueFn} from 'qustar';
-import {SuiteContext} from '../index.js';
+import {SuiteContext} from '../describe.js';
 import {Post, QuerySet} from '../utils.js';
 
 export function describeUnique({describe, testFactory}: SuiteContext) {
