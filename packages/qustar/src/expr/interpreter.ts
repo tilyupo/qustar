@@ -825,7 +825,8 @@ function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
         if (x === true) return 1;
         if (x === false) return 0;
         if (typeof x === 'string') {
-          return Number.parseInt(x);
+          // at least zero
+          return Number.parseInt('0' + x.trim());
         }
         if (typeof x === 'number') {
           return Math.trunc(x);
@@ -839,7 +840,8 @@ function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
         if (x === true) return 1;
         if (x === false) return 0;
         if (typeof x === 'string') {
-          return Number.parseFloat(x);
+          // at least zero
+          return Number.parseFloat('0' + x.trim());
         }
         if (typeof x === 'number') {
           return x;
