@@ -1,8 +1,8 @@
 import {SqlCommand} from '../data-source.js';
-import {Sql} from '../sql/sql.js';
+import {QuerySql} from '../sql/sql.js';
 import {renderSql} from './sql.js';
 
-export function renderSqlite(sql: Sql): SqlCommand {
+export function renderSqlite(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
     emulateArrayLiteralParam: true,
     emulateXor: true,

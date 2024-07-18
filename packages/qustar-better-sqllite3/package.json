@@ -2,6 +2,9 @@
   "name": "qustar-better-sqlite3",
   "version": "0.0.1",
   "license": "MIT",
+  "engines": {
+    "node": ">=10.4.0"
+  },
   "description": "better-sqlite3 data source for qustar",
   "keywords": [
     "qustar",

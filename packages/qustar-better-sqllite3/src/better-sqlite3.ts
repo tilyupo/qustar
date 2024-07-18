@@ -6,6 +6,7 @@ import {
   convertToArgument,
   renderSqlite,
 } from 'qustar';
+import {indent} from './utils.js';
 
 export class BetterSqlite3DataSource implements DataSource {
   constructor(private readonly db: BetterSqliteDb) {}
@@ -21,12 +22,35 @@ export class BetterSqlite3DataSource implements DataSource {
   }
 
   select({src: sql, args}: SqlCommand): Promise<any[]> {
-    const preparedQuery = this.db.prepare(sql);
+    const preparedQuery = this.db.prepare(
+      // we need to add proxy select to force SQLite to rename duplicate columns
+      // otherwise node-sqlite3 will take the last column with the same name, but we expect
+      // the first column to be taken
+      `SELECT\n  node_sqlite3_proxy.*\nFROM\n  (\n${indent(sql, 2)}\n  ) AS node_sqlite3_proxy`
+    );
     const result = preparedQuery
-      .all(...args.map(convertToArgument))
+      .all(
+        ...args.map(x => {
+          // better-sqlite3 doesn't support booleans
+          if (x.value === true) {
+            return 1;
+          } else if (x.value === false) {
+            return 0;
+          } else if (
+            typeof x.value === 'number' &&
+            Number.isSafeInteger(x.value)
+          ) {
+            return BigInt(x.value);
+          } else {
+            return convertToArgument(x);
+          }
+        })
+      )
       .map((x: any) => {
         const result: any = {};
         for (const key of Object.keys(x)) {
+          // SQLite uses :<num> for duplicates
+          if (key.indexOf(':') !== -1) continue;
           result[key] = x[key];
         }
         return result;

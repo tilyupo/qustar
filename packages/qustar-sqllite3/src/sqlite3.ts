@@ -29,20 +29,16 @@ export class Sqlite3DataSource implements DataSource {
   }
 
   select(command: SqlCommand): Promise<any[]> {
-    let sql = command.src;
-    if (command.src.trimStart().toLowerCase().startsWith('select')) {
-      // we need to add proxy select to force SQLite to rename duplicate columns
-      // otherwise node-sqlite3 will take the last column with the same name, but we expect
-      // the first column to be taken
-      sql = `SELECT\n  node_sqlite3_proxy.*\nFROM\n  (\n${indent(sql, 2)}\n  ) AS node_sqlite3_proxy`;
-    }
     return new Promise((resolve, reject) => {
       this.db.all(
-        sql,
+        // we need to add proxy select to force SQLite to rename duplicate columns
+        // otherwise node-sqlite3 will take the last column with the same name, but we expect
+        // the first column to be taken
+        `SELECT\n  node_sqlite3_proxy.*\nFROM\n  (\n${indent(command.src, 2)}\n  ) AS node_sqlite3_proxy`,
         ...command.args.map(convertToArgument),
         (err: any, rows: any[]) => {
           if (err) {
-            err.message += '\n\n' + sql;
+            err.message += '\n\n' + command.src;
             reject(err);
           } else {
             resolve(

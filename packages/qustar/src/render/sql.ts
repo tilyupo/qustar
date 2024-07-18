@@ -19,6 +19,7 @@ import {
   FuncSql,
   LiteralSql,
   LookupSql,
+  QuerySql,
   RawSql,
   RowNumberSql,
   SelectSql,
@@ -50,7 +51,10 @@ export interface SqlRenderingOptions {
   escapeId: (id: string) => string;
 }
 
-export function renderSql(sql: Sql, options: SqlRenderingOptions): SqlCommand {
+export function renderSql(
+  sql: QuerySql,
+  options: SqlRenderingOptions
+): SqlCommand {
   return render(sql, new RenderingContext(options ?? {}));
 }
 
