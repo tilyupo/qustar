@@ -56,8 +56,8 @@ To execute query against a database you need a _connector_. There are many ready
 - PostgreSQL
   - work in progress
 - SQLite
-  - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3) (wrapper for [sqlite3](https://www.npmjs.com/package/sqlite3))
-  - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3) (wrapper for [better-sqlite3](https://www.npmjs.com/package/better-sqlite3))
+  - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3)
+  - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3)
 - MySQL
   - work in progress
 - SQL Server
