@@ -1345,5 +1345,5 @@ function compileFirstTerminator(
   query: Query<any>,
   ctx: CompilationContext
 ): QueryCompilationResult {
-  return _compileQuery(query.limit(1), ctx);
+  return _compileQuery(query.take(1), ctx);
 }

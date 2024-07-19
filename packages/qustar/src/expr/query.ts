@@ -243,14 +243,6 @@ export abstract class Query<T extends Value<T>> {
     return dataSource.select(command);
   }
 
-  exec(target: DataSource): Promise<T[]> {
-    return this.execute(target);
-  }
-
-  run(target: DataSource): Promise<T[]> {
-    return this.execute(target);
-  }
-
   // modificators
 
   groupBy<Result extends Mapping>({
@@ -445,7 +437,7 @@ export abstract class Query<T extends Value<T>> {
     return this.flatMap(selector);
   }
 
-  combine(options: CombineOptions<T>): Query<T> {
+  private combine(options: CombineOptions<T>): Query<T> {
     return new CombineQuery(
       new QuerySource({type: 'query', query: this}),
       options
@@ -492,11 +484,11 @@ export abstract class Query<T extends Value<T>> {
   }
 
   distinct(): Query<T> {
-    return this.distinct();
+    return this.unique();
   }
 
   uniq(): Query<T> {
-    return this.distinct();
+    return this.unique();
   }
 
   limit(limit: number, offset?: number): Query<T> {
@@ -511,7 +503,7 @@ export abstract class Query<T extends Value<T>> {
     if (end !== undefined) {
       return this.limit(end - start, start);
     } else {
-      return this.offset(start);
+      return this.skip(start);
     }
   }
 
@@ -519,7 +511,7 @@ export abstract class Query<T extends Value<T>> {
     return this.limit(count);
   }
 
-  offset(offset: number): Query<T> {
+  skip(offset: number): Query<T> {
     // SQL doesn't allow to use OFFSET without LIMIT
     return new PaginationQuery(
       new QuerySource({type: 'query', query: this}),
@@ -528,12 +520,8 @@ export abstract class Query<T extends Value<T>> {
     );
   }
 
-  skip(count: number): Query<T> {
-    return this.offset(count);
-  }
-
   drop(count: number): Query<T> {
-    return this.offset(count);
+    return this.skip(count);
   }
 
   // terminators
