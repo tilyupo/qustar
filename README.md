@@ -10,12 +10,12 @@ Query SQL database through an array-like API.
 
 Existing solutions are falling into two camps:
 
-1. **High level ORM**. ([Prisma](https://www.npmjs.com/package/prisma), [TypeORM](https://www.npmjs.com/package/typeorm)).  
-   Those provide rigid high level api that works well in simple cases but fails when something non trivial is needed. It also forces you to learn a bunch of specific API that is different for every library.
-2. **Low level SQL query builders**. ([knex](https://www.npmjs.com/package/knex), [Drizzle](https://www.npmjs.com/package/drizzle-orm)).  
-   Those don't force you to use library specific API to write queries and have SQL feal. The problem with those that they are usually too verbose.
+- **High level ORM**.  
+   Those provide rigid high level API that works well in simple cases but fails when something non trivial is needed. It also forces you to learn a bunch of specific API that is different for every library.
+- **Low level SQL query builders**.  
+   Those are more flexible and generally look similar to SQL. The problem with those is that they are too verbose for typical tasks.
 
-Qustar aims to provide familiar API and flexibility without sacrificing ease of use. We archive it through mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap`, etc).
+Qustar provides familiar API and flexibility without sacrificing ease of use. We archive it through mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap`, etc).
 
 ## Quick start
 
