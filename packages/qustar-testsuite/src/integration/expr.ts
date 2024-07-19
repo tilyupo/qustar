@@ -21,7 +21,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       test(name, async ({users}) => {
         const query = users
           .orderByAsc(x => x.id)
-          .offset(1)
+          .drop(1)
           .limit(1)
           .map(() => expr);
 

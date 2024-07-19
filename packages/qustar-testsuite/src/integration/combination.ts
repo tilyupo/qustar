@@ -7,22 +7,22 @@ export function describeCombination({
 }: SuiteContext) {
   describe('query', async () => {
     describe('combination', () => {
-      test('string combination', async ({posts, users}) => {
+      test('string union all', async ({posts, users}) => {
         const lhs = users.select(x => x.name);
         const rhs = posts.select(x => x.title);
         const query = lhs
-          .combine({other: rhs, type: 'union_all'})
+          .unionAll(rhs)
           .orderByAsc(x => x)
           .limit(3);
 
         await expectQuery(query, ['Anna', 'C#', 'C++']);
       });
 
-      test('object combination', async ({posts, users}) => {
+      test('object union all', async ({posts, users}) => {
         const lhs = users.select(x => ({id: x.id, name: x.name}));
         const rhs = posts.select(x => ({id: x.id, name: x.title}));
         const query = lhs
-          .combine({other: rhs, type: 'union_all'})
+          .unionAll(rhs)
           .orderByAsc(x => x.name)
           .limit(3);
 
@@ -33,7 +33,7 @@ export function describeCombination({
         ]);
       });
 
-      test('object combination', async ({posts, users}) => {
+      test('concat', async ({posts, users}) => {
         const lhs = users.select(x => x.id).orderByAsc(x => x);
         const rhs = posts.select(x => x.id).orderByDesc(x => x);
         const query = lhs.concat(rhs);

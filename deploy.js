@@ -2,6 +2,8 @@ const axios = require('axios');
 const {exec, spawn} = require('child_process');
 const semver = require('semver');
 const path = require('path');
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
+const {copyFileSync, rmSync} = require('fs');
 
 const packageJsonPath = path.resolve(process.cwd(), 'package.json');
 const packageJson = require(packageJsonPath);
@@ -64,6 +66,8 @@ async function publishPatch() {
 
     console.log(`Next version: ${nextVersion}`);
 
+    copyFileSync('../../LICENSE', './LICENSE');
+
     console.log('Updating package.json...');
     await updatePackageVersion(nextVersion);
     console.log('Publishing new version...');
@@ -75,8 +79,12 @@ async function publishPatch() {
     // eslint-disable-next-line n/no-process-exit
     process.exit(1);
   } finally {
-    console.log('Reverting package.json...');
-    await updatePackageVersion('0.0.1');
+    try {
+      rmSync('./LICENSE');
+    } finally {
+      console.log('Reverting package.json...');
+      await updatePackageVersion('0.0.1');
+    }
   }
 }
 

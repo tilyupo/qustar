@@ -1,12 +1,6 @@
 roadmap:
-  - type system
-  - intent between query and sql:
-      - doesn't have refs
-      - aliases instead of locator.root
-      - group by => aggregation + projection [+ filter]
-  - intent type checker
-
-- update connectors to use peer-dependency
+  - type check?
+  - update connectors to use peer-dependency
 
 bugs:
   - ref can become nullable after, for example, left join for the right entity,
@@ -39,12 +33,17 @@ gen:
   - gen bad queries and check that fails gracefully
 
 testing:
-  - fix better-sqlite3 tests
   - run tests on CI
   - run gen tests on CI for 5 minutes
   - expr interpreter
   - sql interpreter
   - optimizer canonical tests
+  - add except tests
+  - union tests
+  - intersect tests
+  - date tests
+  - datetime tests
+  - timestamp tests
 
 query compiler:
   - use one join for all props from the same ref
@@ -78,3 +77,7 @@ renderers:
     - casandra
     - firebird
     - cockroachdb
+
+done:
+  - fix better-sqlite3 tests
+  - add interpreter tests

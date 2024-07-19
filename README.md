@@ -51,20 +51,25 @@ console.log(users);
 
 ## Supported database drivers
 
-Qustar can work SQL databases:
-
-- [PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) (work in progress)
-- [SQLite](https://en.wikipedia.org/wiki/SQLite)
-- [MySQL](https://en.wikipedia.org/wiki/MySQL) (work in progress)
-- [SQL Server](https://en.wikipedia.org/wiki/Microsoft_SQL_Server) (work in progress)
-- [Oracle](https://en.wikipedia.org/wiki/Oracle_Database) (work in progress)
-- [ClickHouse](https://en.wikipedia.org/wiki/ClickHouse) (work in progress)
-- [MariaDB](https://en.wikipedia.org/wiki/MariaDB) (work in progress)
-
 To execute query against a database you need a _connector_. There are many ready to use connectors that wrap existing NodeJS drivers:
 
-- [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3) (wrapper for [sqlite3](https://www.npmjs.com/package/sqlite3))
-- [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3) (wrapper for [better-sqlite3](https://www.npmjs.com/package/better-sqlite3))
+- PostgreSQL
+  - work in progress
+- SQLite
+  - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3) (wrapper for [sqlite3](https://www.npmjs.com/package/sqlite3))
+  - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3) (wrapper for [better-sqlite3](https://www.npmjs.com/package/better-sqlite3))
+- MySQL
+  - work in progress
+- SQL Server
+  - work in progress
+- Oracle
+  - work in progress
+- ClickHouse
+  - work in progress
+- MariaDB
+  - work in progress
+
+If you implemented your own connector, let me know and I will add it to the list above!
 
 [//]: # 'todo: add a link to a guide for creating a custom connector'
 
@@ -85,14 +90,14 @@ In qustar you compose a query by calling query methods like `.filter` or `.map`:
 import {collection} from 'qustar';
 
 const users = collection('users');
-const young = users.filter(x => x.age.lt(18));
-const ids = young.map(x => x.id);
+const young = users.filter(user => user.age.lt(18));
+const ids = young.map(user => user.id);
 
 // or
 
 const ids = collection('users')
-  .filter(x => x.age.lt(18))
-  .map(x => x.id);
+  .filter(user => user.age.lt(18))
+  .map(user => user.id);
 ```
 
 Queries are immutable, so you can reuse them safely.
@@ -102,17 +107,15 @@ In methods like `.filter` or `.map` you pass a callback that returns an _express
 ```ts
 const users = collection('users');
 // for arrays you would write: users.filter(x => x.age + 1 === x.height - 5)
-const a = users.filter(x => x.age.add(1).eq(x.height.sub(5)));
+const a = users.filter(user => user.age.add(1).eq(user.height.sub(5)));
 
-// you can also use Expr static methods directly
+// you can also use Expr directly
 import {Expr} from 'qustar';
 
-const b = users.map(x => Expr.eq(x.age.add(1), x.height.sub(5));
+const b = users.map(user => Expr.eq(user.age.add(1), user.height.sub(5));
 ```
 
 We can't use native operators like `+` or `===` because JavaScript doesn't support operator overloading. You can find full list of supported operations [here](#expressions).
-
-Now lets talk more about queries and expression.
 
 ## Docs
 
@@ -122,7 +125,7 @@ Now lets talk more about queries and expression.
 
 - [raw query](#raw-query)
 
-- [queries](#queries):
+- [queries](#queries)
 
   - [pipe](#pipe)
   - [render](#render)
@@ -147,7 +150,6 @@ Now lets talk more about queries and expression.
   - [fullJoin](#fullJoin)
   - [flatMap](#flatMap)
   - [selectMany](#selectMany)
-  - [combine](#combine)
   - [union](#union)
   - [unionAll](#unionAll)
   - [intersect](#intersect)
@@ -178,7 +180,7 @@ Now lets talk more about queries and expression.
   - [length](#length)
   - [len](#len)
 
-- [expressions](#expressions):
+- [expressions](#expressions)
 
   - [from](#from)
   - [sql](#sql)
@@ -285,8 +287,6 @@ Now lets talk more about queries and expression.
 #### flatMap
 
 #### selectMany
-
-#### combine
 
 #### union
 
