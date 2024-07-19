@@ -1,6 +1,8 @@
 roadmap:
   - type check?
   - update connectors to use peer-dependency
+  - Query.sql
+  - Query.sql and Expr.sql support arguments
 
 bugs:
   - ref can become nullable after, for example, left join for the right entity,
