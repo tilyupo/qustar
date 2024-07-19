@@ -30,13 +30,13 @@ Here an example usage of qustar:
 ```ts
 // qustar can work with a variety of SQL databases, we use SQLite as an example
 import {Sqlite3Connector} from 'qustar-sqlite3';
-import {collection} from 'qustar';
+import {Query} from 'qustar';
 
 // create a Connector
 const connector = new Sqlite3Connector('/path/to/your/database');
 
 // run a query
-const users = await collection('users')
+const users = await Query.table('users')
   .orderByDesc(user => user.createdAt)
   .map(user => ({
     name: user.firstName.concat(' ', user.lastName),
@@ -75,27 +75,26 @@ If you implemented your own connector, let me know and I will add it to the list
 
 ## Usage
 
-Any query starts from a [named collection](#named-collection) or a [raw query](#raw-query). We will talk more about raw queries and named collections later, for now the basic usage looks like this:
+Any query starts from a [table](#table) or a [raw sql](#sql). We will talk more about raw queries and tables later, for now the basic usage looks like this:
 
 ```ts
-import {collection} from 'qustar';
+import {Query} from 'qustar';
 
-const users = collection('users');
-const posts = collection('posts');
+const users = Query.table('users');
 ```
 
 In qustar you compose a query by calling query methods like `.filter` or `.map`:
 
 ```ts
-import {collection} from 'qustar';
+import {Query} from 'qustar';
 
-const users = collection('users');
+const users = Query.table('users');
 const young = users.filter(user => user.age.lt(18));
 const ids = young.map(user => user.id);
 
 // or
 
-const ids = collection('users')
+const ids = Query.table('users')
   .filter(user => user.age.lt(18))
   .map(user => user.id);
 ```
@@ -105,7 +104,7 @@ Queries are immutable, so you can reuse them safely.
 In methods like `.filter` or `.map` you pass a callback that returns an _expression_. Expression represents a condition or operation you wish to do. Expressions are build using methods like `.add` or `.eq`:
 
 ```ts
-const users = collection('users');
+const users = Query.table('users');
 // for arrays you would write: users.filter(x => x.age + 1 === x.height - 5)
 const a = users.filter(user => user.age.add(1).eq(user.height.sub(5)));
 
@@ -121,12 +120,10 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
 
 ### Table of contents
 
-- [collection](#collection)
+- [Query](#query)
 
-- [raw query](#raw-query)
-
-- [queries](#queries)
-
+  - [table](#table)
+  - [sql](#sql)
   - [pipe](#pipe)
   - [render](#render)
   - [execute](#execute)
@@ -177,10 +174,10 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
   - [length](#length)
   - [len](#len)
 
-- [expressions](#expressions)
+- [Expr](#expr)
 
   - [from](#from)
-  - [sql](#sql)
+  - [sql](#sql-1)
   - [bitwiseNot](#bitwisenot)
   - [not](#not)
   - [minus](#minus)
@@ -223,21 +220,23 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
   - [in](#in)
   - [ternary](#ternary)
   - [case](#case)
-  - [case](#case)
-  - [case](#case)
   - [substring](#substring)
   - [toString](#tostring)
   - [toFloat](#tofloat)
   - [toInt](#toint)
-  - [concat](#concat)
-  - [count](#count)
-  - [avg](#avg)
-  - [average](#average)
-  - [sum](#sum)
-  - [min](#min)
-  - [max](#max)
+  - [concat](#concat-1)
+  - [count](#count-1)
+  - [avg](#avg-1)
+  - [average](#average-1)
+  - [sum](#sum-1)
+  - [min](#min-1)
+  - [max](#max-1)
 
-### Queries
+### Query
+
+#### table
+
+#### sql
 
 #### pipe
 
@@ -337,7 +336,7 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
 
 #### len
 
-### Expressions
+### Expr
 
 #### from
 
@@ -424,10 +423,6 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
 #### in
 
 #### ternary
-
-#### case
-
-#### case
 
 #### case
 

@@ -2,7 +2,6 @@ import {writeFileSync} from 'fs';
 import sqlite3 from 'sqlite3';
 import {materialize} from '../src/connector';
 import {Sqlite3Connector} from '../src/data-sources/sqlite3';
-import {collection} from '../src/dx';
 import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
 import {CompilationError, compileQuery} from '../src/expr/compiler';
 import {QueryTerminatorExpr} from '../src/expr/expr';
@@ -92,7 +91,7 @@ function init() {
   const connector = new Sqlite3Connector(db);
 
   // run the query
-  const users = await collection('users')
+  const users = await Query.table('users')
     .filter(x => x.id.ne(1))
     .orderByAsc(x => x.id)
     .limit(3)

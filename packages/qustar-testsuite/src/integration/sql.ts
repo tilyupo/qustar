@@ -1,17 +1,17 @@
-import {collection} from 'qustar';
+import {Query} from 'qustar';
 import {SuiteContext} from '../describe.js';
 
 export function describeSql({describe, expectQuery, test}: SuiteContext) {
   describe('query', () => {
     describe('sql', () => {
       test('SELECT 1 as value', async () => {
-        const query = collection({sql: 'SELECT 1 as value'});
+        const query = Query.table({sql: 'SELECT 1 as value'});
 
         await expectQuery(query, [{value: 1}]);
       });
 
       test('row_number', async () => {
-        const query = collection({
+        const query = Query.table({
           sql: `
           SELECT
             p.id,

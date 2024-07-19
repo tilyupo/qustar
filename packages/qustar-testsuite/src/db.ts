@@ -1,4 +1,4 @@
-import {Query, collection} from 'qustar';
+import {Query} from 'qustar';
 
 export interface User {
   id: number;
@@ -30,7 +30,7 @@ export interface Comment {
   parent: Comment;
 }
 
-export const users: Query<User> = collection({
+export const users: Query<User> = Query.table({
   name: 'users',
   schema: {
     posts: {
@@ -46,7 +46,7 @@ export const users: Query<User> = collection({
   },
 });
 
-export const staticUsers: Query<User> = collection({
+export const staticUsers: Query<User> = Query.table({
   name: 'users',
   dynamic: false,
   schema: {
@@ -65,7 +65,7 @@ export const staticUsers: Query<User> = collection({
   },
 });
 
-export const posts: Query<Post> = collection({
+export const posts: Query<Post> = Query.table({
   name: 'posts',
   schema: {
     author: {
@@ -82,7 +82,7 @@ export const posts: Query<Post> = collection({
   },
 });
 
-export const staticPosts: Query<Post> = collection({
+export const staticPosts: Query<Post> = Query.table({
   name: 'posts',
   dynamic: false,
   schema: {
@@ -103,7 +103,7 @@ export const staticPosts: Query<Post> = collection({
   },
 });
 
-export const comments: Query<Comment> = collection({
+export const comments: Query<Comment> = Query.table({
   name: 'comments',
   schema: {
     post: {
@@ -129,7 +129,7 @@ export const comments: Query<Comment> = collection({
   },
 });
 
-export const staticComments: Query<Comment> = collection({
+export const staticComments: Query<Comment> = Query.table({
   name: 'comments',
   dynamic: false,
   schema: {

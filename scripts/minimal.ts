@@ -1,6 +1,5 @@
 import {Database} from 'sqlite3';
 import {Sqlite3Connector} from '../src/data-sources/sqlite3';
-import {collection} from '../src/dx';
 
 (async () => {
   // connect to your favorite database
@@ -10,7 +9,7 @@ import {collection} from '../src/dx';
   const connector = new Sqlite3Connector(db);
 
   // run a query
-  const users = await collection('users')
+  const users = await Query.table('users')
     .orderByDesc(user => user.createdAt)
     .map(user => ({
       name: user.firstName.concat(' ', user.lastName),

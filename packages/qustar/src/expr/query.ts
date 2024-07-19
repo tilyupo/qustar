@@ -1,5 +1,6 @@
 import {match} from 'ts-pattern';
 import {Connector, SqlCommand} from '../connector.js';
+import {collection} from '../dx.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
@@ -159,6 +160,8 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 }
 
 export abstract class Query<T extends Value<T>> {
+  static readonly table = collection;
+
   constructor(
     public readonly source: QuerySource,
     public readonly projection: Projection

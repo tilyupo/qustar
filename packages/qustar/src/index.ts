@@ -1,5 +1,4 @@
 export {Connector, SqlCommand, cmd, materialize} from './connector.js';
-export {collection} from './dx.js';
 export {compileQuery} from './expr/compiler.js';
 export {Expr, QueryTerminatorExpr} from './expr/expr.js';
 export {gen} from './expr/gen.js';
