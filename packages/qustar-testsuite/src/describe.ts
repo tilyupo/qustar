@@ -23,7 +23,7 @@ export interface TestSuiteOptions {
   rawSql: boolean;
 }
 
-export function describeDataSourceInternal(
+export function describeConnectorInternal(
   api: TestApi,
   provider: Connector | undefined,
   options: TestSuiteOptions
@@ -57,12 +57,12 @@ export function describeDataSourceInternal(
   }
 }
 
-export function describeDataSource(
+export function describeConnector(
   api: TestApi,
   provider: Connector | undefined,
   options: Partial<TestSuiteOptions>
 ) {
-  describeDataSourceInternal(api, provider, {
+  describeConnectorInternal(api, provider, {
     fuzzing: true,
     rawSql: true,
     ...options,

@@ -1,7 +1,7 @@
 import {writeFileSync} from 'fs';
 import sqlite3 from 'sqlite3';
 import {materialize} from '../src/connector';
-import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
+import {Sqlite3Connector} from '../src/data-sources/sqlite3';
 import {collection} from '../src/dx';
 import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
 import {CompilationError, compileQuery} from '../src/expr/compiler';
@@ -11,7 +11,7 @@ import {optimize} from '../src/sql/optimizer';
 
 function init() {
   const db = new sqlite3.Database(':memory:');
-  const provider = new Sqlite3DataSource(db);
+  const provider = new Sqlite3Connector(db);
 
   db.exec(EXAMPLE_SCHEMA_INIT_SQL);
 
@@ -89,7 +89,7 @@ function init() {
 (async () => {
   // connect to your favorite database
   const db = new sqlite3.Database(':memory:');
-  const connector = new Sqlite3DataSource(db);
+  const connector = new Sqlite3Connector(db);
 
   // run the query
   const users = await collection('users')

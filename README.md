@@ -2,23 +2,24 @@
 
 [![npm version](https://img.shields.io/npm/v/qustar.svg)](https://www.npmjs.com/package/qustar)
 [![contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/tilyupo/qustar/blob/main/CONTRIBUTING.md)
-[![Coverage Status](https://img.shields.io/badge/license-MIT-blue)](https://github.com/tilyupo/qustar/blob/main/LICENSE)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/tilyupo/qustar/blob/main/LICENSE)
 
-Query SQL database though an array-like API.
+Query SQL database through an array-like API.
 
 ## Motivation
 
 Existing solutions are falling into two camps:
 
-1. **High level ORM**. ([Prisma](https://www.npmjs.com/package/prisma), [TypeORM](https://www.npmjs.com/package/typeorm).
+1. **High level ORM**. ([Prisma](https://www.npmjs.com/package/prisma), [TypeORM](https://www.npmjs.com/package/typeorm)).  
    Those provide rigid high level api that works well in simple cases but fails when something non trivial is needed. It also forces you to learn a bunch of specific API that is different for every library.
-2. **Low level SQL query builders**. ([knex](https://www.npmjs.com/package/knex), [Drizzle](https://www.npmjs.com/package/drizzle-orm)). Those don't force you to use library specific API to write queries and have SQL feal. The problem with those that they are usually too verbose.
+2. **Low level SQL query builders**. ([knex](https://www.npmjs.com/package/knex), [Drizzle](https://www.npmjs.com/package/drizzle-orm)).  
+   Those don't force you to use library specific API to write queries and have SQL feal. The problem with those that they are usually too verbose.
 
-**Qustar** aims to provide familiar API and flexibility without sacrificing ease of use. Qustar archives it throw mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap` etc).
+Qustar aims to provide familiar API and flexibility without sacrificing ease of use. We archive it through mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap`, etc).
 
 ## Quick start
 
-To star using qustar with SQLite (the list of all supported data sources is available below) run the following command:
+To start using qustar with SQLite (the list of all supported data sources is available below) run the following command:
 
 ```sh
 npm install qustar qustar-sqlite3 sqlite3
@@ -27,12 +28,12 @@ npm install qustar qustar-sqlite3 sqlite3
 Here an example usage of qustar:
 
 ```ts
-// qustar can work with a variety of SQL databases
-import {Sqlite3DataSource} from 'qustar-sqlite3';
+// qustar can work with a variety of SQL databases, we use SQLite as an example
+import {Sqlite3Connector} from 'qustar-sqlite3';
 import {collection} from 'qustar';
 
 // create a Connector
-const connector = new Sqlite3DataSource('/path/to/your/database');
+const connector = new Sqlite3Connector('/path/to/your/database');
 
 // run a query
 const users = await collection('users')

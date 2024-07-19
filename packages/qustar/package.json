@@ -27,7 +27,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "deploy": "npm run build && node ../../deploy.js",
+    "deploy": "cp ../../README.md ./ && npm run build && node ../../deploy.js && rm ./README.md",
     "test": "vitest run"
   },
   "devDependencies": {

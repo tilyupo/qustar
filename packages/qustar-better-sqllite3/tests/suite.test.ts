@@ -1,10 +1,10 @@
 import Database from 'better-sqlite3';
-import {describeDataSource} from 'qustar-testsuite';
+import {describeConnector} from 'qustar-testsuite';
 import {describe, test} from 'vitest';
-import {BetterSqlite3DataSource} from '../src/better-sqlite3.js';
+import {BetterSqlite3Connector} from '../src/better-sqlite3.js';
 
-describeDataSource(
+describeConnector(
   {test, describe},
-  new BetterSqlite3DataSource(new Database(':memory:')),
+  new BetterSqlite3Connector(new Database(':memory:')),
   {fuzzing: false}
 );

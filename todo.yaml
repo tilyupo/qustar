@@ -6,6 +6,8 @@ roadmap:
       - group by => aggregation + projection [+ filter]
   - intent type checker
 
+- update connectors to use peer-dependency
+
 bugs:
   - ref can become nullable after, for example, left join for the right entity,
     now we assume that ref condition always takes non-null entities

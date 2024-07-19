@@ -8,7 +8,7 @@ import {
 } from 'qustar';
 import {indent} from './utils.js';
 
-export class BetterSqlite3DataSource implements Connector {
+export class BetterSqlite3Connector implements Connector {
   constructor(private readonly db: BetterSqliteDb) {}
 
   render(query: QuerySql): SqlCommand {

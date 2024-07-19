@@ -1,5 +1,5 @@
 import {Database} from 'sqlite3';
-import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
+import {Sqlite3Connector} from '../src/data-sources/sqlite3';
 import {collection} from '../src/dx';
 
 (async () => {
@@ -7,7 +7,7 @@ import {collection} from '../src/dx';
   const db = new Database(':memory:');
 
   // create a Connector
-  const connector = new Sqlite3DataSource(db);
+  const connector = new Sqlite3Connector(db);
 
   // run a query
   const users = await collection('users')

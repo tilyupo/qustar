@@ -1,7 +1,7 @@
 import {writeFileSync} from 'fs';
 import {Database} from 'sqlite3';
 import {materialize} from '../src/connector';
-import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
+import {Sqlite3Connector} from '../src/data-sources/sqlite3';
 import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
 import {CompilationError, compileQuery} from '../src/expr/compiler';
 import {QueryTerminatorExpr} from '../src/expr/expr';
@@ -10,7 +10,7 @@ import {optimize} from '../src/sql/optimizer';
 
 function init() {
   const db = new Database(':memory:');
-  const provider = new Sqlite3DataSource(db);
+  const provider = new Sqlite3Connector(db);
 
   db.exec(EXAMPLE_SCHEMA_INIT_SQL);
 

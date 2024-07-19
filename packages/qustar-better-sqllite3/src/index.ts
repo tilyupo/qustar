@@ -1,1 +1,1 @@
-export {BetterSqlite3DataSource} from './better-sqlite3.js';
+export {BetterSqlite3Connector} from './better-sqlite3.js';

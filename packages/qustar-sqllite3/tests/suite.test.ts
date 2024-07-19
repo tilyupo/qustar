@@ -1,10 +1,10 @@
-import {describeDataSource} from 'qustar-testsuite';
+import {describeConnector} from 'qustar-testsuite';
 import sqlite3 from 'sqlite3';
 import {describe, test} from 'vitest';
-import {Sqlite3DataSource} from '../src/sqlite3.js';
+import {Sqlite3Connector} from '../src/sqlite3.js';
 
-describeDataSource(
+describeConnector(
   {test, describe},
-  new Sqlite3DataSource(new sqlite3.Database(':memory:')),
+  new Sqlite3Connector(new sqlite3.Database(':memory:')),
   {fuzzing: false}
 );

@@ -1,1 +1,1 @@
-export {describeDataSource} from './describe.js';
+export {describeConnector} from './describe.js';

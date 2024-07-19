@@ -1,8 +1,8 @@
 import {describe, test} from 'vitest';
 
-import {describeDataSourceInternal} from '../src/describe';
+import {describeConnectorInternal} from '../src/describe';
 
-describeDataSourceInternal({test, describe}, undefined, {
+describeConnectorInternal({test, describe}, undefined, {
   fuzzing: false,
   rawSql: false,
 });

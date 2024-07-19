@@ -1,1 +1,1 @@
-export {Sqlite3DataSource} from './sqlite3.js';
+export {Sqlite3Connector} from './sqlite3.js';

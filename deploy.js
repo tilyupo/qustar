@@ -76,7 +76,7 @@ async function publishPatch() {
     process.exit(1);
   } finally {
     console.log('Reverting package.json...');
-    await updatePackageVersion(packageJson.version);
+    await updatePackageVersion('0.0.1');
   }
 }
 
