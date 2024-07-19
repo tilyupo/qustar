@@ -130,8 +130,6 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
   - [pipe](#pipe)
   - [render](#render)
   - [execute](#execute)
-  - [exec](#exec)
-  - [run](#run)
   - [groupBy](#groupBy)
   - [filter](#filter)
   - [where](#where)
@@ -161,7 +159,6 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
   - [limit](#limit)
   - [slice](#slice)
   - [take](#take)
-  - [offset](#offset)
   - [skip](#skip)
   - [drop](#drop)
   - [max](#max)
@@ -248,10 +245,6 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
 
 #### execute
 
-#### exec
-
-#### run
-
 #### groupBy
 
 #### filter
@@ -309,8 +302,6 @@ We can't use native operators like `+` or `===` because JavaScript doesn't suppo
 #### slice
 
 #### take
-
-#### offset
 
 #### skip
 
