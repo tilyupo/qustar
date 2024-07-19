@@ -104,7 +104,7 @@ function schemaProjection(root: QuerySource, schema: Schema): Projection {
         })
       )
       .concat(
-        schema.dynamic
+        schema.additionalProperties
           ? [
               {
                 type: 'wildcard',

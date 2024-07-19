@@ -478,7 +478,7 @@ function intCollection(
 
   for (const doc of documents) {
     const entity: object = {};
-    if (collection.schema.dynamic) {
+    if (collection.schema.additionalProperties) {
       Object.assign(entity, doc);
     }
 

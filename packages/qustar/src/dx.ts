@@ -10,14 +10,14 @@ export interface GenericPropertyDescriptor<TType extends string> {
 }
 
 export interface ParentPropertyDescriptor
-  extends GenericPropertyDescriptor<'parent'> {
+  extends GenericPropertyDescriptor<'ref'> {
   readonly required?: boolean;
   readonly parent: () => Query<any>;
   readonly condition: JoinFilterFn<any, any>;
 }
 
 export interface ChildrenPropertyDescriptor
-  extends GenericPropertyDescriptor<'children'> {
+  extends GenericPropertyDescriptor<'back_ref'> {
   readonly child: () => Query<any>;
   readonly condition: JoinFilterFn<any, any>;
 }
@@ -37,8 +37,11 @@ export type PropertyDescriptor =
 export type TableProperties = Readonly<Record<string, PropertyDescriptor>>;
 
 export type TableSchema =
-  | {readonly dynamic?: true | undefined; schema?: TableProperties | undefined}
-  | {readonly dynamic: false; schema: TableProperties};
+  | {
+      readonly additionalProperties?: true | undefined;
+      schema?: TableProperties | undefined;
+    }
+  | {readonly additionalProperties: false; schema: TableProperties};
 
 export type TableSource =
   | {readonly name: string; readonly sql?: undefined}
@@ -58,14 +61,14 @@ export function collection<T extends Value<T> = any>(
   if (typeof descriptor === 'string') {
     descriptor = {name: descriptor};
   }
-  const {dynamic, schema: columns} = descriptor;
+  const {additionalProperties, schema: columns} = descriptor;
   const descriptors = Object.entries(columns ?? {});
   const schema: (table: () => Query<any>) => Schema = table => ({
-    dynamic: dynamic ?? true,
+    additionalProperties: additionalProperties ?? !columns,
     fields: descriptors
       .filter(
         (entry): entry is [string, SingleScalarType] =>
-          entry[1].type !== 'parent' && entry[1].type !== 'children'
+          entry[1].type !== 'ref' && entry[1].type !== 'back_ref'
       )
       .map(
         ([property, x]): Field => ({
@@ -79,12 +82,12 @@ export function collection<T extends Value<T> = any>(
     refs: descriptors
       .filter(
         (entry): entry is [string, RefPropertyDescriptor] =>
-          entry[1].type === 'parent' || entry[1].type === 'children'
+          entry[1].type === 'ref' || entry[1].type === 'back_ref'
       )
       .map(([property, desc]) =>
         match(desc)
           .with(
-            {type: 'parent'},
+            {type: 'ref'},
             (x): ParentRef => ({
               type: 'parent',
               child: table,
@@ -95,7 +98,7 @@ export function collection<T extends Value<T> = any>(
             })
           )
           .with(
-            {type: 'children'},
+            {type: 'back_ref'},
             (x): ChildrenRef => ({
               type: 'children',
               child: x.child,

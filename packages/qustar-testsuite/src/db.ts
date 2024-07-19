@@ -32,14 +32,15 @@ export interface Comment {
 
 export const users: Query<User> = Query.table({
   name: 'users',
+  additionalProperties: true,
   schema: {
     posts: {
-      type: 'children',
+      type: 'back_ref',
       child: () => posts,
       condition: (user, post) => user.id.eq(post.author_id),
     },
     comments: {
-      type: 'children',
+      type: 'back_ref',
       child: () => comments,
       condition: (user, comment) => user.id.eq(comment.commenter_id),
     },
@@ -48,17 +49,16 @@ export const users: Query<User> = Query.table({
 
 export const staticUsers: Query<User> = Query.table({
   name: 'users',
-  dynamic: false,
   schema: {
     id: {type: 'i32', nullable: false},
     name: {type: 'varchar', nullable: false},
     posts: {
-      type: 'children',
+      type: 'back_ref',
       child: () => staticPosts,
       condition: (user, post) => user.id.eq(post.author_id),
     },
     comments: {
-      type: 'children',
+      type: 'back_ref',
       child: () => staticComments,
       condition: (user, comment) => user.id.eq(comment.commenter_id),
     },
@@ -67,15 +67,16 @@ export const staticUsers: Query<User> = Query.table({
 
 export const posts: Query<Post> = Query.table({
   name: 'posts',
+  additionalProperties: true,
   schema: {
     author: {
-      type: 'parent',
+      type: 'ref',
       required: true,
       parent: () => users,
       condition: (user, post) => user.id.eq(post.author_id),
     },
     comments: {
-      type: 'children',
+      type: 'back_ref',
       child: () => comments,
       condition: (post, comment) => post.id.eq(comment.post_id),
     },
@@ -84,19 +85,18 @@ export const posts: Query<Post> = Query.table({
 
 export const staticPosts: Query<Post> = Query.table({
   name: 'posts',
-  dynamic: false,
   schema: {
     id: {type: 'i32', nullable: false},
     title: {type: 'varchar', nullable: false},
     author_id: {type: 'i32', nullable: false},
     author: {
-      type: 'parent',
+      type: 'ref',
       required: true,
       parent: () => staticUsers,
       condition: (user, post) => user.id.eq(post.author_id),
     },
     comments: {
-      type: 'children',
+      type: 'back_ref',
       child: () => staticComments,
       condition: (post, comment) => post.id.eq(comment.post_id),
     },
@@ -105,21 +105,22 @@ export const staticPosts: Query<Post> = Query.table({
 
 export const comments: Query<Comment> = Query.table({
   name: 'comments',
+  additionalProperties: true,
   schema: {
     post: {
-      type: 'parent',
+      type: 'ref',
       required: true,
       parent: () => posts,
       condition: (post, comment) => post.id.eq(comment.post_id),
     },
     author: {
-      type: 'parent',
+      type: 'ref',
       required: true,
       parent: () => users,
       condition: (user, comment) => user.id.eq(comment.commenter_id),
     },
     parent: {
-      type: 'parent',
+      type: 'ref',
       parent: () => comments,
       condition: (parent, comment) => parent.id.eq(comment.parent_id),
     },
@@ -131,7 +132,6 @@ export const comments: Query<Comment> = Query.table({
 
 export const staticComments: Query<Comment> = Query.table({
   name: 'comments',
-  dynamic: false,
   schema: {
     id: {type: 'i32', nullable: false},
     text: {type: 'varchar', nullable: false},
@@ -139,19 +139,19 @@ export const staticComments: Query<Comment> = Query.table({
     commenter_id: {type: 'i32', nullable: false},
     parent_id: {type: 'i32', nullable: true},
     post: {
-      type: 'parent',
+      type: 'ref',
       required: true,
       parent: () => staticPosts,
       condition: (post, comment) => post.id.eq(comment.post_id),
     },
     author: {
-      type: 'parent',
+      type: 'ref',
       required: true,
       parent: () => staticUsers,
       condition: (user, comment) => user.id.eq(comment.commenter_id),
     },
     parent: {
-      type: 'parent',
+      type: 'ref',
       parent: () => staticComments,
       condition: (parent, comment) => parent.id.eq(comment.parent_id),
     },

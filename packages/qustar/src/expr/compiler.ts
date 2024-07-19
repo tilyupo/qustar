@@ -1081,7 +1081,6 @@ function compileFuncExpr(
   if (expr.func === 'to_string') {
     const proj = expr.args[0].projection();
     assert(proj.type === 'scalar');
-    console.log('!!SuPEORT TYPE:', proj.scalarType.type);
     if (proj.scalarType.type === 'boolean') {
       return {
         sql: {

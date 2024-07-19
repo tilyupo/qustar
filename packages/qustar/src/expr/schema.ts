@@ -10,7 +10,7 @@ export interface Field {
 }
 
 export interface Schema {
-  readonly dynamic: boolean;
+  readonly additionalProperties: boolean;
   readonly fields: readonly Field[];
   readonly refs: readonly Ref[];
 }
