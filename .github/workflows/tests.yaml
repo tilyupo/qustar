@@ -1,0 +1,27 @@
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+name: qustar
+
+jobs:
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['16.x', '18.x', '20.x', '22.x']
+
+    steps:
+      - uses: AutoModality/action-clean@v1
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - run: npm run bootstrap
+      - run: npm run test
