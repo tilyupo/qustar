@@ -1,6 +1,6 @@
 import {writeFileSync} from 'fs';
 import sqlite3 from 'sqlite3';
-import {materialize} from '../src/data-source';
+import {materialize} from '../src/connector';
 import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
 import {collection} from '../src/dx';
 import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
@@ -89,14 +89,14 @@ function init() {
 (async () => {
   // connect to your favorite database
   const db = new sqlite3.Database(':memory:');
-  const dataSource = new Sqlite3DataSource(db);
+  const connector = new Sqlite3DataSource(db);
 
   // run the query
   const users = await collection('users')
     .filter(x => x.id.ne(1))
     .orderByAsc(x => x.id)
     .limit(3)
-    .execute(dataSource);
+    .execute(connector);
 
   // use the result
   console.log(users);

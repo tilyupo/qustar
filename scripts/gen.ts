@@ -1,6 +1,6 @@
 import {writeFileSync} from 'fs';
 import {Database} from 'sqlite3';
-import {materialize} from '../src/data-source';
+import {materialize} from '../src/connector';
 import {Sqlite3DataSource} from '../src/data-sources/sqlite3';
 import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
 import {CompilationError, compileQuery} from '../src/expr/compiler';

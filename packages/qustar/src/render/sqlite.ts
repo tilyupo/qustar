@@ -1,4 +1,4 @@
-import {SqlCommand} from '../data-source.js';
+import {SqlCommand} from '../connector.js';
 import {QuerySql} from '../sql/sql.js';
 import {renderSql} from './sql.js';
 

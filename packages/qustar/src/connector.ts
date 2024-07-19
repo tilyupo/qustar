@@ -23,7 +23,7 @@ export namespace SqlCommand {
   }
 }
 
-export interface DataSource {
+export interface Connector {
   render(query: QuerySql): SqlCommand;
   select(query: SqlCommand): Promise<any[]>;
   execute(statement: string): Promise<void>;

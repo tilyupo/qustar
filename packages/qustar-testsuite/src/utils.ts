@@ -1,6 +1,6 @@
 import {mkdirSync, writeFileSync} from 'fs';
 import {
-  DataSource,
+  Connector,
   Query,
   QueryTerminatorExpr,
   SingleLiteralValue,
@@ -159,7 +159,7 @@ export interface DescribeOrmUtils {
 
 export function buildUtils(
   {test}: TestApi,
-  provider: DataSource | undefined
+  provider: Connector | undefined
 ): DescribeOrmUtils {
   async function checkProvider(
     query: Query<any> | QueryTerminatorExpr<any>,

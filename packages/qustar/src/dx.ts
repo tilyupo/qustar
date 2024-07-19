@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {SqlCommand} from './data-source.js';
+import {SqlCommand} from './connector.js';
 import {ProxyQuery, Query, QuerySource} from './expr/query.js';
 import {ChildrenRef, Field, ParentRef, Schema} from './expr/schema.js';
 import {SingleScalarType} from './literal.js';

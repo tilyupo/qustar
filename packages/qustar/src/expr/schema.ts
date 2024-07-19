@@ -1,4 +1,4 @@
-import {SqlCommand} from '../data-source.js';
+import {SqlCommand} from '../connector.js';
 import {SingleScalarType} from '../literal.js';
 import {JoinFilterFn} from '../types.js';
 import {PropPath} from './projection.js';

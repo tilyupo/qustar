@@ -6,8 +6,8 @@ import {collection} from '../src/dx';
   // connect to your favorite database
   const db = new Database(':memory:');
 
-  // create a DataSource
-  const dataSource = new Sqlite3DataSource(db);
+  // create a Connector
+  const connector = new Sqlite3DataSource(db);
 
   // run a query
   const users = await collection('users')
@@ -17,7 +17,7 @@ import {collection} from '../src/dx';
       age: user.age,
     }))
     .limit(3)
-    .execute(dataSource);
+    .execute(connector);
 
   // use the result
   console.log(users);

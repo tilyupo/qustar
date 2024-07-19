@@ -1,6 +1,6 @@
 import {Database as BetterSqliteDb} from 'better-sqlite3';
 import {
-  DataSource,
+  Connector,
   QuerySql,
   SqlCommand,
   convertToArgument,
@@ -8,7 +8,7 @@ import {
 } from 'qustar';
 import {indent} from './utils.js';
 
-export class BetterSqlite3DataSource implements DataSource {
+export class BetterSqlite3DataSource implements Connector {
   constructor(private readonly db: BetterSqliteDb) {}
 
   render(query: QuerySql): SqlCommand {

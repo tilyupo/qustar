@@ -1,4 +1,4 @@
-import {DataSource} from 'qustar';
+import {Connector} from 'qustar';
 import {describeFuzzing} from './fuzzing.js';
 import {describeCombination} from './integration/combination.js';
 import {describeExpr} from './integration/expr.js';
@@ -25,7 +25,7 @@ export interface TestSuiteOptions {
 
 export function describeDataSourceInternal(
   api: TestApi,
-  provider: DataSource | undefined,
+  provider: Connector | undefined,
   options: TestSuiteOptions
 ) {
   if (provider) {
@@ -59,7 +59,7 @@ export function describeDataSourceInternal(
 
 export function describeDataSource(
   api: TestApi,
-  provider: DataSource | undefined,
+  provider: Connector | undefined,
   options: Partial<TestSuiteOptions>
 ) {
   describeDataSourceInternal(api, provider, {
@@ -73,7 +73,7 @@ export interface SuiteContext extends DescribeOrmUtils {
   describe: (name: string, f: () => Promise<void> | void) => void;
 }
 
-export async function init(provider: DataSource) {
+export async function init(provider: Connector) {
   const sql = /*sql*/ `
     CREATE TABLE users (
       id INT NOT NULL,

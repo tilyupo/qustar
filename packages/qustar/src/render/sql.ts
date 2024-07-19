@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {SqlCommand, cmd} from '../data-source.js';
+import {SqlCommand, cmd} from '../connector.js';
 import {isNumeric} from '../expr/expr.js';
 import {
   ArrayLiteral,

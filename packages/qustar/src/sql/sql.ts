@@ -1,4 +1,4 @@
-import {SqlCommand} from '../data-source.js';
+import {SqlCommand} from '../connector.js';
 import {JoinType, OrderByNulls, OrderByType} from '../expr/query.js';
 import {Literal} from '../literal.js';
 
