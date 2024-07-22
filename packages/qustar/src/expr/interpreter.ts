@@ -870,6 +870,17 @@ function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
 
       return (target as string).substring(start, end);
     })
+    .with('length', () => {
+      const target = intExpr(expr.args[0], ctx);
+
+      assert(target === null || typeof target === 'string');
+
+      if (target === null) {
+        return null;
+      }
+
+      return target.length;
+    })
     .exhaustive();
 }
 
