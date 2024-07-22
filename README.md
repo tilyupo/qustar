@@ -207,7 +207,7 @@ const posts = Query.table({
   schema: {
     author: {
       type: 'ref',
-      // post can exist without an author
+      // post can't exist without an author
       required: true,
       references: () => Query.table('users'),
       condition: (post, user) => post.authorId.eq(user.id),
@@ -268,7 +268,7 @@ const peopleCount = studentNames.unionAll(teacherNames).count();
 const studentNames = Query.table('students').map(student => student.name);
 const teacherNames = Query.table('teachers').map(teacher => teacher.name);
 
-// concat preserves ordering, as it does for an array or a string in JS
+// concat preserves original ordering
 const allNames = studentNames.concat(teacherNames);
 ```
 
@@ -293,7 +293,7 @@ const studentOnlyNames = studentNames.except(techerNames);
 #### .flatMap(mapper)
 
 ```ts
-// posts by users alter than 10 years old
+// posts by users older than 10 years old
 const postsWithAuthor = Query.table('users').flatMap(user =>
   Query.table('posts')
     .filter(post => post.authorId.eq(user.id))
@@ -301,7 +301,7 @@ const postsWithAuthor = Query.table('users').flatMap(user =>
 );
 ```
 
-Qustar also supports `back_ref` properties natively:
+Qustar also supports `back_ref` properties:
 
 ```ts
 const users = Query.table({
@@ -347,40 +347,40 @@ const posts = Query.table('posts')
     // users table from the above example
     right: users,
     condition: (post, user) => post.authorId.eq(user.id),
-    // notice that we put whole author entity under the author property
-    select: (post, author) => ({...post, author}),
+    // notice that we put the whole user entity under the author property
+    select: (post, user) => ({...post, author: user}),
   })
   // do something with the result
   .orderByAsc(({author}) => author.name);
 ```
 
-Why do we need to know schema ahead of time to allow putting an entity as a nested field? This is because of the SQL limitations. When we don't know all columns of a table, we have to use SQL wildcard `*` operator to select all columns. The way the operator works we can't add a prefix to selected columns. This means that some column names might overlap and we can't do anything about it. That is why we need to know all columns that need to be selected.
+Why do we need to know schema ahead of time to put an entity as a nested field? This is because of the SQL limitations. When we don't know all columns of the table, we have to use SQL wildcard `*` operator to select all columns. The operator can't add a prefix to selected columns. This means that some column names might overlap and we can't do anything about it. That is why we need to know all columns that need to be projected inside a nested object.
 
 In the example above we can use `{...post}`, because it's used at the top level (SQL wildcard works at the top level as well). `{nested: {...post}}` whouldn't work.
 
 The list of supported column types:
 
-- _boolean_: true or false
-- _null_: NULL
-- _uuid_: any valid uuid
-- _i8_: 8 bit integer
-- _i16_: 16 bit integer
-- _i32_: 32 bit integer
-- _i64_: 64 bit integer
-- _u8_: 8 bit unsigned integer
-- _u16_: 16 bit unsigned integer
-- _u32_: 32 bit unsigned integer
-- _u64_: 64 bit unsigned integer
-- _f32_: 32 bit floating point number
-- _f64_: 64 bit floating point number
-- _dynamic_: any type
-- _text_: variable length string
+- **boolean**: true or false
+- **null**: NULL
+- **uuid**: any valid uuid
+- **i8**: 8 bit integer
+- **i16**: 16 bit integer
+- **i32**: 32 bit integer
+- **i64**: 64 bit integer
+- **u8**: 8 bit unsigned integer
+- **u16**: 16 bit unsigned integer
+- **u32**: 32 bit unsigned integer
+- **u64**: 64 bit unsigned integer
+- **f32**: 32 bit floating point number
+- **f64**: 64 bit floating point number
+- **dynamic**: any type
+- **text**: variable length string
 
 [//]: '#' 'todo: add ref/back_ref docs'
 
 #### Raw sql
 
-You can use raw SQL to query you database like so:
+You can use raw SQL like so:
 
 ```ts
 const users = Query.sql`SELECT * from users`
@@ -388,7 +388,7 @@ const users = Query.sql`SELECT * from users`
   .map(user => user.id);
 ```
 
-You can also use aliases in nested query like so:
+You can also use aliases in a nested query like so:
 
 ```ts
 const bobPosts = Query.table('users').flatMap(
