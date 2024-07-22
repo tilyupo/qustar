@@ -379,6 +379,12 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return Expr.from(lhs).substring(indexStart, indexEnd);
   }
 
+  static length_<T extends Nullable<string>, Index extends Nullable<number>>(
+    lhs: ScalarOperand<T>
+  ): Expr<NullPropagate<Index, T>> {
+    return Expr.from(lhs).length();
+  }
+
   static toString<T extends Nullable<SingleLiteralValue>>(
     lhs: ScalarOperand<T>
   ): Expr<NullPropagate<T, string>> {
@@ -418,6 +424,10 @@ export abstract class Expr<T extends SingleLiteralValue> {
     operand: ScalarOperand<T>
   ): Expr<T> {
     return Expr.from(operand).average();
+  }
+
+  static mean<T extends Nullable<number>>(operand: ScalarOperand<T>): Expr<T> {
+    return Expr.from(operand).mean();
   }
 
   static sum<T extends Nullable<number>>(operand: ScalarOperand<T>): Expr<T> {
@@ -632,6 +642,10 @@ export abstract class Expr<T extends SingleLiteralValue> {
     ]);
   }
 
+  length<TIndex extends Nullable<number>>(): Expr<NullPropagate<TIndex, T>> {
+    return new FuncExpr<NullPropagate<TIndex, T>>('length', [this]);
+  }
+
   toString(): Expr<NullPropagate<T, string>> {
     return new FuncExpr<NullPropagate<T, string>>('to_string', [this]);
   }
@@ -669,6 +683,10 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return this.avg();
   }
 
+  mean(): Expr<Nullable<T>> {
+    return this.avg();
+  }
+
   sum(): Expr<Nullable<T>> {
     return new FuncExpr('sum', [this]);
   }
@@ -692,7 +710,8 @@ export type Func =
   | 'count'
   | 'sum'
   | 'max'
-  | 'min';
+  | 'min'
+  | 'length';
 
 export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
   constructor(
@@ -719,7 +738,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: {
-          type: 'varchar',
+          type: 'text',
           nullable,
         },
         expr: this,
@@ -728,7 +747,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: {
-          type: 'varchar',
+          type: 'text',
           nullable,
         },
         expr: this,
@@ -737,7 +756,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: {
-          type: 'varchar',
+          type: 'text',
           nullable,
         },
         expr: this,
@@ -780,6 +799,15 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: firstArgProj.scalarType,
+        expr: this,
+      };
+    } else if (this.func === 'length') {
+      const firstArgProj = argProjections[0];
+      assert(firstArgProj.type === 'scalar', 'checked above that scalar');
+      assertString(firstArgProj.scalarType);
+      return {
+        type: 'scalar',
+        scalarType: {type: 'i32', nullable},
         expr: this,
       };
     }
@@ -913,7 +941,7 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
           // todo: handle promotion gracefully
           type:
             isChar(left.scalarType) || isChar(right.scalarType)
-              ? 'varchar'
+              ? 'text'
               : 'f64',
           nullable: left.scalarType.nullable || right.scalarType.nullable,
         },
@@ -1290,7 +1318,7 @@ export function isNumeric(type: ScalarType): boolean {
 
 export function isChar(type: ScalarType): boolean {
   return (
-    type.type === 'varchar' ||
+    type.type === 'text' ||
     type.type === 'char' ||
     type.type === 'dynamic' ||
     type.type === 'null'
@@ -1312,6 +1340,19 @@ export function isInt(type: ScalarType): boolean {
   );
 }
 
+export function isString(type: ScalarType): boolean {
+  return (
+    type.type === 'text' ||
+    type.type === 'char' ||
+    type.type === 'dynamic' ||
+    type.type === 'null'
+  );
+}
+
 export function assertInt(type: ScalarType): void {
   assert(isInt(type), 'type is not integer: ' + type.type);
+}
+
+export function assertString(type: ScalarType): void {
+  assert(isString(type), 'type is not string: ' + type.type);
 }

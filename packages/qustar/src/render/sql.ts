@@ -130,6 +130,10 @@ function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
         fn: 'concat',
         args: sql.args.map(x => render(x, ctx)),
       }))
+      .with('length', () => ({
+        fn: 'length',
+        args: sql.args.map(x => render(x, ctx)),
+      }))
       .exhaustive();
 
     return cmd`${fn}(${SqlCommand.join(args, ', ')})`;
@@ -278,7 +282,7 @@ function renderSingleLiteralInline(literal: SingleLiteral): SqlCommand {
       throw new Error('SQLite does not support timestamptz literals');
     })
     .with({type: {type: 'uuid'}}, ({value}) => cmd`'${value}'`)
-    .with({type: {type: 'varchar'}}, ({value}) => cmd`'${value}'`)
+    .with({type: {type: 'text'}}, ({value}) => cmd`'${value}'`)
     .with({type: {type: 'char'}}, ({value}) => cmd`'${value}'`)
     .with({type: {type: 'dynamic'}}, () => {
       throw new Error('cannot inline scalar dynamic value');

@@ -963,7 +963,7 @@ function genSingleLiteralExpr(
         })
     );
   }
-  if (scalarType.type === 'varchar' || dynamic) {
+  if (scalarType.type === 'text' || dynamic) {
     push(() =>
       Expr.from(ctx.array(1, 5, () => ctx.int(0, 5).toString()).join(''))
     );

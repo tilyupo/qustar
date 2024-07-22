@@ -46,6 +46,8 @@ testing:
   - date tests
   - datetime tests
   - timestamp tests
+  - add string length tests
+  - add mean tests
 
 query compiler:
   - use one join for all props from the same ref

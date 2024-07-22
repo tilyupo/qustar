@@ -603,10 +603,6 @@ export abstract class Query<T extends Value<T>> {
   length(): QueryTerminatorExpr<number> {
     return this.size();
   }
-
-  len(): QueryTerminatorExpr<number> {
-    return this.size();
-  }
 }
 
 function proxyProjection(source: QuerySource): Projection {

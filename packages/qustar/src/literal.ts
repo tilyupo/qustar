@@ -71,8 +71,8 @@ export interface TimestamptzLiteral
   extends GenericLiteral<GenericScalarType<'timestamptz'>, Date> {}
 export interface DynamicLiteral
   extends GenericLiteral<GenericScalarType<'dynamic'>, SingleLiteralValue> {}
-export interface VarcharLiteral
-  extends GenericLiteral<GenericScalarType<'varchar'>, string> {}
+export interface TextLiteral
+  extends GenericLiteral<GenericScalarType<'text'>, string> {}
 export interface CharLiteral extends GenericLiteral<Char, string> {}
 
 export type StaticSingleLiteral =
@@ -94,7 +94,7 @@ export type StaticSingleLiteral =
   | TimetzLiteral
   | TimestampLiteral
   | TimestamptzLiteral
-  | VarcharLiteral
+  | TextLiteral
   | CharLiteral;
 
 export type SingleLiteral = StaticSingleLiteral | DynamicLiteral;
@@ -141,7 +141,7 @@ export function inferLiteral(value: LiteralValue): Literal {
 
   if (typeof value === 'string') {
     return {
-      type: {type: 'varchar', nullable: false},
+      type: {type: 'text', nullable: false},
       value,
     };
   }

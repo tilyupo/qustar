@@ -9,29 +9,27 @@ export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;
 }
 
-export interface ParentPropertyDescriptor
+export interface RefPropertyDescriptor
   extends GenericPropertyDescriptor<'ref'> {
   readonly required?: boolean;
-  readonly parent: () => Query<any>;
+  readonly references: () => Query<any>;
   readonly condition: JoinFilterFn<any, any>;
 }
 
-export interface ChildrenPropertyDescriptor
+export interface BackRefPropertyDescriptor
   extends GenericPropertyDescriptor<'back_ref'> {
-  readonly child: () => Query<any>;
+  readonly references: () => Query<any>;
   readonly condition: JoinFilterFn<any, any>;
 }
 
-type RefPropertyDescriptor =
-  | ParentPropertyDescriptor
-  | ChildrenPropertyDescriptor;
+type NavPropertyDescriptor = RefPropertyDescriptor | BackRefPropertyDescriptor;
 
 export type ScalarPropertyDescriptor = Omit<SingleScalarType, 'nullable'> & {
   nullable?: boolean;
 };
 
 export type PropertyDescriptor =
-  | RefPropertyDescriptor
+  | NavPropertyDescriptor
   | ScalarPropertyDescriptor;
 
 export type TableProperties = Readonly<Record<string, PropertyDescriptor>>;
@@ -81,7 +79,7 @@ export function collection<T extends Value<T> = any>(
       ),
     refs: descriptors
       .filter(
-        (entry): entry is [string, RefPropertyDescriptor] =>
+        (entry): entry is [string, NavPropertyDescriptor] =>
           entry[1].type === 'ref' || entry[1].type === 'back_ref'
       )
       .map(([property, desc]) =>
@@ -92,16 +90,17 @@ export function collection<T extends Value<T> = any>(
               type: 'parent',
               child: table,
               nullable: x.required !== true,
-              parent: x.parent,
+              parent: x.references,
               path: [property],
-              condition: x.condition,
+              // todo: unify condition orders
+              condition: (a, b) => x.condition(b, a),
             })
           )
           .with(
             {type: 'back_ref'},
             (x): ChildrenRef => ({
               type: 'children',
-              child: x.child,
+              child: x.references,
               parent: table,
               path: [property],
               condition: x.condition,

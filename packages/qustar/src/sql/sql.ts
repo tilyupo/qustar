@@ -41,6 +41,7 @@ export type FuncSql = GenericFuncSql<
   | 'to_int'
   | 'to_float'
   | 'coalesce'
+  | 'length'
 >;
 
 export interface GenericFuncSql<TFunc extends string>
@@ -256,7 +257,7 @@ export const constStrLiteral: LiteralSql = {
   type: 'literal',
   parameter: false,
   literal: {
-    type: {type: 'varchar', nullable: false},
+    type: {type: 'text', nullable: false},
     value: 'const',
   },
 };
