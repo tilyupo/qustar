@@ -10,7 +10,17 @@ import {indent} from './utils.js';
 
 // vitest doesn't crash with segmentation error while using sqlite3
 export class Sqlite3Connector implements Connector {
-  constructor(private readonly db: Sqlite3Db) {}
+  private readonly db: Sqlite3Db;
+
+  constructor(filename: string);
+  constructor(db: Sqlite3Db);
+  constructor(dbOrFilename: Sqlite3Db | string) {
+    if (typeof dbOrFilename === 'string') {
+      this.db = new Sqlite3Db(dbOrFilename);
+    } else {
+      this.db = dbOrFilename;
+    }
+  }
 
   render(query: QuerySql): SqlCommand {
     return renderSqlite(query);

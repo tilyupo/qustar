@@ -6,20 +6,9 @@
 
 Query SQL database through an array-like API.
 
-## Motivation
-
-Existing solutions are falling into two camps:
-
-- **High level ORM**.  
-   Those provide rigid high level API that works well in simple cases but fails when something non trivial is needed. It also forces you to learn a bunch of specific API that is different for every library.
-- **Low level SQL query builders**.  
-   Those are more flexible and generally look similar to SQL. The problem with those is that they are too verbose for typical tasks.
-
-Qustar provides familiar API and flexibility without sacrificing ease of use. We archive it through mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap`, etc).
-
 ## Quick start
 
-To start using qustar with SQLite (the list of all supported data sources is available below) run the following command:
+To start using qustar with SQLite (the list of all supported data sources is [available below](#supported-database-drivers)) run the following command:
 
 ```sh
 npm install qustar qustar-sqlite3 sqlite3
@@ -48,6 +37,17 @@ const users = await Query.table('users')
 // use the result
 console.log(users);
 ```
+
+## Why
+
+Existing solutions are falling into two camps:
+
+- **High level ORM**.  
+   Those provide rigid high level API that works well in simple cases but fails when something non trivial is needed. It also forces you to learn a bunch of specific API that is different for every library.
+- **Low level SQL query builders**.  
+   Those are more flexible and generally look similar to SQL. The problem with those is that they are too verbose for typical tasks.
+
+Qustar provides familiar API and flexibility without sacrificing ease of use. We archive it through mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap`, etc).
 
 ## Supported database drivers
 
