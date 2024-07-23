@@ -240,18 +240,6 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         ),
         'none'
       );
-
-      testExpr(
-        "1 <= 2 ? 'true' : 'false' is 'true'",
-        Expr.ternary(Expr.lte(1, 2), 'true', 'false'),
-        'true'
-      );
-
-      testExpr(
-        "1 >= 2 ? 'true' : 'false' is 'false'",
-        Expr.ternary(Expr.gte(1, 2), 'true', 'false'),
-        'false'
-      );
     });
 
     describe('literal', () => {

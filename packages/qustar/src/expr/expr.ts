@@ -318,28 +318,6 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // case
 
-  static ternary<T extends SingleLiteralValue>(
-    condition: ScalarOperand<boolean>,
-    consequent: ScalarOperand<T>,
-    alternate: ScalarOperand<T>
-  ): Expr<T> {
-    return new CaseExpr<T>(
-      Expr.from(condition),
-      [
-        {
-          condition: Expr.from(true),
-          result: Expr.from(consequent),
-        },
-        {
-          condition: Expr.from(false),
-          result: Expr.from(alternate),
-        },
-      ],
-      // safety: condition is true or false, fallback is never used
-      Expr.from(null) as unknown as Expr<T>
-    );
-  }
-
   static case<T extends SingleLiteralValue>(
     subject: ScalarOperand<any>,
     whens: readonly CaseWhenPublic<T>[]
