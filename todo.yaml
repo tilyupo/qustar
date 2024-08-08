@@ -1,8 +1,14 @@
 roadmap:
   - type check?
   - update connectors to use peer-dependency
-  - Query.sql
-  - Query.sql and Expr.sql support arguments
+  - Query.sql + support arguments
+
+docs:
+  - move comparison out of why and far away
+  - it's not obvious that map works at SQL level
+  - Usage doc is too verbose, Andrei whats an high level overview like https://diesel.rs/ examples
+  - dynamic schema is not obvious
+  - list of features at the top
 
 bugs:
   - ref can become nullable after, for example, left join for the right entity,

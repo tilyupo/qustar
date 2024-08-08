@@ -69,7 +69,7 @@ function render(sql: Sql, ctx: RenderingContext): SqlCommand {
     .with({type: 'lookup'}, x => renderLookup(x, ctx))
     .with({type: 'select'}, x => renderSelect(x, ctx))
     .with({type: 'unary'}, x => renderUnary(x, ctx))
-    .with({type: 'raw'}, x => renderRaw(x))
+    .with({type: 'raw'}, x => renderRaw(x, ctx))
     .with({type: 'row_number'}, x => renderRowNumber(x, ctx))
     .exhaustive();
 }
@@ -214,8 +214,21 @@ function renderUnary(sql: UnarySql, ctx: RenderingContext): SqlCommand {
   return prefix ? cmd`${op} ${inner}` : cmd`${inner} ${op}`;
 }
 
-function renderRaw(sql: RawSql): SqlCommand {
-  return sql;
+function renderRaw(sql: RawSql, ctx: RenderingContext): SqlCommand {
+  const src = [sql.src[0]];
+  const args: Literal[] = [];
+
+  for (let i = 1; i < sql.src.length; i += 1) {
+    const arg = render(sql.args[i - 1], ctx);
+    args.push(...arg.args);
+    src.push(`(${arg.src})`);
+    src.push(sql.src[i]);
+  }
+
+  return {
+    src: src.join(''),
+    args,
+  };
 }
 
 function renderRowNumber(sql: RowNumberSql, ctx: RenderingContext): SqlCommand {

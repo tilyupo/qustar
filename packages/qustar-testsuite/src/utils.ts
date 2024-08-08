@@ -47,6 +47,7 @@ export interface ExecuteOptions {
   readonly debug?: boolean;
   readonly staticOnly?: boolean;
   readonly ignoreOrder?: boolean;
+  readonly checkInterpret?: boolean;
 }
 
 function canonSort<T>(arr: T[]) {
@@ -163,7 +164,7 @@ export function buildUtils(
 ): DescribeOrmUtils {
   async function checkProvider(
     query: Query<any> | QueryTerminatorExpr<any>,
-    expectedRows: any[],
+    expectedRows: any[] | undefined,
     options?: ExecuteOptions
   ) {
     if (!provider) {
@@ -185,7 +186,9 @@ export function buildUtils(
       canonSort(referenceRows);
     }
 
-    expect(referenceRows).to.deep.equal(expectedRows);
+    if (expectedRows !== undefined) {
+      expect(referenceRows).to.deep.equal(expectedRows);
+    }
 
     for (const withOptimization of options?.optOnly ? [true] : [true, false]) {
       for (const withParameters of [true, false]) {
@@ -228,6 +231,8 @@ export function buildUtils(
         }
       }
     }
+
+    return referenceRows;
   }
 
   async function execute<T>(
@@ -235,17 +240,23 @@ export function buildUtils(
     options?: ExecuteOptions
   ): Promise<T[]> {
     const expectedRows =
-      query instanceof Query
-        ? interpretQuery(query, {db: EXAMPLE_DB})
-        : interpretQuery(query, {db: EXAMPLE_DB});
+      (options?.checkInterpret ?? false)
+        ? query instanceof Query
+          ? interpretQuery(query, {db: EXAMPLE_DB})
+          : interpretQuery(query, {db: EXAMPLE_DB})
+        : undefined;
 
-    if (options?.ignoreOrder) {
+    if (options?.ignoreOrder && expectedRows) {
       canonSort(expectedRows);
     }
 
-    checkProvider(query, expectedRows, options);
+    const result = await checkProvider(query, expectedRows, options);
 
-    return expectedRows;
+    if (result === undefined && expectedRows === undefined) {
+      throw new Error('must checkInterpret or have a provider');
+    }
+
+    return (expectedRows ?? result)!;
   }
 
   const staticSources = [

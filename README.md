@@ -6,6 +6,8 @@
 
 Query SQL database through an array-like API.
 
+[//]: '#' 'todo: make it obvious that all operations translated to 100% SQL'
+
 ## Quick start
 
 To start using qustar with SQLite (the list of all supported data sources is [available below](#supported-database-drivers)) run the following command:

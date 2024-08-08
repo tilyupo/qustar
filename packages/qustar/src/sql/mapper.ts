@@ -215,7 +215,11 @@ function mapUnary(sql: UnarySql, mapper: SqlMapper): UnarySql {
 }
 
 function mapRaw(sql: RawSql, mapper: SqlMapper): Sql {
-  return mapper.raw(sql);
+  return mapper.raw({
+    type: sql.type,
+    src: sql.src,
+    args: sql.args.map(x => mapSql(x, mapper)),
+  });
 }
 
 function mapRowNumber(sql: RowNumberSql, mapper: SqlMapper): Sql {

@@ -139,8 +139,8 @@ export interface LookupSql extends GenericSql<'lookup'> {
 // === raw ===
 
 export interface RawSql extends GenericSql<'raw'> {
-  readonly src: string;
-  readonly args: Literal[];
+  readonly src: TemplateStringsArray;
+  readonly args: Sql[];
 }
 
 // === select ===

@@ -1,7 +1,7 @@
 import {match} from 'ts-pattern';
 import {
+  ArrayLiteralValue,
   Literal,
-  LiteralValue,
   ScalarType,
   SingleLiteralValue,
   inferLiteral,
@@ -62,8 +62,8 @@ export abstract class Expr<T extends SingleLiteralValue> {
   // sql
 
   static sql<T extends SingleLiteralValue>(
-    src: string,
-    ...args: LiteralValue[]
+    src: TemplateStringsArray,
+    ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
   ): Expr<T> {
     return new SqlExpr<T>(src, args);
   }
@@ -1163,8 +1163,10 @@ export class LiteralExpr<T extends SingleLiteralValue> extends Expr<T> {
 
 export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
   constructor(
-    public readonly src: string,
-    public readonly args: LiteralValue[] = []
+    public readonly src: TemplateStringsArray,
+    public readonly args: Array<
+      ScalarOperand<SingleLiteralValue> | ArrayLiteralValue
+    >
   ) {
     super();
   }

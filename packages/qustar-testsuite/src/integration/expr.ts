@@ -204,9 +204,17 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
     });
 
     describe('sql', () => {
-      testExpr('1 + 1', Expr.sql('1 + 1'), 2);
-      testExpr('1 + ?', Expr.sql('1 + ?', 2), 3);
-      testExpr('SELECT 1', Expr.sql('SELECT ?', 2), 2);
+      testExpr('1 + 1', Expr.sql`1 + 1`, 2);
+      testExpr('1 + ?', Expr.sql`1 + ${2}`, 3);
+      testExpr('SELECT 1', Expr.sql`SELECT ${2}`, 2);
+
+      test('${comments.id} + 1', async ({comments}) => {
+        const query = comments
+          .map(x => Expr.sql`${x.id} + 1`)
+          .orderByAsc(x => x);
+
+        await expectQuery(query, [6, 7, 8, 9]);
+      });
     });
 
     describe('case', () => {

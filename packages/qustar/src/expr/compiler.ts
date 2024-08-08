@@ -765,7 +765,7 @@ function _compileExpr(
     locator: x => compileScalarLocatorExpr(x, ctx),
     queryTerminator: x => _compileQueryTerminatorExpr(x, ctx),
     func: x => compileFuncExpr(x, ctx),
-    sql: x => compileSqlExpr(x),
+    sql: x => compileSqlExpr(x, ctx),
   });
 }
 
@@ -1147,14 +1147,31 @@ function compileLiteralExpr(
   };
 }
 
-function compileSqlExpr(expr: SqlExpr<any>): ExprCompilationResult {
+function compileSqlExpr(
+  expr: SqlExpr<any>,
+  ctx: CompilationContext
+): ExprCompilationResult {
+  const args = expr.args.map((arg): ExprCompilationResult => {
+    if (arg instanceof Expr) {
+      return _compileExpr(arg, ctx);
+    }
+
+    return {
+      sql: {
+        type: 'literal',
+        literal: inferLiteral(arg),
+        parameter: ctx.withParameters,
+      },
+      joins: [],
+    };
+  });
   return {
     sql: {
       type: 'raw',
       src: expr.src,
-      args: expr.args.map(inferLiteral),
+      args: args.map(x => x.sql),
     },
-    joins: [],
+    joins: args.flatMap(x => x.joins),
   };
 }
 
