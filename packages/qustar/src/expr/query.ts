@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
 import {Connector, SqlCommand} from '../connector.js';
-import {collection} from '../dx.js';
+import {TableSchema, collection, publicSchemaToInternalSchema} from '../dx.js';
 import {ArrayLiteralValue, SingleLiteralValue} from '../literal.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
@@ -124,7 +124,11 @@ export class QuerySource {
   constructor(
     public readonly inner:
       | {readonly type: 'collection'; readonly collection: Collection}
-      | {readonly type: 'query'; readonly query: Query<any>}
+      | {
+          readonly type: 'query';
+          readonly query: Query<any>;
+          readonly schema?: Schema;
+        }
       | {
           readonly type: 'view';
           readonly view: View;
@@ -134,7 +138,9 @@ export class QuerySource {
       .with({type: 'collection'}, ({collection}) =>
         schemaProjection(this, collection.schema)
       )
-      .with({type: 'query'}, ({query}) => query.projection)
+      .with({type: 'query'}, ({query, schema}) =>
+        schema ? schemaProjection(this, schema) : query.projection
+      )
       .with({type: 'view'}, ({view}) => schemaProjection(this, view.schema))
       .exhaustive();
   }
@@ -161,6 +167,7 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 
 export abstract class Query<T extends Value<T>> {
   static readonly table = collection;
+
   static sql<T extends Value<T> = any>(
     src: TemplateStringsArray,
     ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
@@ -258,6 +265,16 @@ export abstract class Query<T extends Value<T>> {
   execute(connector: Connector): Promise<T[]> {
     const command = connector.render(this.pipe(compileQuery, optimize));
     return connector.select(command);
+  }
+
+  schema<TNew extends Value<TNew> = T>(schema: TableSchema): Query<TNew> {
+    return new ProxyQuery(
+      new QuerySource({
+        type: 'query',
+        query: this,
+        schema: publicSchemaToInternalSchema(() => this, schema),
+      })
+    ) as Query<TNew>;
   }
 
   // modificators

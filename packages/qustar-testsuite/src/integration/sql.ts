@@ -42,6 +42,24 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
 
         await expectQuery(query, [6, 9, 6]);
       });
+
+      test('schema', async () => {
+        const query = Query.sql`SELECT * FROM posts`
+          .schema({
+            additionalProperties: true,
+            schema: {
+              author: {
+                type: 'ref',
+                references: () => Query.table('users'),
+                condition: (post, user) => post.author_id.eq(user.id),
+              },
+            },
+          })
+          .orderByAsc(x => x.id)
+          .map(x => x.author.id);
+
+        await expectQuery(query, [1, 1, 1, 2, 2, 3]);
+      });
     });
   });
 }

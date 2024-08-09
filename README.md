@@ -408,8 +408,7 @@ const bobPosts = Query.table('users').flatMap(
 You can wrap a raw sql query in `Query.schema` to specify columns staticaly:
 
 ```ts
-const users = Query.schema({
-  query: Query.sql`SELECT * FROM users`,
+const users = query: Query.sql`SELECT * FROM users`.schema({
   // uncomment if you don't want to specify all columns
   // aditionalProperties: true,
   schema: {

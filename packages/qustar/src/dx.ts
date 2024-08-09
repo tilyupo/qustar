@@ -46,21 +46,21 @@ export type TableSource =
 
 export type TableDescriptor = TableSchema & TableSource;
 
-export function collection<T extends Value<T> = any>(
-  collectionName: string
-): Query<T>;
-export function collection<T extends Value<T> = any>(
-  descriptor: TableDescriptor
-): Query<T>;
-export function collection<T extends Value<T> = any>(
-  descriptor: TableDescriptor | string
-): Query<T> {
-  if (typeof descriptor === 'string') {
-    descriptor = {name: descriptor};
-  }
-  const {additionalProperties, schema: columns} = descriptor;
+export function publicSchemaToInternalSchema(
+  table: () => Query<any>,
+  {additionalProperties, schema: columns}: TableSchema
+): Schema {
   const descriptors = Object.entries(columns ?? {});
-  const schema: (table: () => Query<any>) => Schema = table => ({
+  const nonRefDescriptors = descriptors.filter(
+    entry => entry[1].type !== 'ref' && entry[1].type !== 'back_ref'
+  );
+  if (!(additionalProperties ?? true) && nonRefDescriptors.length === 0) {
+    throw new Error(
+      'schema must define at least one field or additionalProperties !== true'
+    );
+  }
+
+  return {
     additionalProperties: additionalProperties ?? !columns,
     fields: descriptors
       .filter(
@@ -108,7 +108,23 @@ export function collection<T extends Value<T> = any>(
           )
           .exhaustive()
       ),
-  });
+  };
+}
+
+export function collection<T extends Value<T> = any>(
+  collectionName: string
+): Query<T>;
+export function collection<T extends Value<T> = any>(
+  descriptor: TableDescriptor
+): Query<T>;
+export function collection<T extends Value<T> = any>(
+  descriptor: TableDescriptor | string
+): Query<T> {
+  if (typeof descriptor === 'string') {
+    descriptor = {name: descriptor};
+  }
+  const schema: (table: () => Query<any>) => Schema = table =>
+    publicSchemaToInternalSchema(table, descriptor);
   if (descriptor.name) {
     const table: Query<T> = new ProxyQuery<T>(
       new QuerySource({
