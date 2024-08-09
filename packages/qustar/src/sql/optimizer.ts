@@ -135,6 +135,8 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
     inner.joins.every(x => x.type === 'inner') &&
     // don't merge if has aggregate function
     // example: SELECT SUM(x) FROM (SELECT (SELECT 1) x) y;
+    //
+    // check that outer has no column that has an aggregate function
     (outer.columns.every(column => {
       if (column.type === 'wildcard') return true;
 
@@ -152,6 +154,7 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
 
       return !hasAggFunc;
     }) ||
+      // check that inner has no column that is a subquery
       inner.columns.every(column => {
         if (column.type === 'wildcard') return true;
 
