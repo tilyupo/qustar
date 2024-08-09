@@ -44,6 +44,7 @@ export function queryToSql(query: Query<any> | QueryTerminatorExpr<any>) {
 
 export interface ExecuteOptions {
   readonly optOnly?: boolean;
+  readonly rawOnly?: boolean;
   readonly debug?: boolean;
   readonly staticOnly?: boolean;
   readonly ignoreOrder?: boolean;
@@ -171,6 +172,12 @@ export function buildUtils(
       return;
     }
 
+    if (options?.optOnly && options.rawOnly) {
+      throw new Error(
+        'invalid execute options: at least opt or raw must be allowed'
+      );
+    }
+
     const projection =
       query instanceof Query ? query.projection : query.projection();
     let sql = compileQuery(query, {withParameters: false});
@@ -190,7 +197,10 @@ export function buildUtils(
       expect(referenceRows).to.deep.equal(expectedRows);
     }
 
-    for (const withOptimization of options?.optOnly ? [true] : [true, false]) {
+    for (const withOptimization of [true, false]) {
+      if (options?.rawOnly && withOptimization) continue;
+      if (options?.optOnly && !withOptimization) continue;
+
       for (const withParameters of [true, false]) {
         let sql = compileQuery(query, {withParameters});
         if (withOptimization) {

@@ -1,15 +1,15 @@
 import {match} from 'ts-pattern';
-import {SYSTEM_COLUMN_PREFIX} from '../expr/compiler.js';
+import {aggregationFuncs, SYSTEM_COLUMN_PREFIX} from '../expr/compiler.js';
 import {assert, assertNever, compose} from '../utils.js';
 import {ID_SQL_MAPPER, mapQuery, mapSelect, mapSql} from './mapper.js';
 import {
   BinarySql,
+  falseLiteral,
   LookupSql,
   QuerySql,
   SelectSql,
   SelectSqlColumn,
   Sql,
-  falseLiteral,
   trueLiteral,
 } from './sql.js';
 
@@ -132,7 +132,41 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
     outer.groupBy === undefined &&
     inner.columns.slice(0, -1).findIndex(x => x.type === 'wildcard') === -1 &&
     outer.joins.every(x => x.type === 'inner') &&
-    inner.joins.every(x => x.type === 'inner')
+    inner.joins.every(x => x.type === 'inner') &&
+    // don't merge if has aggregate function
+    // example: SELECT SUM(x) FROM (SELECT (SELECT 1) x) y;
+    (outer.columns.every(column => {
+      if (column.type === 'wildcard') return true;
+
+      let hasAggFunc = false;
+
+      mapSql(column.expr, {
+        ...ID_SQL_MAPPER,
+        func: x => {
+          if (aggregationFuncs.some(aggFunc => aggFunc === x.func)) {
+            hasAggFunc = true;
+          }
+          return x;
+        },
+      });
+
+      return !hasAggFunc;
+    }) ||
+      inner.columns.every(column => {
+        if (column.type === 'wildcard') return true;
+
+        let hasSelect = false;
+
+        mapSql(column.expr, {
+          ...ID_SQL_MAPPER,
+          select: x => {
+            hasSelect = true;
+            return x;
+          },
+        });
+
+        return !hasSelect;
+      }))
   );
 }
 

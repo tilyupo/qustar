@@ -1253,7 +1253,16 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
         expr: this,
       };
     } else if (this.terminator === 'first') {
-      return this.query.projection;
+      const queryProj = this.query.projection;
+      assert(
+        queryProj.type === 'scalar',
+        'query projection is not scalar: ' + queryProj.type
+      );
+      return {
+        type: 'scalar',
+        scalarType: queryProj.scalarType,
+        expr: this,
+      };
     }
 
     return assertNever(

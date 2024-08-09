@@ -1212,10 +1212,12 @@ function _compileQueryTerminatorExpr(
     .exhaustive();
 }
 
+export const aggregationFuncs = ['avg', 'min', 'max', 'sum', 'count'] as const;
+
 function compileAggregationTerminator(
   query: Query<any>,
   // nit: move to separate type
-  func: 'avg' | 'min' | 'max' | 'sum' | 'count',
+  func: (typeof aggregationFuncs)[number],
   ctx: CompilationContext
 ): QueryCompilationResult {
   assert(

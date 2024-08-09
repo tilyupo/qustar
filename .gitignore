@@ -63,3 +63,4 @@ yarn-error.log
 
 # debug
 /debug
+/packages/*/debug
