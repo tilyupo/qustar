@@ -124,7 +124,7 @@ export function collection<T extends Value<T> = any>(
     descriptor = {name: descriptor};
   }
   const schema: (table: () => Query<any>) => Schema = table =>
-    publicSchemaToInternalSchema(table, descriptor);
+    publicSchemaToInternalSchema(table, descriptor as TableSchema);
   if (descriptor.name) {
     const table: Query<T> = new ProxyQuery<T>(
       new QuerySource({

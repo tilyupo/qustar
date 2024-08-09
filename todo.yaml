@@ -2,6 +2,7 @@ roadmap:
   - type check?
   - update connectors to use peer-dependency
   - Query.sql + support arguments
+  - fix bug users.orderByDesc(x => x.id).map(x => x.id).first(x => x)
 
 docs:
   - move comparison out of why and far away

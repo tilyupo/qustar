@@ -8,7 +8,6 @@ import {
 import {Database as Sqlite3Db} from 'sqlite3';
 import {indent} from './utils.js';
 
-// vitest doesn't crash with segmentation error while using sqlite3
 export class Sqlite3Connector implements Connector {
   private readonly db: Sqlite3Db;
 

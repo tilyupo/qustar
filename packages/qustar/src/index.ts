@@ -5,6 +5,7 @@ export {gen} from './expr/gen.js';
 export {interpretQuery} from './expr/interpreter.js';
 export {Query} from './expr/query.js';
 export {SingleLiteralValue} from './literal.js';
+export {renderPostgreSql} from './render/postgresql.js';
 export {convertToArgument} from './render/sql.js';
 export {renderSqlite} from './render/sqlite.js';
 export {optimize} from './sql/optimizer.js';

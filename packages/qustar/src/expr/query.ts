@@ -2,6 +2,7 @@ import {match} from 'ts-pattern';
 import {Connector, SqlCommand} from '../connector.js';
 import {TableSchema, collection, publicSchemaToInternalSchema} from '../dx.js';
 import {ArrayLiteralValue, SingleLiteralValue} from '../literal.js';
+import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
 import {
@@ -254,17 +255,24 @@ export abstract class Query<T extends Value<T>> {
     )(this);
   }
 
-  render(dialect: 'sqlite', options?: RenderOptions): SqlCommand {
+  render(
+    dialect: 'sqlite' | 'postgresql',
+    options?: RenderOptions
+  ): SqlCommand {
     return this.pipe(
       x => compileQuery(x, options),
       x => ((options?.optimize ?? true) ? optimize(x) : x),
       match(dialect)
         .with('sqlite', () => renderSqlite)
+        .with('postgresql', () => renderPostgreSql)
         .exhaustive()
     );
   }
 
-  renderInline(dialect: 'sqlite', options?: RenderOptions): string {
+  renderInline(
+    dialect: 'sqlite' | 'postgresql',
+    options?: RenderOptions
+  ): string {
     return this.render(dialect, {...options, withParameters: false}).src;
   }
 

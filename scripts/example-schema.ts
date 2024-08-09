@@ -41,8 +41,8 @@ export const EXAMPLE_SCHEMA_INIT_SQL = /*sql*/ `
   INSERT INTO
     comments(id, text, post_id, commenter_id, deleted, parent_id)
   VALUES
-    (5, 'cool', 1, 1, 0, NULL),
-    (6, '+1', 1, 1, 0, 5),
-    (7, 'me too', 1, 2, 0, NULL),
-    (8, 'nah', 2, 3, 1, 5);
+    (5, 'cool', 1, 1, CAST(0 as BIT), NULL),
+    (6, '+1', 1, 1, CAST(0 as BIT), 5),
+    (7, 'me too', 1, 2, CAST(0 as BIT), NULL),
+    (8, 'nah', 2, 3, CAST(1 as BIT), 5);
 `;
