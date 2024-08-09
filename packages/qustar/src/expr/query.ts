@@ -20,7 +20,7 @@ import {
   Value,
 } from '../types.js';
 import {arrayEqual, assert, assertNever, startsWith} from '../utils.js';
-import {compileQuery} from './compiler.js';
+import {CompilationOptions, compileQuery} from './compiler.js';
 import {
   Expr,
   LocatorExpr,
@@ -165,6 +165,8 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
   readonly having?: FilterFn<T>;
 }
 
+export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
+
 export abstract class Query<T extends Value<T>> {
   static readonly table = collection;
 
@@ -252,14 +254,18 @@ export abstract class Query<T extends Value<T>> {
     )(this);
   }
 
-  render(dialect: 'sqlite'): SqlCommand {
+  render(dialect: 'sqlite', options?: RenderOptions): SqlCommand {
     return this.pipe(
-      compileQuery,
-      optimize,
+      x => compileQuery(x, options),
+      x => ((options?.optimize ?? true) ? optimize(x) : x),
       match(dialect)
         .with('sqlite', () => renderSqlite)
         .exhaustive()
     );
+  }
+
+  renderInline(dialect: 'sqlite', options?: RenderOptions): string {
+    return this.render(dialect, {...options, withParameters: false}).src;
   }
 
   execute(connector: Connector): Promise<T[]> {
