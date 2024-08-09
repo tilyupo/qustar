@@ -151,7 +151,18 @@ function mapSqlSource(source: SqlSource, mapper: SqlMapper): SqlSource {
           query: mapQuery(x.query, mapper),
         })
       )
-      .with({type: 'sql'}, x => x)
+      .with(
+        {type: 'sql'},
+        (source): SqlSource => ({
+          type: source.type,
+          as: source.as,
+          sql: {
+            type: source.sql.type,
+            src: source.sql.src,
+            args: source.sql.args.map(arg => mapSql(arg, mapper)),
+          },
+        })
+      )
       .exhaustive()
   );
 }

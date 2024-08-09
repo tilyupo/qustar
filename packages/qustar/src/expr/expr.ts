@@ -10,6 +10,7 @@ import {Assert, Equal} from '../types.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
 import {Query, QuerySource} from './query.js';
+import {SqlTeamplte} from './schema.js';
 
 // expr
 
@@ -65,7 +66,7 @@ export abstract class Expr<T extends SingleLiteralValue> {
     src: TemplateStringsArray,
     ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
   ): Expr<T> {
-    return new SqlExpr<T>(src, args);
+    return new SqlExpr<T>({src, args});
   }
 
   // unary
@@ -1162,12 +1163,7 @@ export class LiteralExpr<T extends SingleLiteralValue> extends Expr<T> {
 }
 
 export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
-  constructor(
-    public readonly src: TemplateStringsArray,
-    public readonly args: Array<
-      ScalarOperand<SingleLiteralValue> | ArrayLiteralValue
-    >
-  ) {
+  constructor(readonly sql: SqlTeamplte) {
     super();
   }
 

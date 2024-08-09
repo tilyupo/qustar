@@ -1,6 +1,10 @@
-import {SqlCommand} from '../connector.js';
-import {SingleScalarType} from '../literal.js';
+import {
+  ArrayLiteralValue,
+  SingleLiteralValue,
+  SingleScalarType,
+} from '../literal.js';
 import {JoinFilterFn} from '../types.js';
+import {ScalarOperand} from './expr.js';
 import {PropPath} from './projection.js';
 import {Query} from './query.js';
 
@@ -20,8 +24,13 @@ export interface Collection {
   readonly schema: Schema;
 }
 
+export interface SqlTeamplte {
+  readonly src: TemplateStringsArray;
+  readonly args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>;
+}
+
 export interface View {
-  readonly command: SqlCommand;
+  readonly sql: SqlTeamplte;
   readonly schema: Schema;
 }
 

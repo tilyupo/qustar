@@ -165,40 +165,61 @@ function _compileQuery(
 }
 
 function compileQuerySource(
-  alias: QuerySource,
+  source: QuerySource,
   ctx: CompilationContext
 ): CompilationResult<SqlSource> {
-  if (alias.inner.type === 'query') {
-    const query = _compileQuery(alias.inner.query, ctx);
+  if (source.inner.type === 'query') {
+    const query = _compileQuery(source.inner.query, ctx);
     return {
       sql: {
         type: 'query',
-        as: ctx.getAlias(alias),
+        as: ctx.getAlias(source),
         query: query.sql,
       },
       joins: query.joins,
     };
-  } else if (alias.inner.type === 'collection') {
+  } else if (source.inner.type === 'collection') {
     return {
       sql: {
         type: 'table',
-        as: ctx.getAlias(alias),
-        table: alias.inner.collection.name,
+        as: ctx.getAlias(source),
+        table: source.inner.collection.name,
       },
       joins: [],
     };
-  } else if (alias.inner.type === 'view') {
+  } else if (source.inner.type === 'view') {
+    const args = source.inner.view.sql.args.map(
+      (arg): ExprCompilationResult => {
+        if (arg instanceof Expr) {
+          return _compileExpr(arg, ctx);
+        }
+
+        return {
+          sql: {
+            type: 'literal',
+            literal: inferLiteral(arg),
+            parameter: ctx.withParameters,
+          },
+          joins: [],
+        };
+      }
+    );
+
     return {
       sql: {
         type: 'sql',
-        command: alias.inner.view.command,
-        as: ctx.getAlias(alias),
+        sql: {
+          type: 'raw',
+          src: source.inner.view.sql.src,
+          args: args.map(x => x.sql),
+        },
+        as: ctx.getAlias(source),
       },
-      joins: [],
+      joins: args.flatMap(x => x.joins),
     };
   }
 
-  assertNever(alias.inner, 'invalid QuerySource.type');
+  assertNever(source.inner, 'invalid QuerySource.type');
 }
 
 export const SCALAR_COLUMN_ALIAS = 'value';
@@ -1151,7 +1172,7 @@ function compileSqlExpr(
   expr: SqlExpr<any>,
   ctx: CompilationContext
 ): ExprCompilationResult {
-  const args = expr.args.map((arg): ExprCompilationResult => {
+  const args = expr.sql.args.map((arg): ExprCompilationResult => {
     if (arg instanceof Expr) {
       return _compileExpr(arg, ctx);
     }
@@ -1168,7 +1189,7 @@ function compileSqlExpr(
   return {
     sql: {
       type: 'raw',
-      src: expr.src,
+      src: expr.sql.src,
       args: args.map(x => x.sql),
     },
     joins: args.flatMap(x => x.joins),

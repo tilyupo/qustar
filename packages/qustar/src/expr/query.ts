@@ -1,7 +1,7 @@
 import {match} from 'ts-pattern';
 import {Connector, SqlCommand} from '../connector.js';
 import {collection} from '../dx.js';
-import {SingleLiteralValue} from '../literal.js';
+import {ArrayLiteralValue, SingleLiteralValue} from '../literal.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
 import {
@@ -161,6 +161,20 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 
 export abstract class Query<T extends Value<T>> {
   static readonly table = collection;
+  static sql<T extends Value<T> = any>(
+    src: TemplateStringsArray,
+    ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
+  ): Query<T> {
+    return new ProxyQuery(
+      new QuerySource({
+        type: 'view',
+        view: {
+          sql: {src, args},
+          schema: {additionalProperties: true, fields: [], refs: []},
+        },
+      })
+    );
+  }
 
   constructor(
     public readonly source: QuerySource,

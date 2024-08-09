@@ -441,7 +441,7 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
       .with(
         {type: 'sql'},
         sql =>
-          cmd`FROM\n  (\n${indentCommand(sql.command, 2, ctx)}\n  ) AS ${ctx.escapeId(sql.as)}`
+          cmd`FROM\n  (\n${indentCommand(renderRaw(sql.sql, ctx), 2, ctx)}\n  ) AS ${ctx.escapeId(sql.as)}`
       )
       .exhaustive();
 
@@ -470,7 +470,8 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
       .with({type: 'table'}, right => cmd`${right.table}`)
       .with(
         {type: 'sql'},
-        right => cmd`(\n${indentCommand(right.command, 2, ctx)}\n  )`
+        right =>
+          cmd`(\n${indentCommand(renderRaw(right.sql, ctx), 2, ctx)}\n  )`
       )
       .exhaustive();
 

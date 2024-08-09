@@ -1,12 +1,15 @@
+/* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
+import {
+  Query,
+  QueryTerminatorExpr,
+  compileQuery,
+  materialize,
+  optimize,
+} from 'qustar';
+import {Sqlite3Connector} from 'qustar-sqlite3';
 import sqlite3 from 'sqlite3';
-import {materialize} from '../src/connector';
-import {Sqlite3Connector} from '../src/data-sources/sqlite3';
-import {EXAMPLE_SCHEMA_INIT_SQL} from '../src/example-schema';
-import {CompilationError, compileQuery} from '../src/expr/compiler';
-import {QueryTerminatorExpr} from '../src/expr/expr';
-import {Query} from '../src/expr/query';
-import {optimize} from '../src/sql/optimizer';
+import {EXAMPLE_SCHEMA_INIT_SQL} from './example-schema.js';
 
 function init() {
   const db = new sqlite3.Database(':memory:');
@@ -47,7 +50,7 @@ function init() {
         );
       }
 
-      const rows = await provider.execute(renderedQuery);
+      const rows = await provider.select(renderedQuery);
 
       if (!silent) {
         console.log(renderedQuery.src);
@@ -66,8 +69,8 @@ function init() {
 
         console.log();
       }
-    } catch (err) {
-      if (err instanceof CompilationError) {
+    } catch (err: any) {
+      if (err.sql && err.joins) {
         writeFileSync(
           './debug/sql.json',
           JSON.stringify(err.sql, undefined, 2)
@@ -86,17 +89,14 @@ function init() {
 }
 
 (async () => {
-  // connect to your favorite database
-  const db = new sqlite3.Database(':memory:');
-  const connector = new Sqlite3Connector(db);
+  const {execute} = init();
 
-  // run the query
-  const users = await Query.table('users')
-    .filter(x => x.id.ne(1))
-    .orderByAsc(x => x.id)
-    .limit(3)
-    .execute(connector);
+  const users = await Query.table('users').map(x =>
+    Query.sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`.first(
+      x => x.id
+    )
+  );
 
-  // use the result
-  console.log(users);
+  const result = execute(users);
+  console.log(result);
 })();

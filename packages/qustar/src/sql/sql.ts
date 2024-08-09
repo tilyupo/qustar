@@ -1,4 +1,3 @@
-import {SqlCommand} from '../connector.js';
 import {JoinType, OrderByNulls, OrderByType} from '../expr/query.js';
 import {Literal} from '../literal.js';
 
@@ -207,7 +206,7 @@ export interface SelectSqlFromTable extends GenericSelectSqlFrom<'table'> {
 }
 
 export interface SelectSqlFromSql extends GenericSelectSqlFrom<'sql'> {
-  readonly command: SqlCommand;
+  readonly sql: RawSql;
 }
 
 export type SqlSource =

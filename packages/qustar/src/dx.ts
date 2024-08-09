@@ -1,7 +1,6 @@
 import {match} from 'ts-pattern';
-import {SqlCommand} from './connector.js';
 import {ProxyQuery, Query, QuerySource} from './expr/query.js';
-import {ChildrenRef, Field, ParentRef, Schema} from './expr/schema.js';
+import {ChildrenRef, Field, ParentRef, Schema, View} from './expr/schema.js';
 import {SingleScalarType} from './literal.js';
 import {JoinFilterFn, Value} from './types.js';
 
@@ -43,7 +42,7 @@ export type TableSchema =
 
 export type TableSource =
   | {readonly name: string; readonly sql?: undefined}
-  | {readonly name?: undefined; readonly sql: string | SqlCommand};
+  | {readonly name?: undefined; readonly sql: string | View};
 
 export type TableDescriptor = TableSchema & TableSource;
 
@@ -127,8 +126,11 @@ export function collection<T extends Value<T> = any>(
         new QuerySource({
           type: 'view',
           view: {
-            command: {
-              src: descriptor.sql,
+            sql: {
+              src: {
+                raw: [descriptor.sql],
+                ...[descriptor.sql],
+              },
               args: [],
             },
             schema: schema(() => table),
@@ -140,10 +142,7 @@ export function collection<T extends Value<T> = any>(
       const table: Query<T> = new ProxyQuery<T>(
         new QuerySource({
           type: 'view',
-          view: {
-            command: descriptor.sql,
-            schema: schema(() => table),
-          },
+          view: descriptor.sql,
         })
       );
       return table;

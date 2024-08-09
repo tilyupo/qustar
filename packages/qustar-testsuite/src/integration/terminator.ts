@@ -26,7 +26,7 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
         testTerm('author.id', posts => posts.min(x => x.author.id), 1);
       });
 
-      (['size', 'len', 'length', 'count'] as const).forEach(method =>
+      (['size', 'length', 'count'] as const).forEach(method =>
         describe(method, () => {
           testTerm('id', posts => posts[method](), 6);
           testTerm('title', posts => posts.limit(2)[method](), 2);
