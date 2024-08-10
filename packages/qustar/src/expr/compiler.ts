@@ -47,16 +47,16 @@ import {
 } from './query.js';
 
 export interface CompilationOptions {
-  readonly withParameters?: boolean;
+  readonly parameters?: boolean;
 }
 
 class CompilationContext {
   private aliases = new Map<QuerySource, string>();
   private aliasCounter = 1;
-  public readonly withParameters: boolean;
+  public readonly parameters: boolean;
 
   constructor(options: CompilationOptions) {
-    this.withParameters = options.withParameters ?? true;
+    this.parameters = options.parameters ?? true;
   }
 
   getAlias(source: QuerySource): string {
@@ -198,7 +198,7 @@ function compileQuerySource(
           sql: {
             type: 'literal',
             literal: inferLiteral(arg),
-            parameter: ctx.withParameters,
+            parameter: ctx.parameters,
           },
           joins: [],
         };
@@ -1162,7 +1162,7 @@ function compileLiteralExpr(
     sql: {
       type: 'literal',
       literal: expr.literal,
-      parameter: ctx.withParameters,
+      parameter: ctx.parameters,
     },
     joins: [],
   };
@@ -1181,7 +1181,7 @@ function compileSqlExpr(
       sql: {
         type: 'literal',
         literal: inferLiteral(arg),
-        parameter: ctx.withParameters,
+        parameter: ctx.parameters,
       },
       joins: [],
     };

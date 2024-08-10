@@ -30,7 +30,7 @@ export function describeFuzzing({describe, execute, test}: SuiteContext) {
           }
           (err.message +=
             '\n\n' +
-            renderSqlite(compileQuery(query, {withParameters: false})).src),
+            renderSqlite(compileQuery(query, {parameters: false})).src),
             (err.message += `\n\n seed: ${seed}`);
           throw err;
         }

@@ -17,7 +17,7 @@ function init() {
 
   async function execute<T>(query: Query<T>, silent = false) {
     try {
-      const compiledQuery = compileQuery(query, {withParameters: true});
+      const compiledQuery = compileQuery(query, {parameters: true});
       const optimizedQuery = optimize(compiledQuery);
       const renderedQuery = connector.render(optimizedQuery);
 

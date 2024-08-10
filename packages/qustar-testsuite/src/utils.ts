@@ -35,7 +35,7 @@ function indent(s: string, depth = 1): string {
 }
 
 export function queryToSql(query: Query<any> | QueryTerminatorExpr<any>) {
-  const compiledQuery = compileQuery(query, {withParameters: false});
+  const compiledQuery = compileQuery(query, {parameters: false});
   const optimizedQuery = optimize(compiledQuery);
   const renderedQuery = renderSqlite(optimizedQuery);
 
@@ -180,7 +180,7 @@ export function buildUtils(
 
     const projection =
       query instanceof Query ? query.projection : query.projection();
-    let sql = compileQuery(query, {withParameters: false});
+    let sql = compileQuery(query, {parameters: false});
     if (options?.optOnly) {
       sql = optimize(sql);
     }
@@ -201,8 +201,8 @@ export function buildUtils(
       if (options?.rawOnly && withOptimization) continue;
       if (options?.optOnly && !withOptimization) continue;
 
-      for (const withParameters of [true, false]) {
-        let sql = compileQuery(query, {withParameters});
+      for (const parameters of [true, false]) {
+        let sql = compileQuery(query, {parameters});
         if (withOptimization) {
           sql = optimize(sql);
         }

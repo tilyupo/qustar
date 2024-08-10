@@ -273,7 +273,7 @@ export abstract class Query<T extends Value<T>> {
     dialect: 'sqlite' | 'postgresql',
     options?: RenderOptions
   ): string {
-    return this.render(dialect, {...options, withParameters: false}).src;
+    return this.render(dialect, {...options, parameters: false}).src;
   }
 
   async execute(connector: Connector): Promise<T[]> {
