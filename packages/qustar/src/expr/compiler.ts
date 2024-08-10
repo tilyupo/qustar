@@ -696,12 +696,10 @@ function compileJoinQuery(
   query: JoinQuery<any>,
   ctx: CompilationContext
 ): CompilationResult<SelectSql> {
-  const filterExpr = query.options.filterExpr;
+  const filterExpr = query.options.filterExpr ?? Expr.from(1).eq(1);
 
   const right = compileQuerySource(query.options.right, ctx);
-  const filter = filterExpr
-    ? _compileExpr(filterExpr, ctx)
-    : {sql: undefined, joins: []};
+  const filter = _compileExpr(filterExpr, ctx);
   const projection = compileProjection(query, ctx);
   const joins = [...right.joins, ...filter.joins, ...projection.joins];
 

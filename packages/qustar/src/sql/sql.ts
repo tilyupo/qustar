@@ -206,7 +206,7 @@ export type SqlSource =
 
 export interface SelectSqlJoin {
   readonly right: SqlSource;
-  readonly condition: Sql | undefined;
+  readonly condition: Sql;
   readonly type: JoinType;
   readonly lateral: boolean;
 }

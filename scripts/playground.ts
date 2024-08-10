@@ -4,6 +4,7 @@ import pg from 'pg';
 import {Query, QueryTerminatorExpr, compileQuery} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
+import {posts} from '../packages/qustar-testsuite/src/db.js';
 import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
 
 function init() {
@@ -84,20 +85,7 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = Query.sql`
-    SELECT
-      p.id,
-      ROW_NUMBER () OVER (PARTITION BY p.author_id ORDER BY p.id) AS idx
-    FROM
-      posts AS p
-    ORDER BY
-      p.id
-  `
-      .schema({
-        id: 'i32',
-        idx: 'i32',
-      })
-      .map(x => ({...x, idx: x.idx.sub(1)}));
+    const query = posts.innerJoin({right: posts, select: () => 1});
 
     await execute(query);
   } finally {
