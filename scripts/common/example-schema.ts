@@ -1,16 +1,16 @@
 export const EXAMPLE_SCHEMA_INIT_SQL = /*sql*/ `
-  CREATE TABLE users (
+  CREATE TABLE IF NOT EXISTS users (
     id INT NOT NULL,
     name TEXT NOT NULL
   );
 
-  CREATE TABLE posts (
+  CREATE TABLE IF NOT EXISTS posts (
     id INT NOT NULL,
     title TEXT NOT NULL,
     author_id INT NOT NULL
   );
 
-  CREATE TABLE comments (
+  CREATE TABLE IF NOT EXISTS comments (
     id INT NOT NULL,
     text TEXT NOT NULL,
     post_id INT NOT NULL,
@@ -21,6 +21,7 @@ export const EXAMPLE_SCHEMA_INIT_SQL = /*sql*/ `
 
   --
 
+  DELETE FROM users;
   INSERT INTO
     users
   VALUES
@@ -28,6 +29,7 @@ export const EXAMPLE_SCHEMA_INIT_SQL = /*sql*/ `
     (2, 'Anna'),
     (3, 'Max');
 
+  DELETE FROM posts;
   INSERT INTO
     posts
   VALUES
@@ -38,6 +40,7 @@ export const EXAMPLE_SCHEMA_INIT_SQL = /*sql*/ `
     (5, 'C++', 2),
     (6, 'Python', 3);
 
+  DELETE FROM comments;
   INSERT INTO
     comments(id, text, post_id, commenter_id, deleted, parent_id)
   VALUES

@@ -1,30 +1,24 @@
 /* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
-import {
-  Query,
-  QueryTerminatorExpr,
-  compileQuery,
-  materialize,
-  optimize,
-} from 'qustar';
+import pg from 'pg';
+import {Query, compileQuery, optimize} from 'qustar';
+import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
-import sqlite3 from 'sqlite3';
-import {EXAMPLE_SCHEMA_INIT_SQL} from './example-schema.js';
+import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
 
 function init() {
-  const db = new sqlite3.Database(':memory:');
-  const provider = new Sqlite3Connector(db);
+  console.log('pg', pg);
+  const connector = (true as any)
+    ? new PgConnector('postgresql://qustar:test@localhost:22783')
+    : new Sqlite3Connector(':memory:');
 
-  db.exec(EXAMPLE_SCHEMA_INIT_SQL);
+  connector.execute(EXAMPLE_SCHEMA_INIT_SQL);
 
-  async function execute<T>(
-    query: Query<T> | QueryTerminatorExpr<any>,
-    silent = false
-  ) {
+  async function execute<T>(query: Query<T>, silent = false) {
     try {
       const compiledQuery = compileQuery(query, {withParameters: false});
       const optimizedQuery = optimize(compiledQuery);
-      const renderedQuery = provider.render(optimizedQuery);
+      const renderedQuery = connector.render(optimizedQuery);
 
       if (!silent) {
         writeFileSync(
@@ -38,11 +32,11 @@ function init() {
 
         writeFileSync(
           './debug/query-raw.sql',
-          provider.render(compiledQuery).src
+          connector.render(compiledQuery).src
         );
         writeFileSync(
           './debug/query-opt.sql',
-          provider.render(optimizedQuery).src
+          connector.render(optimizedQuery).src
         );
         writeFileSync(
           './debug/args.json',
@@ -50,7 +44,7 @@ function init() {
         );
       }
 
-      const rows = await provider.select(renderedQuery);
+      const rows = await query.execute(connector);
 
       if (!silent) {
         console.log(renderedQuery.src);
@@ -59,12 +53,7 @@ function init() {
 
       if (!silent) {
         for (const row of rows) {
-          console.log(
-            materialize(
-              row,
-              query instanceof Query ? query.projection : query.projection()
-            )
-          );
+          console.log(row);
         }
 
         console.log();
@@ -85,18 +74,21 @@ function init() {
     }
   }
 
-  return {execute};
+  return {execute, close: () => connector.close()};
 }
 
 (async () => {
-  const {execute} = init();
+  const {execute, close} = init();
 
-  const users = await Query.table('users').map(x =>
-    Query.sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`.first(
-      x => x.id
-    )
-  );
+  try {
+    const users = await Query.table('users').map(x =>
+      Query.sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`.first(
+        x => x.id
+      )
+    );
 
-  const result = execute(users);
-  console.log(result);
+    await execute(users);
+  } finally {
+    await close();
+  }
 })();

@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
-import {Connector, SqlCommand} from '../connector.js';
-import {TableSchema, collection, publicSchemaToInternalSchema} from '../dx.js';
+import {Connector, materialize, SqlCommand} from '../connector.js';
+import {collection, publicSchemaToInternalSchema, TableSchema} from '../dx.js';
 import {ArrayLiteralValue, SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
@@ -12,11 +12,11 @@ import {
   FilterFn,
   JoinFilterFn,
   JoinMapFn,
+  Mapping,
   MapQueryFn,
   MapScalarArrayFn,
   MapScalarFn,
   MapValueFn,
-  Mapping,
   ScalarMapping,
   Value,
 } from '../types.js';
@@ -276,9 +276,11 @@ export abstract class Query<T extends Value<T>> {
     return this.render(dialect, {...options, withParameters: false}).src;
   }
 
-  execute(connector: Connector): Promise<T[]> {
+  async execute(connector: Connector): Promise<T[]> {
     const command = connector.render(this.pipe(compileQuery, optimize));
-    return connector.select(command);
+    const rows = await connector.select(command);
+
+    return rows.map(row => materialize(row, this.projection));
   }
 
   schema<TNew extends Value<TNew> = T>(schema: TableSchema): Query<TNew> {

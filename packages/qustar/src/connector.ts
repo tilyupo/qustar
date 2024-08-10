@@ -27,6 +27,7 @@ export interface Connector {
   render(query: QuerySql): SqlCommand;
   select(query: SqlCommand): Promise<any[]>;
   execute(statement: string): Promise<void>;
+  close(): Promise<void>;
 }
 
 interface FlatRowColumn {

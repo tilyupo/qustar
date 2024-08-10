@@ -71,4 +71,9 @@ export class BetterSqlite3Connector implements Connector {
 
     return Promise.resolve(result);
   }
+
+  close(): Promise<void> {
+    this.db.close();
+    return Promise.resolve();
+  }
 }

@@ -1,4 +1,4 @@
-import {Client, Pool} from 'pg';
+import pg from 'pg';
 import {
   Connector,
   QuerySql,
@@ -8,18 +8,17 @@ import {
 } from 'qustar';
 
 export class PgConnector implements Connector {
-  private readonly client: Client | Pool;
+  private readonly db: pg.Pool;
 
   constructor(connectionString: string);
-  constructor(client: Client);
-  constructor(pool: Pool);
-  constructor(clientOrConnectionString: Client | Pool | string) {
+  constructor(pool: pg.Pool);
+  constructor(clientOrConnectionString: pg.Pool | string) {
     if (typeof clientOrConnectionString === 'string') {
-      this.client = new Pool({
+      this.db = new pg.Pool({
         connectionString: clientOrConnectionString,
       });
     } else {
-      this.client = clientOrConnectionString;
+      this.db = clientOrConnectionString;
     }
   }
 
@@ -29,7 +28,7 @@ export class PgConnector implements Connector {
 
   execute(statement: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.query(statement, err => {
+      this.db.query(statement, err => {
         if (err) {
           reject(err);
         } else {
@@ -40,7 +39,7 @@ export class PgConnector implements Connector {
   }
 
   async select(command: SqlCommand): Promise<any[]> {
-    const {rows} = await this.client.query(
+    const {rows} = await this.db.query(
       command.src,
       command.args.map(convertToArgument)
     );
@@ -54,5 +53,9 @@ export class PgConnector implements Connector {
       }
       return result;
     });
+  }
+
+  close(): Promise<void> {
+    return this.db.end();
   }
 }

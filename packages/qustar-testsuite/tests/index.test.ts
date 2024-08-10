@@ -1,6 +1,6 @@
 import {describe, test} from 'vitest';
 
-import {describeConnectorInternal} from '../src/describe';
+import {describeConnectorInternal} from '../src/describe.js';
 
 describeConnectorInternal({test, describe}, undefined, {
   fuzzing: false,

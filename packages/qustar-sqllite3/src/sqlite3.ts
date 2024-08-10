@@ -5,17 +5,17 @@ import {
   convertToArgument,
   renderSqlite,
 } from 'qustar';
-import {Database as Sqlite3Db} from 'sqlite3';
+import sqlite3 from 'sqlite3';
 import {indent} from './utils.js';
 
 export class Sqlite3Connector implements Connector {
-  private readonly db: Sqlite3Db;
+  private readonly db: sqlite3.Database;
 
   constructor(filename: string);
-  constructor(db: Sqlite3Db);
-  constructor(dbOrFilename: Sqlite3Db | string) {
+  constructor(db: sqlite3.Database);
+  constructor(dbOrFilename: sqlite3.Database | string) {
     if (typeof dbOrFilename === 'string') {
-      this.db = new Sqlite3Db(dbOrFilename);
+      this.db = new sqlite3.Database(dbOrFilename);
     } else {
       this.db = dbOrFilename;
     }
@@ -65,5 +65,10 @@ export class Sqlite3Connector implements Connector {
         }
       );
     });
+  }
+
+  close(): Promise<void> {
+    this.db.close();
+    return Promise.resolve();
   }
 }

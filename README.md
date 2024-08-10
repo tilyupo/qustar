@@ -77,7 +77,7 @@ If you implemented your own connector, let me know and I will add it to the list
 
 ## Usage
 
-Any query starts from a table or a [raw sql](#sql). We will talk more about raw queries later, for now the basic usage looks like this:
+Any query starts from a table or a [raw sql](#raw-sql). We will talk more about raw queries later, for now the basic usage looks like this:
 
 ```ts
 import {Query} from 'qustar';
@@ -156,7 +156,7 @@ const userInfo = Query.table('users')
 const users = Query.table('users')
   // order by age in ascending order
   .orderByAsc(user => user.age)
-  // then other by name in descending order
+  // then order by name in descending order
   .thenByDesc(user => user.name);
 ```
 
@@ -295,7 +295,6 @@ const studentOnlyNames = studentNames.except(techerNames);
 #### .flatMap(mapper)
 
 ```ts
-// posts by users older than 10 years old
 const postsWithAuthor = Query.table('users').flatMap(user =>
   Query.table('posts')
     .filter(post => post.authorId.eq(user.id))
@@ -308,7 +307,7 @@ Qustar also supports `back_ref` properties:
 ```ts
 const users = Query.table({
   name: 'users',
-  // we don't want to specify all table columns in this example, only the ref
+  // we don't want to specify all table columns in this example
   additionalProperties: true,
   schema: {
     posts: {
@@ -393,14 +392,14 @@ const users = Query.sql`SELECT * from users`
 You can also use aliases in a nested query like so:
 
 ```ts
-const bobPosts = Query.table('users').flatMap(
+const posts = Query.table('users').flatMap(
   user =>
     Query.sql`
       SELECT
         *
       FROM
         posts p
-      WHERE p.authorId = ${user.id} AND ${user}.name like 'bob%'
+      WHERE p.authorId = ${user.id}'
     `
 );
 ```
@@ -408,7 +407,7 @@ const bobPosts = Query.table('users').flatMap(
 You can wrap a raw sql query in `Query.schema` to specify columns staticaly:
 
 ```ts
-const users = query: Query.sql`SELECT * FROM users`.schema({
+const users = query: Query.sql`SELECT id, name FROM users`.schema({
   // uncomment if you don't want to specify all columns
   // aditionalProperties: true,
   schema: {

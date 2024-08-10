@@ -6,15 +6,22 @@
   "type": "module",
   "scripts": {
     "start": "tsx ./scripts/playground.ts",
-    "build": "npm run build --workspaces",
-    "build:watch": "conc \"npm run build:watch --workspace=qustar\" \"npm run build:watch --workspace=qustar-testsuite\"",
     "bootstrap": "npm install && npm install --workspaces && npm run build",
     "deploy": "npm run deploy --workspaces",
-    "test": "npm test --workspaces"
+    "test": "npm test --workspaces",
+    "build": "npm run build --workspaces",
+    "build:watch": "run-p build:watch:*",
+    "build:watch:qustar": "npm run build:watch --workspace=qustar",
+    "build:watch:qustar-testsuite": "npm run build:watch --workspace=qustar-testsuite",
+    "build:watch:qustar-pg": "npm run build:watch --workspace=qustar-pg",
+    "build:watch:qustar-sqlite3": "npm run build:watch --workspace=qustar-sqlite3",
+    "build:watch:qustar-better-sqlite3": "npm run build:watch --workspace=qustar-better-sqlite3"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "gts": "^5.2.0",
+    "npm-run-all": "^4.1.5",
+    "pg": "^8.12.0",
     "prettier": "^3.3.2",
     "prettier-plugin-organize-imports": "^3.2.3",
     "tsx": "^4.15.6",

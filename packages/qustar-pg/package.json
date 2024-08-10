@@ -29,7 +29,10 @@
     "build:watch": "tsc -w",
     "deploy": "npm run build && node ../../deploy.js",
     "db": "docker run -it --rm -e POSTGRES_USER=qustar -e POSTGRES_PASSWORD=test -p 22783:5432 postgres:12.20-bullseye",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:watch": "run-p test:watch:*",
+    "test:watch:run": "vitest",
+    "test:watch:db": "npm run db"
   },
   "dependencies": {
     "pg": "^8.12.0",
@@ -37,6 +40,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.6",
+    "npm-run-all": "^4.1.5",
     "qustar-testsuite": "^0.0.1",
     "vitest": "^1.6.0"
   }
