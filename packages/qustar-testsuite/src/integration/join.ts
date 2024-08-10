@@ -76,15 +76,23 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
           .orderByAsc(x => x.c, {nulls: 'last'})
           .thenByAsc(x => x.p, {nulls: 'last'});
 
-        await expectQuery(query, [
-          {c: 5, p: null},
-          {c: 6, p: 5},
-          {c: 7, p: null},
-          {c: 8, p: 5},
-          {c: null, p: 6},
-          {c: null, p: 7},
-          {c: null, p: 8},
-        ]);
+        // in postgreSQL FULL JOIN is only supported with merge-joinable or hash-joinable
+        // join condition
+        // it should be possible to solve this with FULL JOIN emulation through UNION ALL of
+        // LEFT and RIGHT joins
+        await expectQuery(
+          query,
+          [
+            {c: 5, p: null},
+            {c: 6, p: 5},
+            {c: 7, p: null},
+            {c: 8, p: 5},
+            {c: null, p: 6},
+            {c: null, p: 7},
+            {c: null, p: 8},
+          ],
+          {optOnly: true}
+        );
       });
     });
   });

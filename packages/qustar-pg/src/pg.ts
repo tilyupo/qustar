@@ -36,8 +36,6 @@ export class PgConnector implements Connector {
       command.args.map(convertToArgument)
     );
 
-    console.log({rows, fields});
-
     return rows.map((row: any) => {
       const result: any = {};
       for (const key of Object.keys(row)) {
