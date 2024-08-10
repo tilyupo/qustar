@@ -182,7 +182,7 @@ function renderBinary(sql: BinarySql, ctx: RenderingContext): SqlCommand {
     .with('!=', () => '!=')
     .with('<', () => '<')
     .with('<=', () => '<=')
-    .with('==', () => '==')
+    .with('==', () => '=')
     .with('>', () => '>')
     .with('>=', () => '>=')
     .with('in', () => 'IN')

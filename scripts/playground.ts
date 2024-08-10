@@ -4,6 +4,7 @@ import pg from 'pg';
 import {Query, compileQuery, optimize} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
+import {comments} from '../packages/qustar-testsuite/src/db.js';
 import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
 
 function init() {
@@ -81,13 +82,9 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const users = await Query.table('users').map(x =>
-      Query.sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`.first(
-        x => x.id
-      )
-    );
+    const query = comments.map(x => x.author.name);
 
-    await execute(users);
+    await execute(query);
   } finally {
     await close();
   }
