@@ -882,10 +882,22 @@ function inferProjection(value: Mapping, depth = 0): Projection {
       }
     }
 
-    return {type: 'object', props, refs, nullable: false};
+    return {
+      type: 'object',
+      props: deduplicateFirstWins(props, (a, b) => arrayEqual(a.path, b.path)),
+      refs: deduplicateFirstWins(refs, (a, b) => arrayEqual(a.path, b.path)),
+      nullable: false,
+    };
   }
 
   return assertNever(value, 'unsupported selection');
+}
+
+function deduplicateFirstWins<T>(
+  arr: readonly T[],
+  eq: (a: T, b: T) => boolean
+) {
+  return arr.filter((val, idx) => arr.findIndex(x => eq(x, val)) === idx);
 }
 
 export class MapQuery<T extends Value<T>> extends Query<T> {

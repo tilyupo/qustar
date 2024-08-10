@@ -8,7 +8,13 @@ import {isNumeric} from './expr/expr.js';
 import {Projection, PropPath} from './expr/projection.js';
 import {Literal, ScalarType} from './literal.js';
 import {QuerySql} from './sql/sql.js';
-import {arrayEqual, deepEntries, isNumberString, setPath} from './utils.js';
+import {
+  arrayEqual,
+  assert,
+  deepEntries,
+  isNumberString,
+  setPath,
+} from './utils.js';
 
 export interface SqlCommand {
   readonly src: string;
@@ -143,14 +149,9 @@ export function materialize(row: any, projection: Projection): any {
     .with({type: 'object'}, object => {
       const result: Record<string, any> = {};
       for (const [path, value] of deepEntries(row)) {
-        const propProj = object.props.find(
-          x => x.type === 'single' && arrayEqual(x.path, path)
-        );
-        if (propProj?.type === 'single') {
-          setPath(result, path, materializeScalar(value, propProj.scalarType));
-        } else {
-          setPath(result, path, value);
-        }
+        const propProj = object.props.find(x => arrayEqual(x.path, path));
+        assert(propProj !== undefined, 'got an unknown prop path');
+        setPath(result, path, materializeScalar(value, propProj.scalarType));
       }
 
       return result;
