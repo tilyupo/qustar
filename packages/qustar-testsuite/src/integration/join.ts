@@ -10,7 +10,6 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
             right: users,
             select: () => 1,
           })
-          .orderByAsc(x => x.title)
           .limit(3);
 
         await expectQuery(query, [1, 1, 1]);
