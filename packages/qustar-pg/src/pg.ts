@@ -36,6 +36,8 @@ export class PgConnector implements Connector {
       command.args.map(convertToArgument)
     );
 
+    console.log({rows, fields});
+
     return rows.map((row: any) => {
       const result: any = {};
       for (const key of Object.keys(row)) {
@@ -48,7 +50,7 @@ export class PgConnector implements Connector {
         // pg returns some number types as strings to preserve accuracy
         // list of all dataTypeIDs can be found in the oid.txt file at the root
         if (
-          [20, 21, 23, 700, 701, 1700].includes(field.dataTypeID) ??
+          [20, 21, 23, 700, 701, 1700].includes(field.dataTypeID) &&
           row[key] !== null
         ) {
           result[key] = Number.parseFloat(row[key]);

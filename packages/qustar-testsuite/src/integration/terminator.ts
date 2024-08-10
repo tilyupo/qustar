@@ -16,7 +16,11 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
 
       describe('max', () => {
         testTerm('id', posts => posts.max(x => x.id), 6);
-        testTerm('title', posts => posts.max(x => x.title), 'rust');
+        testTerm(
+          'title',
+          posts => posts.max(x => x.title.toLowerCase()),
+          'typescript'
+        );
         testTerm('author.id', posts => posts.max(x => x.author.id), 3);
       });
 

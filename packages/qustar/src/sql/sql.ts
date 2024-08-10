@@ -29,6 +29,8 @@ export interface RowNumberSql extends GenericSql<'row_number'> {
 // === func ===
 
 export type FuncSql = GenericFuncSql<
+  | 'lower'
+  | 'upper'
   | 'substring'
   | 'concat'
   | 'max'

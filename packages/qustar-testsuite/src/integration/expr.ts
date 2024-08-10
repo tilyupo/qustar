@@ -285,6 +285,44 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         );
       });
 
+      describe('toLowerCase', () => {
+        testExpr(
+          'TypeScript is typescript',
+          Expr.toLowerCase(Expr.from('TypeScript')),
+          'typescript'
+        );
+        testExpr(
+          'lower is lower',
+          Expr.toLowerCase(Expr.from('lower')),
+          'lower'
+        );
+        testExpr(
+          'UPPER is upper',
+          Expr.toLowerCase(Expr.from('UPPER')),
+          'upper'
+        );
+        testExpr('null is null', Expr.toLowerCase(Expr.from(null)), null);
+      });
+
+      describe('toUpperCase', () => {
+        testExpr(
+          'TypeScript is TYPESCRIPT',
+          Expr.toUpperCase(Expr.from('TypeScript')),
+          'TYPESCRIPT'
+        );
+        testExpr(
+          'lower is LOWER',
+          Expr.toUpperCase(Expr.from('lower')),
+          'LOWER'
+        );
+        testExpr(
+          'UPPER is UPPER',
+          Expr.toUpperCase(Expr.from('UPPER')),
+          'UPPER'
+        );
+        testExpr('null is null', Expr.toUpperCase(Expr.from(null)), null);
+      });
+
       describe('toString', () => {
         testExpr('toString(null) is null', Expr.from(null).toString(), null);
         testExpr(

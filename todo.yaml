@@ -101,3 +101,4 @@ done:
   - Query.sql
   - Query.schema
   - support alias usage in raw sql
+  - add toLowerCase/toUpperCase

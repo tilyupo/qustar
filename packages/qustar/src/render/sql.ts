@@ -126,6 +126,14 @@ function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
           ),
         ],
       }))
+      .with('lower', () => ({
+        fn: 'LOWER',
+        args: sql.args.map(x => render(x, ctx)),
+      }))
+      .with('upper', () => ({
+        fn: 'UPPER',
+        args: sql.args.map(x => render(x, ctx)),
+      }))
       .with('avg', () => ({fn: 'AVG', args: sql.args.map(x => render(x, ctx))}))
       .with('count', () => ({
         fn: 'COUNT',

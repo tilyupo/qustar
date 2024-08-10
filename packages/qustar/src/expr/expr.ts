@@ -358,6 +358,20 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return Expr.from(lhs).substring(indexStart, indexEnd);
   }
 
+  static toLowerCase<
+    T extends Nullable<string>,
+    Index extends Nullable<number>,
+  >(lhs: ScalarOperand<T>): Expr<NullPropagate<Index, T>> {
+    return Expr.from(lhs).toLowerCase();
+  }
+
+  static toUpperCase<
+    T extends Nullable<string>,
+    Index extends Nullable<number>,
+  >(lhs: ScalarOperand<T>): Expr<NullPropagate<Index, T>> {
+    return Expr.from(lhs).toUpperCase();
+  }
+
   static length_<T extends Nullable<string>, Index extends Nullable<number>>(
     lhs: ScalarOperand<T>
   ): Expr<NullPropagate<Index, T>> {
@@ -621,6 +635,18 @@ export abstract class Expr<T extends SingleLiteralValue> {
     ]);
   }
 
+  toLowerCase<TIndex extends Nullable<number>>(): Expr<
+    NullPropagate<TIndex, T>
+  > {
+    return new FuncExpr<NullPropagate<TIndex, T>>('lower', [this]);
+  }
+
+  toUpperCase<TIndex extends Nullable<number>>(): Expr<
+    NullPropagate<TIndex, T>
+  > {
+    return new FuncExpr<NullPropagate<TIndex, T>>('upper', [this]);
+  }
+
   length<TIndex extends Nullable<number>>(): Expr<NullPropagate<TIndex, T>> {
     return new FuncExpr<NullPropagate<TIndex, T>>('length', [this]);
   }
@@ -680,6 +706,8 @@ export abstract class Expr<T extends SingleLiteralValue> {
 }
 
 export type Func =
+  | 'lower'
+  | 'upper'
   | 'substring'
   | 'concat'
   | 'to_string'
@@ -713,7 +741,11 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
     const nullable = argProjections.some(
       x => x.type !== 'scalar' || x.scalarType.nullable
     );
-    if (this.func === 'substring') {
+    if (
+      this.func === 'substring' ||
+      this.func === 'lower' ||
+      this.func === 'upper'
+    ) {
       return {
         type: 'scalar',
         scalarType: {

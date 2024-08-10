@@ -85,7 +85,7 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = posts.innerJoin({right: posts, select: () => 1});
+    const query = posts.map(x => null);
 
     await execute(query);
   } finally {
