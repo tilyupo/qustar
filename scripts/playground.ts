@@ -4,7 +4,7 @@ import pg from 'pg';
 import {Query, compileQuery, optimize} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
-import {comments} from '../packages/qustar-testsuite/src/db.js';
+import {posts} from '../packages/qustar-testsuite/src/db.js';
 import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
 
 function init() {
@@ -17,7 +17,7 @@ function init() {
 
   async function execute<T>(query: Query<T>, silent = false) {
     try {
-      const compiledQuery = compileQuery(query, {withParameters: false});
+      const compiledQuery = compileQuery(query, {withParameters: true});
       const optimizedQuery = optimize(compiledQuery);
       const renderedQuery = connector.render(optimizedQuery);
 
@@ -45,7 +45,7 @@ function init() {
         );
       }
 
-      const rows = await query.execute(connector);
+      const rows = await connector.select(renderedQuery);
 
       if (!silent) {
         console.log(renderedQuery.src);
@@ -82,7 +82,10 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = comments.map(x => x.author.name);
+    const query = posts
+      .select(x => x.id.div(2).toInt())
+      .unique()
+      .orderByAsc(x => x);
 
     await execute(query);
   } finally {

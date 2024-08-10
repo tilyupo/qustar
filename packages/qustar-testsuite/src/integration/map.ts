@@ -115,6 +115,7 @@ export function describeMap({
         'two refs with the same name',
         async ({comments}) => {
           const query = comments
+            .orderByAsc(x => x.id)
             .map(x => ({...x.post, ...x}))
             .map(x => x.author.name);
 

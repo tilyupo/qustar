@@ -1,8 +1,5 @@
 roadmap:
-  - type check?
   - update connectors to use peer-dependency
-  - Query.sql + support arguments
-  - fix bug users.orderByDesc(x => x.id).map(x => x.id).first(x => x)
 
 docs:
   - move comparison out of why and far away
@@ -12,11 +9,12 @@ docs:
   - list of features at the top
 
 bugs:
+  - fix bug users.orderByDesc(x => x.id).map(x => x.id).first(x => x)
   - ref can become nullable after, for example, left join for the right entity,
-    now we assume that ref condition always takes non-null entities
+    now we assume that ref condition always takes non-null entities (fixed?)
 
 features:
-  - support alias usage in raw sql
+  - type check
   - unselection support
   - typescript support
   - support schema aliases
@@ -92,3 +90,7 @@ renderers:
 done:
   - fix better-sqlite3 tests
   - add interpreter tests
+  - Expr.sql
+  - Query.sql
+  - Query.schema
+  - support alias usage in raw sql

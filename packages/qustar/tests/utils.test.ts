@@ -1,5 +1,12 @@
 import {describe, expect, test} from 'vitest';
-import {compare, deepEntries, deepEqual, like, setPath} from '../src/utils';
+import {
+  compare,
+  deepEntries,
+  deepEqual,
+  isNumberString,
+  like,
+  setPath,
+} from '../src/utils.js';
 
 describe('utils', async () => {
   test('deepEqual', () => {
@@ -92,5 +99,39 @@ describe('utils', async () => {
     for (const {target, expected} of cases) {
       expect(deepEntries(target)).to.deep.equal(expected);
     }
+  });
+
+  describe('isNumberString', () => {
+    test('should return true for valid integer strings', () => {
+      expect(isNumberString('123')).toBe(true);
+      expect(isNumberString('-123')).toBe(true);
+      expect(isNumberString('+123')).toBe(true);
+      expect(isNumberString('0')).toBe(true);
+    });
+
+    test('should return true for valid floating-point strings', () => {
+      expect(isNumberString('123.456')).toBe(true);
+      expect(isNumberString('-123.456')).toBe(true);
+      expect(isNumberString('+123.456')).toBe(true);
+      expect(isNumberString('0.456')).toBe(true);
+    });
+
+    test('should return false for strings with invalid number formats', () => {
+      expect(isNumberString('123.')).toBe(false); // Trailing dot
+      expect(isNumberString('.456')).toBe(false); // Leading dot
+      expect(isNumberString('123..456')).toBe(false); // Multiple dots
+      expect(isNumberString('123a')).toBe(false); // Invalid character
+      expect(isNumberString('abc')).toBe(false); // Non-numeric string
+      expect(isNumberString('')).toBe(false); // Empty string
+      expect(isNumberString('+-123')).toBe(false); // Multiple signs
+    });
+
+    test('should return false for strings that are not numbers', () => {
+      expect(isNumberString(' ')).toBe(false); // Whitespace
+      expect(isNumberString('abc123')).toBe(false); // Letters and numbers
+      expect(isNumberString('123abc')).toBe(false); // Numbers and letters
+      expect(isNumberString('NaN')).toBe(false); // NaN string
+      expect(isNumberString('Infinity')).toBe(false); // Infinity string
+    });
   });
 });

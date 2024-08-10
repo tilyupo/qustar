@@ -267,3 +267,7 @@ export function deepEntries(obj: object): DeepObjectEntry[] {
 
   return result;
 }
+
+export function isNumberString(value: string) {
+  return /^(-|\+)?[0-9]+(\.[0-9]+)?$/.test(value);
+}

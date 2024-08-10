@@ -37,7 +37,13 @@ export function convertToArgument(literal: Literal): LiteralValue {
   }
 }
 class RenderingContext {
+  private placeholderIndex = 0;
+
   constructor(readonly options: SqlRenderingOptions) {}
+
+  placeholder() {
+    return this.options.placeholder(this.placeholderIndex++);
+  }
 
   escapeId(id: string): string {
     return this.options.escapeId(id);
@@ -54,6 +60,7 @@ export interface SqlRenderingOptions {
   emulateArrayLiteralParam?: boolean;
   emulateXor?: boolean;
   escapeId: (id: string) => string;
+  placeholder: (index: number) => string;
 }
 
 export function renderSql(
@@ -318,12 +325,13 @@ function renderSingleLiteralInline(literal: SingleLiteral): SqlCommand {
 
 function renderSingleLiteral(
   literal: SingleLiteral,
-  parameter: boolean
+  parameter: boolean,
+  ctx: RenderingContext
 ): SqlCommand {
   if (parameter) {
     return {
       args: [literal],
-      src: '?',
+      src: ctx.placeholder(),
     };
   } else {
     return renderSingleLiteralInline(literal);
@@ -342,7 +350,8 @@ function renderArrayLiteral(
           type: literal.type.itemType,
           value: x,
         } as SingleLiteral,
-        parameter
+        parameter,
+        ctx
       )
     );
 
@@ -351,7 +360,7 @@ function renderArrayLiteral(
 
   return {
     args: [literal],
-    src: '?',
+    src: ctx.placeholder(),
   };
 }
 
@@ -369,7 +378,7 @@ function renderLiteral(
     // for type check
     assertSingleLiteral(literal);
 
-    return renderSingleLiteral(literal, parameter);
+    return renderSingleLiteral(literal, parameter, ctx);
   }
 }
 

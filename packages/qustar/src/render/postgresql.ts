@@ -12,5 +12,6 @@ export function renderPostgreSql(sql: QuerySql): SqlCommand {
 
       return `"${id.split('"').join('""')}"`;
     },
+    placeholder: idx => `$${idx + 1}`,
   });
 }

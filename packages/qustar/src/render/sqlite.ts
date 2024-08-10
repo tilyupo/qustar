@@ -14,5 +14,6 @@ export function renderSqlite(sql: QuerySql): SqlCommand {
 
       return `"${id.split('"').join('""')}"`;
     },
+    placeholder: () => '?',
   });
 }

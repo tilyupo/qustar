@@ -4,10 +4,11 @@ import {
   SYSTEM_COLUMN_PREFIX,
   deserializePropPath,
 } from './expr/compiler.js';
+import {isNumeric} from './expr/expr.js';
 import {Projection, PropPath} from './expr/projection.js';
-import {Literal} from './literal.js';
+import {Literal, ScalarType} from './literal.js';
 import {QuerySql} from './sql/sql.js';
-import {arrayEqual, deepEntries, setPath} from './utils.js';
+import {arrayEqual, deepEntries, isNumberString, setPath} from './utils.js';
 
 export interface SqlCommand {
   readonly src: string;
@@ -90,33 +91,55 @@ export function materialize(row: any, projection: Projection): any {
     )
   );
 
-  function materializeBoolean(value: unknown, nullable: boolean) {
+  function materializeBoolean(value: unknown) {
     if (typeof value === 'boolean') {
       return value;
     }
-    if (value !== null && value !== 0 && value !== 1) {
+    if (value !== 0 && value !== 1) {
       throw new Error('can not materialize boolean value: ' + value);
     }
 
+    return value === 1;
+  }
+
+  function materializeNumber(value: unknown) {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    // pg driver returns strings for numeric values for some reason
+    if (typeof value !== 'string' || !isNumberString(value)) {
+      throw new Error('can not materialize number value: ' + value);
+    }
+
+    return Number.parseFloat(value);
+  }
+
+  function materializeScalar(value: unknown, scalarType: ScalarType) {
     if (value === null) {
-      if (nullable) {
+      if (scalarType.nullable) {
         return null;
       } else {
-        throw new Error('got null for a non null boolean');
+        throw new Error('got null for a non null scalar type');
       }
-    } else {
-      return value === 1;
     }
+
+    if (scalarType.type === 'boolean') {
+      return materializeBoolean(value);
+    }
+
+    if (isNumeric(scalarType)) {
+      return materializeNumber(value);
+    }
+
+    return value;
   }
 
   return match(projection)
     .with({type: 'scalar'}, scalar => {
       const value = row[SCALAR_COLUMN_ALIAS];
-      if (scalar.scalarType.type === 'boolean') {
-        return materializeBoolean(value, scalar.scalarType.nullable);
-      }
 
-      return value;
+      return materializeScalar(value, scalar.scalarType);
     })
     .with({type: 'object'}, object => {
       const result: Record<string, any> = {};
@@ -124,15 +147,8 @@ export function materialize(row: any, projection: Projection): any {
         const propProj = object.props.find(
           x => x.type === 'single' && arrayEqual(x.path, path)
         );
-        if (
-          propProj?.type === 'single' &&
-          propProj.scalarType.type === 'boolean'
-        ) {
-          setPath(
-            result,
-            path,
-            materializeBoolean(value, propProj.scalarType.nullable)
-          );
+        if (propProj?.type === 'single') {
+          setPath(result, path, materializeScalar(value, propProj.scalarType));
         } else {
           setPath(result, path, value);
         }

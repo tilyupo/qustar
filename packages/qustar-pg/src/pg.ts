@@ -31,12 +31,12 @@ export class PgConnector implements Connector {
   }
 
   async select(command: SqlCommand): Promise<any[]> {
-    const {rows} = await this.db.query(
+    const result = await this.db.query(
       command.src,
       command.args.map(convertToArgument)
     );
 
-    return rows.map((x: any) => {
+    return result.rows.map((x: any) => {
       const result: any = {};
       for (const key of Object.keys(x)) {
         result[key] = x[key];
