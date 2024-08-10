@@ -696,7 +696,7 @@ function compileJoinQuery(
   query: JoinQuery<any>,
   ctx: CompilationContext
 ): CompilationResult<SelectSql> {
-  const filterExpr = query.options.filterExpr ?? Expr.from(1).eq(1);
+  const filterExpr = query.options.filterExpr ?? Expr.from(true);
 
   const right = compileQuerySource(query.options.right, ctx);
   const filter = _compileExpr(filterExpr, ctx);

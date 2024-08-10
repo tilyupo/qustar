@@ -4,6 +4,8 @@ import {renderSql} from './sql.js';
 
 export function renderSqlite(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
+    falseInlineLiteral: '0',
+    trueInlineLiteral: '1',
     emulateArrayLiteralParam: true,
     emulateXor: true,
     escapeId(id: string): string {

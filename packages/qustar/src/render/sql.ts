@@ -58,6 +58,7 @@ export interface SqlRenderingOptions {
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
   emulateXor?: boolean;
+  emulateBoolean?: boolean;
   escapeId: (id: string) => string;
   placeholder: (index: number) => string;
 }
@@ -277,9 +278,16 @@ function renderCombination(
   return cmd`${render(sql.lhs, ctx)}\n${op}\n${render(sql.rhs, ctx)}`;
 }
 
-function renderSingleLiteralInline(literal: SingleLiteral): SqlCommand {
+function renderSingleLiteralInline(
+  literal: SingleLiteral,
+  ctx: RenderingContext
+): SqlCommand {
   const command = match(literal)
-    .with({type: {type: 'boolean'}}, ({value}) => cmd`${value ? 1 : 0}`)
+    .with({type: {type: 'boolean'}}, ({value}) =>
+      ctx.options.emulateBoolean
+        ? cmd`${value ? '1' : '0'}`
+        : cmd`${value ? 'true' : 'false'}`
+    )
     .with({type: {type: 'f32'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'f64'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'i8'}}, ({value}) => cmd`${value}`)
@@ -313,8 +321,11 @@ function renderSingleLiteralInline(literal: SingleLiteral): SqlCommand {
     })
     .exhaustive();
 
-  if (isNumeric(literal.type) || literal.type.type === 'boolean') {
-    // we need to add plus to make sure that SQLite treats it as an expression
+  if (
+    isNumeric(literal.type) ||
+    (literal.type.type === 'boolean' && ctx.options.emulateBoolean)
+  ) {
+    // we need to add plus to make sure that DB treats it as an expression
     // by default it will treat numbers as column indexes in GROUP/ORDER BY context
     return cmd`(0 + ${command})`;
   } else {
@@ -333,7 +344,7 @@ function renderSingleLiteral(
       src: ctx.placeholder(),
     };
   } else {
-    return renderSingleLiteralInline(literal);
+    return renderSingleLiteralInline(literal, ctx);
   }
 }
 
