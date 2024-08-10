@@ -16,8 +16,6 @@ import {
   PropPath,
   PropProjection,
   ScalarProjection,
-  SinglePropProjection,
-  WildcardPropProjection,
 } from './projection.js';
 import {
   CombineQuery,
@@ -48,20 +46,10 @@ interface ScalarShape extends GenericShape<'scalar'> {
   readonly scalarType: ScalarType;
 }
 
-interface GenericShapeProp<TType extends string> {
-  readonly type: TType;
-}
-
-interface SinglePropShape extends GenericShapeProp<'single'> {
+interface PropShape {
   readonly path: PropPath;
   readonly scalarType: SingleScalarType;
 }
-
-interface WildcardPropShape extends GenericShapeProp<'wildcard'> {
-  readonly source: ObjectShape;
-}
-
-type PropShape = SinglePropShape | WildcardPropShape;
 
 interface ObjectShape extends GenericShape<'object'> {
   readonly props: readonly PropShape[];
@@ -228,15 +216,13 @@ function applyFullOrder(query: Query<any>): Query<any> {
   return match(query.projection)
     .with({type: 'scalar'}, () => query.orderByAsc(x => x))
     .with({type: 'object'}, proj =>
-      proj.props
-        .filter((x): x is SinglePropProjection => x.type === 'single')
-        .reduce(
-          (q, property) =>
-            q.thenByAsc(x =>
-              property.path.reduce((handle, part) => handle[part], x)
-            ),
-          query
-        )
+      proj.props.reduce(
+        (q, property) =>
+          q.thenByAsc(x =>
+            property.path.reduce((handle, part) => handle[part], x)
+          ),
+        query
+      )
     )
     .exhaustive();
 }
@@ -273,15 +259,11 @@ function genObjectProjection(
   ctx: GenContext
 ): ObjectProjection {
   if (shape) {
-    assert(
-      shape.props.every(x => x.type === 'single'),
-      'can only generate object projection with single prop projections'
-    );
     return {
       type: 'object',
       nullable: shape.nullable,
       refs: [],
-      props: (shape.props as SinglePropShape[]).map(prop => ({
+      props: (shape.props as PropShape[]).map(prop => ({
         type: 'single',
         expr: genExpr([{type: 'scalar', scalarType: prop.scalarType}], ctx),
         path: prop.path,
@@ -295,67 +277,34 @@ function genObjectProjection(
 
 function genAnyObjectProjection(ctx: GenContext): ObjectProjection {
   const props = ctx.array(1, 5, () => {
-    const locators = ctx.deps.expr.filter(
-      (x): x is LocatorExpr<any> =>
-        x instanceof LocatorExpr && x.projection().type === 'object'
-    );
-    if (locators.length > 0) {
-      return ctx.select(
-        () => genWildcardPropProjection(locators, ctx),
-        () => genSinglePropProjection(ctx)
-      )();
-    } else {
-      return genSinglePropProjection(ctx);
-    }
+    return genSinglePropProjection(ctx);
   });
   return {
     type: 'object',
     nullable: false,
-    // todo: fill refs from wildcard projections
+    // todo: fill refs
     refs: [],
     props: props
       .sort((a, b) => {
-        if (a.type === 'wildcard') {
-          return -1;
-        }
-
-        if (b.type === 'wildcard') {
-          return 1;
-        }
-
         return a.path.length - b.path.length;
       })
-      .filter(
-        (outerProp, outerIndex) =>
-          outerProp.type === 'wildcard' ||
-          props.every(
-            (innerProp, innerIndex) =>
-              outerIndex >= innerIndex ||
-              innerProp.type === 'wildcard' ||
-              !startsWith(innerProp.path, outerProp.path)
-          )
+      .filter((outerProp, outerIndex) =>
+        props.every(
+          (innerProp, innerIndex) =>
+            outerIndex >= innerIndex ||
+            !startsWith(innerProp.path, outerProp.path)
+        )
       ),
   };
 }
 
-function genWildcardPropProjection(
-  locators: LocatorExpr<any>[],
-  ctx: GenContext
-): WildcardPropProjection {
-  return {
-    type: 'wildcard',
-    source: ctx.select(...locators),
-  };
-}
-
-function genSinglePropProjection(ctx: GenContext): SinglePropProjection {
+function genSinglePropProjection(ctx: GenContext): PropProjection {
   const exprProj = genExpr(DYNAMIC_SHAPE, ctx).projection();
   assert(
     exprProj.type === 'scalar' && exprProj.scalarType.type !== 'array',
     'gen expr must be a dynamic scalar'
   );
   return {
-    type: 'single',
     expr: exprProj.expr,
     scalarType: exprProj.scalarType,
     path: ctx.array(1, 3, () => ctx.int(1, 5).toString()),
@@ -440,29 +389,14 @@ function toObjectShape(projection: ObjectProjection): ObjectShape {
   return {
     type: 'object',
     nullable: projection.nullable,
-    props: projection.props.map(prop =>
-      match(prop)
-        .with({type: 'single'}, x => toSinglePropShape(x))
-        .with({type: 'wildcard'}, x => toWildcardPropShape(x))
-        .exhaustive()
-    ),
+    props: projection.props.map(toSinglePropShape),
   };
 }
 
-function toSinglePropShape(prop: SinglePropProjection): SinglePropShape {
+function toSinglePropShape(prop: PropProjection): PropShape {
   return {
-    type: 'single',
     path: prop.path,
     scalarType: prop.scalarType,
-  };
-}
-
-function toWildcardPropShape(prop: WildcardPropProjection): WildcardPropShape {
-  const source = toShape(prop.source.projection());
-  assert(source.type === 'object', 'invalid wildcard projection from scalar');
-  return {
-    type: 'wildcard',
-    source,
   };
 }
 
@@ -538,14 +472,8 @@ function genQuerySource(
       {type: 'object'},
       (proj): Deps => ({
         // todo: add parent ref exprs
-        expr: proj.props.map(prop =>
-          match(prop)
-            .with(
-              {type: 'single'},
-              x => new LocatorExpr(source, [x.path], false)
-            )
-            .with({type: 'wildcard'}, x => x.source)
-            .exhaustive()
+        expr: proj.props.map(
+          prop => new LocatorExpr(source, [prop.path], false)
         ),
         queries: proj.refs
           .filter((x): x is ChildrenRef => x.type === 'children')
@@ -644,33 +572,10 @@ function matchObjectProjection(
 }
 
 function matchProp(proj: PropProjection, shape: PropShape): boolean {
-  return match(proj)
-    .with(
-      {type: 'single'},
-      x => shape.type === x.type && matchSingleProp(x, shape)
-    )
-    .with(
-      {type: 'wildcard'},
-      x => shape.type === x.type && matchWildcardProp(x, shape)
-    )
-    .exhaustive();
-}
-
-function matchSingleProp(
-  proj: SinglePropProjection,
-  shape: SinglePropShape
-): boolean {
   return (
     matchScalarType(proj.scalarType, shape.scalarType) &&
     deepEqual(proj.path, shape.path)
   );
-}
-
-function matchWildcardProp(
-  proj: WildcardPropProjection,
-  shape: WildcardPropShape
-): boolean {
-  return matchProjection(proj.source.projection(), shape.source);
 }
 
 const INT_SHAPES: ScalarShape[] = (

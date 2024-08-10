@@ -1,7 +1,7 @@
 /* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
 import pg from 'pg';
-import {Query, compileQuery, optimize} from 'qustar';
+import {Query, QueryTerminatorExpr, compileQuery} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
 import {posts} from '../packages/qustar-testsuite/src/db.js';
@@ -15,10 +15,13 @@ function init() {
 
   connector.execute(EXAMPLE_SCHEMA_INIT_SQL);
 
-  async function execute<T>(query: Query<T>, silent = false) {
+  async function execute<T>(
+    query: Query<T> | QueryTerminatorExpr<any>,
+    silent = false
+  ) {
     try {
       const compiledQuery = compileQuery(query, {parameters: true});
-      const optimizedQuery = optimize(compiledQuery);
+      const optimizedQuery = compiledQuery; // optimize(compiledQuery);
       const renderedQuery = connector.render(optimizedQuery);
 
       if (!silent) {
@@ -82,10 +85,7 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = posts
-      .select(x => x.id.div(2).toInt())
-      .unique()
-      .orderByAsc(x => x);
+    const query = posts.map(post => ({...post, id: 1})).map(x => x.id);
 
     await execute(query);
   } finally {

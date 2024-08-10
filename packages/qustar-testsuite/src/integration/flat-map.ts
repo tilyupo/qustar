@@ -36,23 +36,19 @@ export function describeFlatMap({describe, test, expectQuery}: SuiteContext) {
         });
       });
 
-      test(
-        'nested refs',
-        async ({posts}) => {
-          const query = posts
-            .flatMap(post =>
-              post.comments.map(comment => ({
-                author: comment.author.id,
-              }))
-            )
-            .map(x => x.author);
+      test('nested refs', async ({posts}) => {
+        const query = posts
+          .flatMap(post =>
+            post.comments.map(comment => ({
+              author: comment.author.id,
+            }))
+          )
+          .map(x => x.author);
 
-          await expectQuery(query, [1, 1, 2, 3], {
-            optOnly: true,
-          });
-        },
-        {staticOnly: true}
-      );
+        await expectQuery(query, [1, 1, 2, 3], {
+          optOnly: true,
+        });
+      });
     });
   });
 }

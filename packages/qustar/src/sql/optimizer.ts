@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
 import {aggregationFuncs, SYSTEM_COLUMN_PREFIX} from '../expr/compiler.js';
-import {assert, assertNever, compose} from '../utils.js';
+import {assert, compose} from '../utils.js';
 import {ID_SQL_MAPPER, mapQuery, mapSelect, mapSql} from './mapper.js';
 import {
   BinarySql,
@@ -8,7 +8,6 @@ import {
   LookupSql,
   QuerySql,
   SelectSql,
-  SelectSqlColumn,
   Sql,
   trueLiteral,
 } from './sql.js';
@@ -31,7 +30,7 @@ export function optimize(sql: QuerySql): QuerySql {
       ...result,
       // we don't need system columns in the final result
       columns: result.columns.filter(
-        x => x.type === 'wildcard' || !x.as.startsWith(SYSTEM_COLUMN_PREFIX)
+        x => !x.as.startsWith(SYSTEM_COLUMN_PREFIX)
       ),
     };
   } else {
@@ -130,7 +129,6 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
     inner.offset === undefined &&
     inner.groupBy === undefined &&
     outer.groupBy === undefined &&
-    inner.columns.slice(0, -1).findIndex(x => x.type === 'wildcard') === -1 &&
     outer.joins.every(x => x.type === 'inner') &&
     inner.joins.every(x => x.type === 'inner') &&
     // don't merge if has aggregate function
@@ -138,8 +136,6 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
     //
     // check that outer has no column that has an aggregate function
     (outer.columns.every(column => {
-      if (column.type === 'wildcard') return true;
-
       let hasAggFunc = false;
 
       mapSql(column.expr, {
@@ -156,8 +152,6 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
     }) ||
       // check that inner has no column that is a subquery
       inner.columns.every(column => {
-        if (column.type === 'wildcard') return true;
-
         let hasSelect = false;
 
         mapSql(column.expr, {
@@ -199,43 +193,16 @@ function remapLookupRefs(
   targetAlias: string
 ): Sql {
   if (lookup.subject.type === 'alias' && lookup.subject.name === targetAlias) {
-    const innerColumn = target.columns.find(
-      x => x.type === 'wildcard' || x.as === lookup.prop
-    );
+    const innerColumn = target.columns.find(x => x.as === lookup.prop);
 
     if (innerColumn === undefined) {
       throw new Error('Invalid SQL, can not find column in source');
     }
 
-    if (innerColumn.type === 'wildcard') {
-      return {
-        type: 'lookup',
-        subject: {
-          type: 'alias',
-          name: innerColumn.subject.name,
-        },
-        prop: lookup.prop,
-      };
-    } else if (innerColumn.type === 'single') {
-      return innerColumn.expr;
-    } else {
-      return assertNever(innerColumn, 'invalid innerColumn: ' + innerColumn);
-    }
+    return innerColumn.expr;
   }
 
   return lookup;
-}
-
-function remapColumnRefs(
-  column: SelectSqlColumn,
-  target: SelectSql,
-  targetAlias: string
-): SelectSqlColumn | readonly SelectSqlColumn[] {
-  if (column.type === 'wildcard' && column.subject.name === targetAlias) {
-    return target.columns;
-  }
-
-  return column;
 }
 
 function remapRefs(
@@ -246,7 +213,6 @@ function remapRefs(
   return mapSelect(referee, {
     ...ID_SQL_MAPPER,
     lookup: lookup => remapLookupRefs(lookup, target, targetAlias),
-    column: column => remapColumnRefs(column, target, targetAlias),
   });
 }
 

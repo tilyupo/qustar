@@ -27,7 +27,7 @@ import {
   SqlOrderBy,
   UnarySql,
 } from '../sql/sql.js';
-import {assertNever, formatDate, formatDateTime, indent} from '../utils.js';
+import {formatDate, formatDateTime, indent} from '../utils.js';
 
 export function convertToArgument(literal: Literal): LiteralValue {
   if (literal.type.type === 'date') {
@@ -55,7 +55,6 @@ export interface SqlRenderingOptions {
   // SQLite selects the first column with the same name
   // PostgreSQL selects the last
   // so we need to alter SQL generation to preserve intended behavior
-  columnOrder: 'original' | 'reverse';
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
   emulateXor?: boolean;
@@ -412,35 +411,25 @@ function straight(command: SqlCommand): SqlCommand {
 
 function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
   const columns = SqlCommand.join(
-    match(ctx.options.columnOrder)
-      .with('original', () => sql.columns)
-      .with('reverse', () => [...sql.columns].reverse())
-      .exhaustive()
-      .map((column): SqlCommand => {
-        if (column.type === 'single') {
-          let expr = straight(render(column.expr, ctx));
+    sql.columns.map((column): SqlCommand => {
+      let expr = straight(render(column.expr, ctx));
 
-          if (
-            column.expr.type === 'select' ||
-            column.expr.type === 'combination' ||
-            column.expr.type === 'raw'
-          ) {
-            // todo: it seems like it must be:
-            // expr = cmd`(${expr}) AS ${ctx.escapeId(column.as)}`;
-            expr = cmd`(${expr})`;
-          }
+      if (
+        column.expr.type === 'select' ||
+        column.expr.type === 'combination' ||
+        column.expr.type === 'raw'
+      ) {
+        // todo: it seems like it must be:
+        // expr = cmd`(${expr}) AS ${ctx.escapeId(column.as)}`;
+        expr = cmd`(${expr})`;
+      }
 
-          if (column.expr.type === 'lookup' && column.expr.prop === column.as) {
-            return cmd`${expr}`;
-          } else {
-            return cmd`${expr} AS ${ctx.escapeId(column.as)}`;
-          }
-        } else if (column.type === 'wildcard') {
-          return cmd`${column.subject.name}.*`;
-        }
-
-        return assertNever(column, 'invalid column: ' + column);
-      }),
+      if (column.expr.type === 'lookup' && column.expr.prop === column.as) {
+        return cmd`${expr}`;
+      } else {
+        return cmd`${expr} AS ${ctx.escapeId(column.as)}`;
+      }
+    }),
     ',\n'
   );
   let select = sql.distinct

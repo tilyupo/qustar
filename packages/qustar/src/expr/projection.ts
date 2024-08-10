@@ -1,5 +1,5 @@
 import {ScalarType, SingleScalarType} from '../literal.js';
-import {Expr, LocatorExpr} from './expr.js';
+import {Expr} from './expr.js';
 import {Ref} from './schema.js';
 
 export type Projection = ScalarProjection | ObjectProjection;
@@ -15,24 +15,11 @@ export interface ScalarProjection extends GenericProjection<'scalar'> {
   readonly expr: Expr<any>;
 }
 
-export interface GenericProjectionProp<TType extends string> {
-  readonly type: TType;
-}
-
-export interface SinglePropProjection extends GenericProjectionProp<'single'> {
+export interface PropProjection {
   readonly expr: Expr<any>;
   readonly path: PropPath;
   readonly scalarType: SingleScalarType;
 }
-
-// no path because nested wildcards are not supported in SQL
-// so, only from root to root wildcards are supported
-export interface WildcardPropProjection
-  extends GenericProjectionProp<'wildcard'> {
-  readonly source: LocatorExpr<any>;
-}
-
-export type PropProjection = SinglePropProjection | WildcardPropProjection;
 
 export interface ObjectProjection extends GenericProjection<'object'> {
   readonly props: readonly PropProjection[];

@@ -1096,35 +1096,16 @@ export class LocatorExpr<T extends SingleLiteralValue> extends Expr<T> {
             )
             .exhaustive();
         } else {
-          const prop = proj.props.find(
-            x => x.type === 'wildcard' || arrayEqual(x.path, part)
-          );
+          const prop = proj.props.find(x => arrayEqual(x.path, part));
           if (prop) {
-            if (prop.type === 'single') {
-              proj = {
-                type: 'scalar',
-                scalarType: {
-                  ...prop.scalarType,
-                  nullable: proj.nullable || prop.scalarType.nullable,
-                },
-                expr: prop.expr,
-              };
-            } else if (prop.type === 'wildcard') {
-              proj = {
-                type: 'scalar',
-                scalarType: {
-                  type: 'dynamic',
-                  nullable: true,
-                },
-                expr: new LocatorExpr(
-                  this.root,
-                  [...currentPath],
-                  this.nullable
-                ),
-              };
-            } else {
-              assertNever(prop, 'invalid prop: ' + prop);
-            }
+            proj = {
+              type: 'scalar',
+              scalarType: {
+                ...prop.scalarType,
+                nullable: proj.nullable || prop.scalarType.nullable,
+              },
+              expr: prop.expr,
+            };
           } else {
             throw new Error('invalid projection prop: ' + part);
           }

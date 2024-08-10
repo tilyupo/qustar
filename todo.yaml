@@ -23,12 +23,16 @@ features:
   - transactions
   - array support
   - allow nested wildcards because they sometimes can be optimized out later
+  - support decimal type
+  - support Date type
+  - now that we know about all properties in a query, we can throw an error when accessing an unknown prop
 
 tech:
   - refactor combine query compiler
   - noPropertyAccessFromIndexSignature
   - noUncheckedIndexedAccess
   - no-explicit-any
+  - extract base vitest config
 
 interpreter:
   - group by
@@ -50,9 +54,12 @@ testing:
   - intersect tests
   - date tests
   - datetime tests
+  - datetime with tz tests
   - timestamp tests
   - add string length tests
   - add mean tests
+  - add tests for every data type
+  - add a test that selects parameter that is a number (SELECT ?), pg seems to don't work
 
 query compiler:
   - use one join for all props from the same ref

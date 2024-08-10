@@ -1,6 +1,6 @@
 import {compileQuery, gen, interpretQuery, renderSqlite} from 'qustar';
 import {expect} from 'vitest';
-import {EXAMPLE_DB, staticComments, staticPosts} from './db.js';
+import {EXAMPLE_DB, comments, posts} from './db.js';
 import {SuiteContext} from './describe.js';
 
 export function describeFuzzing({describe, execute, test}: SuiteContext) {
@@ -8,7 +8,7 @@ export function describeFuzzing({describe, execute, test}: SuiteContext) {
     test('query', async () => {
       for (let i = 1; i < 1024; i += 1) {
         const seed = i.toString();
-        const query = gen([staticComments, staticPosts], {
+        const query = gen([comments, posts], {
           seed,
           disableFlatMap: true,
           disableGroupBy: true,

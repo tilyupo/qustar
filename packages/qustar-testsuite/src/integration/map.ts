@@ -86,55 +86,41 @@ export function describeMap({
       testMap(
         'nested ref',
         x => ({one: {id: x.id, title: x.title}, two: x.author}),
-        {one: {id: 2, title: 'rust'}, two: {id: 1, name: 'Dima'}},
-        {staticOnly: true}
+        {one: {id: 2, title: 'rust'}, two: {id: 1, name: 'Dima'}}
       );
 
       testMap(
         'nested nested ref',
         x => ({one: {id: x.id, lvl1: {lvl2: {lvl3: 1}}}}),
-        {one: {id: 2, lvl1: {lvl2: {lvl3: 1}}}},
-        {staticOnly: true}
+        {one: {id: 2, lvl1: {lvl2: {lvl3: 1}}}}
       );
 
-      test(
-        'use nested ref',
-        async ({comments}) => {
-          const query = comments
-            .map(x => ({post: x.post}))
-            .map(x => x.post.author.name);
+      test('use nested ref', async ({comments}) => {
+        const query = comments
+          .map(x => ({post: x.post}))
+          .map(x => x.post.author.name);
 
-          await expectQuery(query, ['Dima', 'Dima', 'Dima', 'Dima']);
-        },
-        {staticOnly: true}
-      );
+        await expectQuery(query, ['Dima', 'Dima', 'Dima', 'Dima']);
+      });
 
       testMap('special symbols', () => ({'%&""*"-+': 1}), {'%&""*"-+': 1});
 
-      test(
-        'two refs with the same name',
-        async ({comments}) => {
-          const query = comments
-            .orderByAsc(x => x.id)
-            .map(x => ({...x.post, ...x}))
-            .map(x => x.author.name);
+      test('two refs with the same name', async ({comments}) => {
+        const query = comments
+          .orderByAsc(x => x.id)
+          .map(x => ({...x.post, ...x}))
+          .map(x => x.author.name);
 
-          await expectQuery(query, ['Dima', 'Dima', 'Anna', 'Max']);
-        },
-        {staticOnly: true}
-      );
+        await expectQuery(query, ['Dima', 'Dima', 'Anna', 'Max']);
+      });
 
-      test(
-        'two refs with the same name',
-        async ({comments}) => {
-          const query = comments
-            .map(x => ({...x, ...x.post}))
-            .map(x => x.author.name);
+      test('two refs with the same name', async ({comments}) => {
+        const query = comments
+          .map(x => ({...x, ...x.post}))
+          .map(x => x.author.name);
 
-          await expectQuery(query, ['Dima', 'Dima', 'Dima', 'Dima']);
-        },
-        {staticOnly: true}
-      );
+        await expectQuery(query, ['Dima', 'Dima', 'Dima', 'Dima']);
+      });
     });
   });
 }

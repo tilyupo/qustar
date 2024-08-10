@@ -7,6 +7,7 @@ export function describeUnique({describe, testFactory}: SuiteContext) {
     describe('unique', () => {
       const testUnique = testFactory(
         <T extends Mapping>({posts}: QuerySet, mapper: MapValueFn<Post, T>) => {
+          debugger;
           return posts
             .select(mapper)
             .unique()

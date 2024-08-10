@@ -268,7 +268,6 @@ function propagateOrdering(source: SqlSource): OrderPropagation {
         columns:
           x.orderBy?.map(
             (_, index): SelectSqlColumn => ({
-              type: 'single',
               as: orderingColumnAlias(index),
               expr: {
                 type: 'lookup',
@@ -317,7 +316,6 @@ function compileScalarProjection(
       columns: [
         ...orderPropagation.columns,
         {
-          type: 'single',
           expr: exprSql,
           as: SCALAR_COLUMN_ALIAS,
         },
@@ -357,21 +355,12 @@ function compileObjectProjection(
   const joins: Join[] = [...sourceJoins];
 
   for (const prop of proj.props) {
-    if (prop.type === 'single') {
-      const expr = _compileExpr(prop.expr, ctx);
-      columns.push({
-        type: 'single',
-        as: serializePropPath(prop.path),
-        expr: expr.sql,
-      });
-      joins.push(...expr.joins);
-    } else if (prop.type === 'wildcard') {
-      const alias = compileObjectLocatorExpr(prop.source, ctx);
-      columns.push({type: 'wildcard', subject: alias.sql});
-      joins.push(...alias.joins);
-    } else {
-      assertNever(prop, 'invalid prop: ' + prop);
-    }
+    const expr = _compileExpr(prop.expr, ctx);
+    columns.push({
+      as: serializePropPath(prop.path),
+      expr: expr.sql,
+    });
+    joins.push(...expr.joins);
   }
 
   const orderPropagation: OrderPropagation = preserveOrder
@@ -440,7 +429,6 @@ function compileOrderByQuery(
       columns: orderBy
         .map(
           (exor, idx): SelectSqlColumn => ({
-            type: 'single',
             as: orderingColumnAlias(idx),
             expr: exor.expr,
           })
@@ -502,14 +490,39 @@ function extractUserColumnNames(sql: QuerySql): string[] {
     .with({type: 'combination'}, extractUserColumnNames)
     .with({type: 'select'}, selectSql =>
       selectSql.columns
-        .map(x => {
-          assert(x.type === 'single', 'concat does not support dynamic schema');
-
-          return x.as;
-        })
+        .map(x => x.as)
         .filter(x => !x.startsWith(SYSTEM_ORDERING_COLUMN_PREFIX))
     )
     .exhaustive();
+}
+
+function assertColumnListTheSame(a: string[], b: string[]) {
+  if (a.length !== b.length) {
+    throw new Error(
+      'invalid combination query: lhs and rhs must have the same column list'
+    );
+  }
+
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) {
+      throw new Error(
+        'invalid combination query: lhs and rhs must have the same column list'
+      );
+    }
+  }
+}
+
+function extractColumnNames(query: QuerySql): string[] {
+  if (query.type === 'select') {
+    return query.columns.map(x => x.as);
+  } else {
+    const lhs = extractColumnNames(query.lhs);
+    const rhs = extractColumnNames(query.rhs);
+
+    assertColumnListTheSame(lhs, rhs);
+
+    return lhs;
+  }
 }
 
 function compileCombineQuery(
@@ -521,6 +534,9 @@ function compileCombineQuery(
   const lhs = _compileQuery(lhsQuery, ctx);
   const rhs = _compileQuery(rhsQuery, ctx);
   const joins = [...lhs.joins, ...rhs.joins];
+  const lhsColumns = extractColumnNames(lhs.sql);
+  const rhsColumns = extractColumnNames(rhs.sql);
+  assertColumnListTheSame(lhsColumns, rhsColumns);
 
   if (query.options.type === 'concat') {
     const primaryOrderCol = SYSTEM_COLUMN_PREFIX + '__concat_primary_order';
@@ -534,7 +550,6 @@ function compileCombineQuery(
       };
       const {orderBy} = propagateOrdering(source);
       const primaryColumn: SelectSqlColumn = {
-        type: 'single',
         as: primaryOrderCol,
         expr: {
           type: 'literal',
@@ -567,7 +582,6 @@ function compileCombineQuery(
           columns: [
             primaryColumn,
             {
-              type: 'single',
               as: secondaryOrderCol,
               expr: {type: 'row_number', orderBy},
             },
@@ -581,7 +595,6 @@ function compileCombineQuery(
           columns: [
             primaryColumn,
             {
-              type: 'single',
               as: secondaryOrderCol,
               expr: oneLiteral,
             },
@@ -619,12 +632,22 @@ function compileCombineQuery(
         columns: [
           ...orderBy.map(
             (x, index): SelectSqlColumn => ({
-              type: 'single',
               as: orderingColumnAlias(index),
               expr: x.expr,
             })
           ),
-          {type: 'wildcard', subject: {type: 'alias', name: sourceAlias}},
+          ...lhsColumns
+            .filter(x => !x.startsWith(SYSTEM_COLUMN_PREFIX))
+            .map(
+              (x): SelectSqlColumn => ({
+                as: x,
+                expr: {
+                  type: 'lookup',
+                  prop: x,
+                  subject: {type: 'alias', name: sourceAlias},
+                },
+              })
+            ),
         ],
         from: {
           type: 'query',
@@ -663,8 +686,7 @@ function prepareForCombination(
   return {
     ...sql,
     columns: sql.columns.filter(
-      x =>
-        x.type === 'wildcard' || !x.as.startsWith(SYSTEM_ORDERING_COLUMN_PREFIX)
+      x => !x.as.startsWith(SYSTEM_ORDERING_COLUMN_PREFIX)
     ),
     orderBy: preserveOrderBy ? sql.orderBy : undefined,
   };
@@ -1232,7 +1254,6 @@ function compileAggregationTerminator(
       type: 'select',
       columns: [
         {
-          type: 'single',
           expr: {
             type: 'func',
             func,
@@ -1323,7 +1344,6 @@ function compileEmptyTerminator(
       type: 'select',
       columns: [
         {
-          type: 'single',
           as: 'value',
           expr: {
             type: 'unary',
@@ -1357,7 +1377,6 @@ function compileSomeTerminator(
       type: 'select',
       columns: [
         {
-          type: 'single',
           as: 'value',
           expr: {
             type: 'unary',

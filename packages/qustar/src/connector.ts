@@ -107,7 +107,6 @@ export function materialize(row: any, projection: Projection): any {
       return value;
     }
 
-    // pg driver returns strings for numeric values for some reason
     if (typeof value !== 'string' || !isNumberString(value)) {
       throw new Error('can not materialize number value: ' + value);
     }

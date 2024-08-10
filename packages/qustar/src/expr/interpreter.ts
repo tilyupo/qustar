@@ -1,14 +1,7 @@
 import {P, match} from 'ts-pattern';
 import {SingleLiteralValue} from '../literal.js';
 import {Value} from '../types.js';
-import {
-  assert,
-  assertNever,
-  compare,
-  deepEqual,
-  like,
-  setPath,
-} from '../utils.js';
+import {assert, compare, deepEqual, like, setPath} from '../utils.js';
 import {
   BinaryExpr,
   CaseExpr,
@@ -110,14 +103,7 @@ function intScalarProjection(proj: ScalarProjection, ctx: IntContext): unknown {
 function intObjectProjection(proj: ObjectProjection, ctx: IntContext): unknown {
   const result: object = {};
   for (const prop of proj.props) {
-    if (prop.type === 'wildcard') {
-      // todo: handle refs
-      Object.assign(result);
-    } else if (prop.type === 'single') {
-      setPath(result, prop.path, intExpr(prop.expr, ctx));
-    } else {
-      assertNever(prop, 'invalid prop: ' + prop);
-    }
+    setPath(result, prop.path, intExpr(prop.expr, ctx));
   }
 
   // todo: handle refs
@@ -478,9 +464,6 @@ function intCollection(
 
   for (const doc of documents) {
     const entity: object = {};
-    if (collection.schema.additionalProperties) {
-      Object.assign(entity, doc);
-    }
 
     for (const field of collection.schema.fields) {
       if (field.name in entity) {

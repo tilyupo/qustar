@@ -35,7 +35,6 @@ import {
   PropPath,
   PropProjection,
   ScalarProjection,
-  SinglePropProjection,
 } from './projection.js';
 import {
   ChildrenRef,
@@ -95,25 +94,13 @@ export interface CombineOptions<T> {
 function schemaProjection(root: QuerySource, schema: Schema): Projection {
   return {
     type: 'object',
-    props: schema.fields
-      .map(
-        (x): PropProjection => ({
-          type: 'single',
-          path: [x.name],
-          scalarType: x.scalarType,
-          expr: new LocatorExpr(root, [[x.name]], false),
-        })
-      )
-      .concat(
-        schema.additionalProperties
-          ? [
-              {
-                type: 'wildcard',
-                source: new LocatorExpr(root, [], false),
-              },
-            ]
-          : []
-      ),
+    props: schema.fields.map(
+      (x): PropProjection => ({
+        path: [x.name],
+        scalarType: x.scalarType,
+        expr: new LocatorExpr(root, [[x.name]], false),
+      })
+    ),
     refs: schema.refs,
     nullable: false,
   };
@@ -128,7 +115,6 @@ export class QuerySource {
       | {
           readonly type: 'query';
           readonly query: Query<any>;
-          readonly schema?: Schema;
         }
       | {
           readonly type: 'view';
@@ -139,9 +125,7 @@ export class QuerySource {
       .with({type: 'collection'}, ({collection}) =>
         schemaProjection(this, collection.schema)
       )
-      .with({type: 'query'}, ({query, schema}) =>
-        schema ? schemaProjection(this, schema) : query.projection
-      )
+      .with({type: 'query'}, ({query}) => query.projection)
       .with({type: 'view'}, ({view}) => schemaProjection(this, view.schema))
       .exhaustive();
   }
@@ -168,22 +152,34 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 
 export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
+export class RawSqlQuery<T extends Value<T>> {
+  constructor(
+    private src: TemplateStringsArray,
+    private args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
+  ) {}
+
+  schema<TNew extends Value<TNew> = T>(schema: TableSchema): Query<TNew> {
+    const query = new ProxyQuery(
+      new QuerySource({
+        type: 'view',
+        view: {
+          sql: {src: this.src, args: this.args},
+          schema: publicSchemaToInternalSchema(() => query, schema),
+        },
+      })
+    );
+    return query;
+  }
+}
+
 export abstract class Query<T extends Value<T>> {
   static readonly table = collection;
 
   static sql<T extends Value<T> = any>(
     src: TemplateStringsArray,
     ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
-  ): Query<T> {
-    return new ProxyQuery(
-      new QuerySource({
-        type: 'view',
-        view: {
-          sql: {src, args},
-          schema: {additionalProperties: true, fields: [], refs: []},
-        },
-      })
-    );
+  ): RawSqlQuery<T> {
+    return new RawSqlQuery(src, args);
   }
 
   constructor(
@@ -281,16 +277,6 @@ export abstract class Query<T extends Value<T>> {
     const rows = await connector.select(command);
 
     return rows.map(row => materialize(row, this.projection));
-  }
-
-  schema<TNew extends Value<TNew> = T>(schema: TableSchema): Query<TNew> {
-    return new ProxyQuery(
-      new QuerySource({
-        type: 'query',
-        query: this,
-        schema: publicSchemaToInternalSchema(() => this, schema),
-      })
-    ) as Query<TNew>;
   }
 
   // modificators
@@ -676,26 +662,12 @@ function proxyObjectProjection(
 ): ObjectProjection {
   return {
     type: 'object',
-    props: sourceProj.props.map(prop =>
-      match(prop)
-        .with(
-          {type: 'single'},
-          (x): PropProjection => ({
-            type: 'single',
-            expr: new LocatorExpr(source, [x.path], false),
-            path: x.path,
-            scalarType: x.scalarType,
-          })
-        )
-        .with(
-          {type: 'wildcard'},
-          (): PropProjection => ({
-            type: 'wildcard',
-            source: new LocatorExpr(source, [], false),
-          })
-        )
-        .exhaustive()
-    ),
+    props: sourceProj.props.map(prop => ({
+      type: 'single',
+      expr: new LocatorExpr(source, [prop.path], false),
+      path: prop.path,
+      scalarType: prop.scalarType,
+    })),
     refs: sourceProj.refs,
     nullable: sourceProj.nullable,
   };
@@ -774,9 +746,7 @@ function createObjectHandle(
 
         for (const path of [
           ...proj.refs.map(x => x.path),
-          ...proj.props
-            .filter((x): x is SinglePropProjection => x.type === 'single')
-            .map(x => x.path),
+          ...proj.props.map(x => x.path),
         ]) {
           if (startsWith(path.slice(0, -1), [...prefix, prop])) {
             return createObjectHandle(locator, proj, [...prefix, prop]);
@@ -862,21 +832,11 @@ function inferProjection(value: Mapping, depth = 0): Projection {
           'invalid wildcard projection for scalar'
         );
         for (const prop of locatorProj.props) {
-          if (prop.type === 'single') {
-            props.push({
-              type: 'single',
-              expr: locator.push(prop.path),
-              path: prop.path,
-              scalarType: prop.scalarType,
-            });
-          } else if (prop.type === 'wildcard') {
-            props.push({
-              type: 'wildcard',
-              source: locator,
-            });
-          } else {
-            assertNever(prop, 'invalid prop: ' + prop);
-          }
+          props.push({
+            expr: locator.push(prop.path),
+            path: prop.path,
+            scalarType: prop.scalarType,
+          });
         }
 
         refs.push(...locatorProj.refs);
@@ -887,13 +847,7 @@ function inferProjection(value: Mapping, depth = 0): Projection {
 
         if (propProj.type === 'object') {
           for (const nestedProp of propProj.props) {
-            assert(
-              nestedProp.type !== 'wildcard',
-              'wildcard nested projection is not supported'
-            );
-
             props.push({
-              type: 'single',
               path: [key, ...nestedProp.path],
               expr: nestedProp.expr,
               scalarType: nestedProp.scalarType,
@@ -920,7 +874,6 @@ function inferProjection(value: Mapping, depth = 0): Projection {
           );
 
           props.push({
-            type: 'single',
             path: [key],
             scalarType: propProj.scalarType,
             expr: propProj.expr,

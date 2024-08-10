@@ -13,7 +13,6 @@ import {
   SelectSql,
   SelectSqlColumn,
   SelectSqlJoin,
-  SelectSqlWildcardColumn,
   Sql,
   SqlSource,
   UnarySql,
@@ -171,22 +170,10 @@ export function mapSelect(sql: SelectSql, mapper: SqlMapper): SelectSql {
   return mapper.select({
     type: sql.type,
     columns: sql.columns
-      .map(column =>
-        match(column)
-          .with({type: 'single'}, x => ({
-            type: x.type,
-            as: x.as,
-            expr: mapSql(x.expr, mapper),
-          }))
-          .with(
-            {type: 'wildcard'},
-            (x): SelectSqlWildcardColumn => ({
-              type: x.type,
-              subject: mapper.alias(x.subject),
-            })
-          )
-          .exhaustive()
-      )
+      .map(column => ({
+        as: column.as,
+        expr: mapSql(column.expr, mapper),
+      }))
       .flatMap(mapper.column),
     from: sql.from ? mapSqlSource(sql.from, mapper) : undefined,
     joins: sql.joins

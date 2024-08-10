@@ -8,7 +8,7 @@ export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;
 }
 
-export interface RefPropertyDescriptor
+export interface ForwardRefPropertyDescriptor
   extends GenericPropertyDescriptor<'ref'> {
   readonly required?: boolean;
   readonly references: () => Query<any>;
@@ -21,65 +21,70 @@ export interface BackRefPropertyDescriptor
   readonly condition: JoinFilterFn<any, any>;
 }
 
-type NavPropertyDescriptor = RefPropertyDescriptor | BackRefPropertyDescriptor;
+type RefPropertyDescriptor =
+  | ForwardRefPropertyDescriptor
+  | BackRefPropertyDescriptor;
 
 export type ScalarPropertyDescriptor = Omit<SingleScalarType, 'nullable'> & {
   nullable?: boolean;
 };
 
 export type PropertyDescriptor =
-  | NavPropertyDescriptor
-  | ScalarPropertyDescriptor;
+  | RefPropertyDescriptor
+  | ScalarPropertyDescriptor
+  | SingleScalarType['type'];
 
-export type TableProperties = Readonly<Record<string, PropertyDescriptor>>;
-
-export type TableSchema =
-  | {
-      readonly additionalProperties?: true | undefined;
-      schema?: TableProperties | undefined;
-    }
-  | {readonly additionalProperties: false; schema: TableProperties};
+export type TableSchema = Readonly<Record<string, PropertyDescriptor>>;
 
 export type TableSource =
   | {readonly name: string; readonly sql?: undefined}
   | {readonly name?: undefined; readonly sql: string | View};
 
-export type TableDescriptor = TableSchema & TableSource;
+export type TableDescriptor = {readonly schema: TableSchema} & TableSource;
 
 export function publicSchemaToInternalSchema(
   table: () => Query<any>,
-  {additionalProperties, schema: columns}: TableSchema
+  columns: TableSchema
 ): Schema {
   const descriptors = Object.entries(columns ?? {});
-  const nonRefDescriptors = descriptors.filter(
-    entry => entry[1].type !== 'ref' && entry[1].type !== 'back_ref'
-  );
-  if (!(additionalProperties ?? true) && nonRefDescriptors.length === 0) {
-    throw new Error(
-      'schema must define at least one field or additionalProperties !== true'
-    );
+  const nonRefDescriptors = descriptors
+    .filter(
+      (
+        entry
+      ): entry is [
+        string,
+        ScalarPropertyDescriptor | SingleScalarType['type'],
+      ] =>
+        typeof entry[1] === 'string' ||
+        (entry[1].type !== 'ref' && entry[1].type !== 'back_ref')
+    )
+    .map((entry): [string, ScalarPropertyDescriptor] => {
+      const descriptor = entry[1];
+      if (typeof descriptor === 'string') {
+        return [entry[0], {type: descriptor}];
+      } else {
+        return [entry[0], descriptor];
+      }
+    });
+  if (nonRefDescriptors.length === 0) {
+    throw new Error('schema must define at least one field');
   }
 
   return {
-    additionalProperties: additionalProperties ?? !columns,
-    fields: descriptors
-      .filter(
-        (entry): entry is [string, SingleScalarType] =>
-          entry[1].type !== 'ref' && entry[1].type !== 'back_ref'
-      )
-      .map(
-        ([property, x]): Field => ({
-          name: property,
-          scalarType: {
-            ...x,
-            nullable: x.nullable ?? false,
-          },
-        })
-      ),
+    fields: nonRefDescriptors.map(
+      ([property, x]): Field => ({
+        name: property,
+        scalarType: {
+          ...x,
+          nullable: x.nullable ?? false,
+        } as SingleScalarType,
+      })
+    ),
     refs: descriptors
       .filter(
-        (entry): entry is [string, NavPropertyDescriptor] =>
-          entry[1].type === 'ref' || entry[1].type === 'back_ref'
+        (entry): entry is [string, RefPropertyDescriptor] =>
+          typeof entry[1] !== 'string' &&
+          (entry[1].type === 'ref' || entry[1].type === 'back_ref')
       )
       .map(([property, desc]) =>
         match(desc)
@@ -112,19 +117,13 @@ export function publicSchemaToInternalSchema(
 }
 
 export function collection<T extends Value<T> = any>(
-  collectionName: string
-): Query<T>;
-export function collection<T extends Value<T> = any>(
   descriptor: TableDescriptor
 ): Query<T>;
 export function collection<T extends Value<T> = any>(
-  descriptor: TableDescriptor | string
+  descriptor: TableDescriptor
 ): Query<T> {
-  if (typeof descriptor === 'string') {
-    descriptor = {name: descriptor};
-  }
   const schema: (table: () => Query<any>) => Schema = table =>
-    publicSchemaToInternalSchema(table, descriptor as TableSchema);
+    publicSchemaToInternalSchema(table, descriptor.schema);
   if (descriptor.name) {
     const table: Query<T> = new ProxyQuery<T>(
       new QuerySource({

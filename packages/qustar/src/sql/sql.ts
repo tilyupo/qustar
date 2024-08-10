@@ -173,22 +173,10 @@ export interface SelectSql extends GenericSql<'select'> {
 
 // select select
 
-export interface GenericSelectSqlColumn<TType extends string> {
-  readonly type: TType;
-}
-
-export interface SelectSqlSingleColumn
-  extends GenericSelectSqlColumn<'single'> {
+export interface SelectSqlColumn {
   readonly expr: Sql;
   readonly as: string;
 }
-
-export interface SelectSqlWildcardColumn
-  extends GenericSelectSqlColumn<'wildcard'> {
-  readonly subject: AliasSql;
-}
-
-export type SelectSqlColumn = SelectSqlSingleColumn | SelectSqlWildcardColumn;
 
 // select from
 

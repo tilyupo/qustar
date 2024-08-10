@@ -11,18 +11,7 @@ import {
   renderSqlite,
 } from 'qustar';
 import {expect} from 'vitest';
-import {
-  Comment,
-  EXAMPLE_DB,
-  Post,
-  User,
-  comments,
-  posts,
-  staticComments,
-  staticPosts,
-  staticUsers,
-  users,
-} from './db.js';
+import {Comment, EXAMPLE_DB, Post, User, comments, posts, users} from './db.js';
 import {TestApi} from './describe.js';
 
 export {Comment, Post, User};
@@ -46,7 +35,6 @@ export interface ExecuteOptions {
   readonly optOnly?: boolean;
   readonly rawOnly?: boolean;
   readonly debug?: boolean;
-  readonly staticOnly?: boolean;
   readonly ignoreOrder?: boolean;
   readonly checkInterpret?: boolean;
 }
@@ -207,7 +195,7 @@ export function buildUtils(
           sql = optimize(sql);
         }
 
-        const command = renderSqlite(sql);
+        const command = provider.render(sql);
         const rows = await provider
           .select(command)
           .then((rows: any[]) => rows.map(x => materialize(x, projection)));
@@ -269,15 +257,13 @@ export function buildUtils(
     return (expectedRows ?? result)!;
   }
 
-  const staticSources = [
+  const sources = [
     {
-      posts: staticPosts,
-      users: staticUsers,
-      comments: staticComments,
+      posts: posts,
+      users: users,
+      comments: comments,
     },
   ];
-
-  const allSources = [...staticSources, {posts, users, comments}];
 
   return {
     execute,
@@ -286,7 +272,6 @@ export function buildUtils(
     },
     test(name, f, options) {
       test(name, async () => {
-        const sources = options?.staticOnly ? staticSources : allSources;
         for (const source of sources) {
           await f(source);
         }
@@ -294,7 +279,6 @@ export function buildUtils(
     },
     testFactory(f) {
       return (name, arg, expected, options) => {
-        const sources = options?.staticOnly ? staticSources : allSources;
         test(name, async () => {
           for (const source of sources) {
             let queries = f(source, arg);
