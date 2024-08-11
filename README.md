@@ -19,37 +19,44 @@ npm install qustar qustar-sqlite3 sqlite3
 Here an example usage of qustar:
 
 ```ts
-// qustar can work with a variety of SQL databases, we use SQLite as an example
-import {Sqlite3Connector} from 'qustar-sqlite3';
+// qustar can work with a variety of SQL databases, we use PostgreSQL as an example
+import {PgConnector} from 'qustar-pg';
 import {Query} from 'qustar';
 
 // create a Connector
-const connector = new Sqlite3Connector('/path/to/your/database');
+const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
 
-// run a query
-const users = await Query.table('users')
+// specify a schema
+const users = await Query.table({
+  name: 'users',
+  schema: {
+    id: 'i32',
+    firstName: 'text',
+    lastName: 'text',
+    age: {type: 'i32', nullable: true},
+  },
+});
+
+// compose a query
+const query = users
   .orderByDesc(user => user.createdAt)
   .map(user => ({
     name: user.firstName.concat(' ', user.lastName),
     age: user.age,
   }))
-  .limit(3)
-  .execute(connector);
+  .limit(3);
 
-// use the result
-console.log(users);
+// get the result
+console.log(await query.execute(connector));
 ```
 
-## Why
+## Features
 
-Existing solutions are falling into two camps:
-
-- **High level ORM**.  
-   Those provide rigid high level API that works well in simple cases but fails when something non trivial is needed. It also forces you to learn a bunch of specific API that is different for every library.
-- **Low level SQL query builders**.  
-   Those are more flexible and generally look similar to SQL. The problem with those is that they are too verbose for typical tasks.
-
-Qustar provides familiar API and flexibility without sacrificing ease of use. We archive it through mimicking native JavaScript array API (`filter`, `map`, `slice`, `flatMap`, etc).
+- High level query builder that doesn't limit you (seriously)
+- Full TypeScript support
+- Supports PostgreSQL, SQLite, MySQL and any other database through a custom connector
+- High level features like `refs` and `back_refs`
+- No codegen, works with plain TypeScript/JavaScript
 
 ## Supported database drivers
 
@@ -61,15 +68,7 @@ To execute query against a database you need a _connector_. There are many ready
   - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3)
   - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3)
 - MySQL
-  - work in progress
-- SQL Server
-  - work in progress
-- Oracle
-  - work in progress
-- ClickHouse
-  - work in progress
-- MariaDB
-  - work in progress
+  - coming soon
 
 If you implemented your own connector, let me know and I will add it to the list above!
 
@@ -82,23 +81,23 @@ Any query starts from a table or a [raw sql](#raw-sql). We will talk more about 
 ```ts
 import {Query} from 'qustar';
 
-const users = Query.table('users');
+const users = Query.table({
+  name: 'users',
+  schema: {
+    /* users table schema */
+  },
+});
 ```
 
 In qustar you compose a query by calling query methods like `.filter` or `.map`:
 
 ```ts
-import {Query} from 'qustar';
-
-const users = Query.table('users');
 const young = users.filter(user => user.age.lt(18));
 const youngIds = young.map(user => user.id);
 
 // or
 
-const ids = Query.table('users')
-  .filter(user => user.age.lt(18))
-  .map(user => user.id);
+const ids = users.filter(user => user.age.lt(18)).map(user => user.id);
 ```
 
 Queries are immutable, so you can reuse them safely.
@@ -106,11 +105,10 @@ Queries are immutable, so you can reuse them safely.
 For methods like `.filter` or `.map` you pass a callback which returns an _expression_. Expression represents a condition or operation you wish to do. Expressions are build using methods like `.add` or `.eq`:
 
 ```ts
-const users = Query.table('users');
 // for arrays you would write: users.filter(x => x.age + 1 === x.height - 5)
 const a = users.filter(user => user.age.add(1).eq(user.height.sub(5)));
 
-// you can also use Expr to achive the same
+// you can also use Expr to achieve the same
 import {Expr} from 'qustar';
 
 const b = users.map(user => Expr.eq(user.age.add(1), user.height.sub(5));
@@ -173,7 +171,7 @@ const users = Query.table('users')
 
 #### .slice(start, end)
 
-You can also use `.slice` method to achive the same:
+You can also use `.slice` method to achieve the same:
 
 ```ts
 const users = Query.table('users')
@@ -289,7 +287,7 @@ const studentAndTeacherNames = studentNames.intersect(teacherNames);
 const studentNames = Query.table('students').map(student => student.name);
 const teacherNames = Query.table('teachers').map(teacher => teacher.name);
 
-const studentOnlyNames = studentNames.except(techerNames);
+const studentOnlyNames = studentNames.except(teacherNames);
 ```
 
 #### .flatMap(mapper)
@@ -357,7 +355,7 @@ const posts = Query.table('posts')
 
 Why do we need to know schema ahead of time to put an entity as a nested field? This is because of the SQL limitations. When we don't know all columns of the table, we have to use SQL wildcard `*` operator to select all columns. The operator can't add a prefix to selected columns. This means that some column names might overlap and we can't do anything about it. That is why we need to know all columns that need to be projected inside a nested object.
 
-In the example above we can use `{...post}`, because it's used at the top level (SQL wildcard works at the top level as well). `{nested: {...post}}` whouldn't work.
+In the example above we can use `{...post}`, because it's used at the top level (SQL wildcard works at the top level as well). `{nested: {...post}}` wouldn't work.
 
 The list of supported column types:
 
@@ -385,6 +383,8 @@ You can use raw SQL like so:
 
 ```ts
 const users = Query.sql`SELECT * from users`
+  // we must specify schema so qustar knows how to compose query
+  .schema({id: 'i32', age: 'i32'})
   .filter(user => user.age.lte(25))
   .map(user => user.id);
 ```
@@ -392,28 +392,23 @@ const users = Query.sql`SELECT * from users`
 You can also use aliases in a nested query like so:
 
 ```ts
-const posts = Query.table('users').flatMap(
-  user =>
-    Query.sql`
+const postIds = Query.table('users').flatMap(user =>
+  Query.sql`
       SELECT
-        *
+        id
       FROM
         posts p
       WHERE p.authorId = ${user.id}'
-    `
+    `.schema({id: 'i32'})
 );
 ```
 
-You can wrap a raw sql query in `Query.schema` to specify columns staticaly:
+As you can see, you must call `Query.schema` to specify columns statically:
 
 ```ts
 const users = query: Query.sql`SELECT id, name FROM users`.schema({
-  // uncomment if you don't want to specify all columns
-  // aditionalProperties: true,
-  schema: {
-    id: {type: 'i32'},
-    name: {type: 'text', nullable: true},
-    // you can use 'ref' and 'back_ref' as well
-  },
+  id: {type: 'i32'},
+  name: {type: 'text', nullable: true},
+  // you can use 'ref' and 'back_ref' as well
 });
 ```
