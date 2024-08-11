@@ -6,6 +6,7 @@ import {renderSql} from './sql.js';
 
 export function renderPostgreSql(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
+    xor: '#',
     escapeId(id: string): string {
       if (id.indexOf(':') !== -1) {
         throw new Error('can not use : in property names');

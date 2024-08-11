@@ -58,6 +58,7 @@ export interface SqlRenderingOptions {
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
   emulateXor?: boolean;
+  xor: '^' | '#';
   emulateBoolean?: boolean;
   escapeId: (id: string) => string;
   placeholder: (index: number, literal: Literal) => string;
@@ -209,7 +210,7 @@ function renderBinary(sql: BinarySql, ctx: RenderingContext): SqlCommand {
     .with('%', () => '%')
     .with('|', () => '|')
     .with('&', () => '&')
-    .with('^', () => '^')
+    .with('^', () => ctx.options.xor)
     .with('<<', () => '<<')
     .with('>>', () => '>>')
     .exhaustive();
