@@ -104,28 +104,31 @@ function propagateNull(sql: Sql): Sql {
 
   if (sql.type === 'binary') {
     if (isNullLiteral(sql.lhs) || isNullLiteral(sql.rhs)) {
-      return match(sql.op)
-        .with('!=', () => nullLiteral)
-        .with('%', () => nullLiteral)
-        .with('&', () => nullLiteral)
-        .with('*', () => nullLiteral)
-        .with('+', () => nullLiteral)
-        .with('-', () => nullLiteral)
-        .with('/', () => nullLiteral)
-        .with('<', () => nullLiteral)
-        .with('<<', () => nullLiteral)
-        .with('<=', () => nullLiteral)
-        .with('==', () => nullLiteral)
-        .with('>', () => nullLiteral)
-        .with('>=', () => nullLiteral)
-        .with('>>', () => nullLiteral)
-        .with('^', () => nullLiteral)
-        .with('and', () => sql)
-        .with('in', () => nullLiteral)
-        .with('like', () => nullLiteral)
-        .with('or', () => sql)
-        .with('|', () => nullLiteral)
-        .exhaustive();
+      return (
+        match(sql.op)
+          .with('!=', () => nullLiteral)
+          .with('%', () => nullLiteral)
+          .with('&', () => nullLiteral)
+          .with('*', () => nullLiteral)
+          .with('+', () => nullLiteral)
+          .with('-', () => nullLiteral)
+          .with('/', () => nullLiteral)
+          .with('<', () => nullLiteral)
+          .with('<<', () => nullLiteral)
+          .with('<=', () => nullLiteral)
+          .with('==', () => nullLiteral)
+          .with('>', () => nullLiteral)
+          .with('>=', () => nullLiteral)
+          .with('>>', () => nullLiteral)
+          .with('^', () => nullLiteral)
+          // todo: optimize and/or out
+          .with('and', () => sql)
+          .with('or', () => sql)
+          .with('in', () => nullLiteral)
+          .with('like', () => nullLiteral)
+          .with('|', () => nullLiteral)
+          .exhaustive()
+      );
     }
   }
 

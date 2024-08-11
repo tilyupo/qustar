@@ -8,7 +8,6 @@ docs:
   - list of features at the top
 
 bugs:
-  - fix bug users.orderByDesc(x => x.id).map(x => x.id).first(x => x)
   - ref can become nullable after, for example, left join for the right entity,
     now we assume that ref condition always takes non-null entities (fixed?)
 
@@ -114,3 +113,4 @@ done:
   - add toLowerCase/toUpperCase
   - sqlite support
   - postgres support
+  - fix bug users.orderByDesc(x => x.id).map(x => x.id).first(x => x)
