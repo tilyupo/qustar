@@ -250,6 +250,8 @@ interface OrderPropagation {
   readonly orderBy: readonly SqlOrderBy[] | undefined;
 }
 
+// todo: we need to deduplicate system columns, because, for example,
+// todo: postgres can't handle ambiguous column references
 // order propagation columns must be added at the beginning for
 // optimizer to work correctly because of the wildcard selection
 function propagateOrdering(source: SqlSource): OrderPropagation {

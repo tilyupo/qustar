@@ -4,8 +4,13 @@ import {writeFileSync} from 'fs';
 import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
-import {posts} from '../packages/qustar-testsuite/src/db.js';
+import {users} from '../packages/qustar-testsuite/src/db.js';
 import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
+
+interface ExecOptions {
+  readonly silent?: boolean;
+  readonly noOpt?: boolean;
+}
 
 function init() {
   const connector = (true as any)
@@ -16,14 +21,20 @@ function init() {
 
   async function execute<T>(
     query: Query<T> | QueryTerminatorExpr<any>,
-    silent = false
+    options?: ExecOptions
   ) {
     try {
       const compiledQuery = compileQuery(query, {parameters: true});
-      const optimizedQuery = optimize(compiledQuery);
+      writeFileSync(
+        './debug/sql-raw.json',
+        JSON.stringify(compiledQuery, undefined, 2)
+      );
+      const optimizedQuery = options?.noOpt
+        ? compiledQuery
+        : optimize(compiledQuery);
       const renderedQuery = connector.render(optimizedQuery);
 
-      if (!silent) {
+      if (!options?.silent) {
         writeFileSync(
           './debug/sql-raw.json',
           JSON.stringify(compiledQuery, undefined, 2)
@@ -49,12 +60,12 @@ function init() {
 
       const rows = await connector.select(renderedQuery);
 
-      if (!silent) {
+      if (!options?.silent) {
         console.log(renderedQuery.src);
         console.log();
       }
 
-      if (!silent) {
+      if (!options?.silent) {
         for (const row of rows) {
           console.log(row);
         }
@@ -84,12 +95,12 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = posts.map(x => ({
-      new_id: x.id.mul(3),
-      text: x.title.concat(' ').concat(x.author.name),
-    }));
+    const query = users
+      .flatMap(x => x.posts.orderByAsc(x => x.id))
+      .orderByAsc(x => x.id)
+      .map(x => x.id);
 
-    await execute(query);
+    await execute(query, {noOpt: true});
   } finally {
     await close();
   }

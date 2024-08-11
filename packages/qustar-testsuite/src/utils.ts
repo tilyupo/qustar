@@ -270,7 +270,7 @@ export function buildUtils(
     expectQuery(query, expected, options) {
       return expectQuery(execute, query, expected, options);
     },
-    test(name, f, options) {
+    test(name, f) {
       test(name, async () => {
         for (const source of sources) {
           await f(source);

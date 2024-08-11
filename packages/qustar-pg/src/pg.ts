@@ -48,7 +48,10 @@ export class PgConnector implements Connector {
         // pg returns some number types as strings to preserve accuracy
         // list of all dataTypeIDs can be found in the oid.txt file at the root
         if (
-          [20, 21, 23, 700, 701, 1700].includes(field.dataTypeID) &&
+          [
+            /* int8 */ 20, /* int2 */ 21, /* int4 */ 23, /* float4 */ 700,
+            /* float8 */ 701, /* bit */ 1560, /* numeric */ 1700,
+          ].includes(field.dataTypeID) &&
           row[key] !== null
         ) {
           result[key] = Number.parseFloat(row[key]);

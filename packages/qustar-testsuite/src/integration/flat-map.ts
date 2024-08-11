@@ -3,9 +3,21 @@ import {SuiteContext} from '../describe.js';
 export function describeFlatMap({describe, test, expectQuery}: SuiteContext) {
   describe('query', () => {
     describe('flatMap', () => {
+      // there was a problem with ambiguous column selection because
+      // system ordering __orm_system__ordering__0 was specified twice
+      test('user post ids', async ({users}) => {
+        const query = users
+          .flatMap(x => x.posts.orderByAsc(x => x.id))
+          .orderByAsc(x => x.id)
+          .map(x => x.id);
+
+        await expectQuery(query, []);
+      });
+
       test('user posts', async ({users}) => {
         const query = users
-          .flatMap(x => x.posts.map(y => y.title))
+          .orderByDesc(x => x.id)
+          .flatMap(x => x.posts.orderByAsc(x => x.id).map(y => y.title))
           .orderByAsc(x => x);
 
         await expectQuery(
@@ -38,10 +50,13 @@ export function describeFlatMap({describe, test, expectQuery}: SuiteContext) {
 
       test('nested refs', async ({posts}) => {
         const query = posts
+          .orderByAsc(x => x.id)
           .flatMap(post =>
-            post.comments.map(comment => ({
-              author: comment.author.id,
-            }))
+            post.comments
+              .orderByAsc(x => x.id)
+              .map(comment => ({
+                author: comment.author.id,
+              }))
           )
           .map(x => x.author);
 
