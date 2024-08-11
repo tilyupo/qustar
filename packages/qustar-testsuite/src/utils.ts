@@ -149,13 +149,15 @@ export interface DescribeOrmUtils {
 
 export function buildUtils(
   {test}: TestApi,
-  provider: Connector | undefined
+  provider: Connector | undefined,
+  migrationsApplied: Promise<void>
 ): DescribeOrmUtils {
   async function checkProvider(
     query: Query<any> | QueryTerminatorExpr<any>,
     expectedRows: any[] | undefined,
     options?: ExecuteOptions
   ) {
+    await migrationsApplied;
     if (!provider) {
       return;
     }

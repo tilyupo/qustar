@@ -255,6 +255,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       // todo: add date, time, timetz, timestamp, timestamptz, uuid
       testExpr('1 is 1', Expr.from(1), 1);
       testExpr("'one' is 'one'", Expr.from('one'), 'one');
+      testExpr('"\'` is "\'`', Expr.from('"\'`'), '"\'`');
       testExpr('null is null', Expr.from(null), null);
       testExpr('1.23 is 1.23', Expr.from(1.23), 1.23);
       testExpr('true is true', Expr.from(true), true);

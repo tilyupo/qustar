@@ -1,0 +1,46 @@
+{
+  "name": "qustar-mysql2",
+  "version": "0.0.1",
+  "description": "mysql2 data source for qustar",
+  "license": "MIT",
+  "keywords": [
+    "qustar",
+    "sqlite",
+    "mysql2",
+    "sql",
+    "typescript"
+  ],
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "files": [
+    "build/src"
+  ],
+  "exports": {
+    ".": "./build/src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tilyupo/qustar.git",
+    "directory": "packages/qustar-mysql2"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "deploy": "npm run build && node ../../deploy.js",
+    "db": "docker run -it --rm -e MYSQL_ROOT_PASSWORD=test -e MYSQL_USER=qustar -e MYSQL_PASSWORD=test -e MYSQL_DATABASE=qustar -p 22784:3306 mysql:9.0.1",
+    "test": "vitest run",
+    "test:watch": "run-p test:watch:*",
+    "test:watch:run": "vitest",
+    "test:watch:db": "npm run db"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0",
+    "qustar": "^0.0.1"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "qustar-testsuite": "^0.0.1",
+    "vitest": "^1.6.0"
+  }
+}

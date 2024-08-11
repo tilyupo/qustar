@@ -58,10 +58,13 @@ export interface SqlRenderingOptions {
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
   emulateXor?: boolean;
-  xor: '^' | '#';
+  xor: '^' | '#' | (string & {});
   emulateBoolean?: boolean;
   escapeId: (id: string) => string;
   placeholder: (index: number, literal: Literal) => string;
+  int32Type: 'INT' | 'SIGNED' | (string & {});
+  float32Type: 'REAL' | 'DECIMAL' | (string & {});
+  textType: 'TEXT' | 'CHAR' | (string & {});
 }
 
 export function renderSql(
@@ -89,11 +92,11 @@ function render(sql: Sql, ctx: RenderingContext): SqlCommand {
 
 function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
   if (sql.func === 'to_int32') {
-    return cmd`CAST(${render(sql.args[0], ctx)} as INT)`;
+    return cmd`CAST(${render(sql.args[0], ctx)} as ${ctx.options.int32Type})`;
   } else if (sql.func === 'to_float32') {
-    return cmd`CAST(${render(sql.args[0], ctx)} as REAL)`;
+    return cmd`CAST(${render(sql.args[0], ctx)} as ${ctx.options.float32Type})`;
   } else if (sql.func === 'to_string') {
-    return cmd`CAST(${render(sql.args[0], ctx)} as TEXT)`;
+    return cmd`CAST(${render(sql.args[0], ctx)} as ${ctx.options.textType})`;
   } else {
     const {fn, args} = match(sql.func)
       .with('substring', () => ({
@@ -307,7 +310,10 @@ function renderSingleLiteralInline(
     .with({type: {type: 'i32'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'i64'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'null'}}, () => cmd`NULL`)
-    .with({type: {type: 'text'}}, ({value}) => cmd`'${value}'`)
+    .with(
+      {type: {type: 'text'}},
+      ({value}) => cmd`'${value.split("'").join("''")}'`
+    )
     .exhaustive();
 
   if (
@@ -531,18 +537,8 @@ function renderOrderByTerms(
       .with('asc', () => 'ASC')
       .with('desc', () => 'DESC')
       .exhaustive();
-    let result = cmd`(${straight(render(part.expr, ctx))}) ${orderByType}`;
 
-    if (part.nulls) {
-      const nulls = match(part.nulls)
-        .with('first', () => 'NULLS FIRST')
-        .with('last', () => 'NULLS LAST')
-        .exhaustive();
-
-      result = cmd`${result} ${nulls}`;
-    }
-
-    return result;
+    return cmd`(${straight(render(part.expr, ctx))}) ${orderByType}`;
   });
 
   return SqlCommand.join(parts, ',\n  ');

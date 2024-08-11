@@ -6,13 +6,12 @@ import {renderSql} from './sql.js';
 
 export function renderPostgreSql(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
+    float32Type: 'REAL',
+    int32Type: 'INT',
+    textType: 'TEXT',
     xor: '#',
     emulateArrayLiteralParam: true,
     escapeId(id: string): string {
-      if (id.indexOf(':') !== -1) {
-        throw new Error('can not use : in property names');
-      }
-
       return `"${id.split('"').join('""')}"`;
     },
     placeholder: (idx, literal) => {

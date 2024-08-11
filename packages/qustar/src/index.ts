@@ -4,6 +4,7 @@ export {Expr, QueryTerminatorExpr} from './expr/expr.js';
 export {Query} from './expr/query.js';
 export {sql} from './expr/sql.js';
 export {SingleLiteralValue} from './literal.js';
+export {renderMySql} from './render/mysql.js';
 export {renderPostgreSql} from './render/postgresql.js';
 export {convertToArgument} from './render/sql.js';
 export {renderSqlite} from './render/sqlite.js';

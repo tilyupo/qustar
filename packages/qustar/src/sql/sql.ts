@@ -1,4 +1,4 @@
-import {JoinType, OrderByNulls, OrderByType} from '../expr/query.js';
+import {JoinType, OrderByType} from '../expr/query.js';
 import {Literal} from '../literal.js';
 
 export type Sql =
@@ -217,7 +217,6 @@ export interface SelectSqlJoin {
 
 export interface SqlOrderBy {
   readonly type: OrderByType;
-  readonly nulls: OrderByNulls | undefined;
   readonly expr: Sql;
 }
 

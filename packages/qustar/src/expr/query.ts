@@ -70,17 +70,10 @@ export interface JoinOptionsPrivate {
 }
 
 export type OrderByType = 'desc' | 'asc';
-export type OrderByNulls = 'first' | 'last';
 
-export type OrderByOrdering =
+export type OrderByOptions =
   | {asc: true; desc?: undefined}
   | {desc: true; asc?: undefined};
-
-export interface OrderByNullsOptions {
-  readonly nulls?: OrderByNulls;
-}
-
-export type OrderByOptions = OrderByNullsOptions & OrderByOrdering;
 
 export type CombinationType =
   | 'union'
@@ -331,53 +324,47 @@ export abstract class Query<T extends Value<T>> {
   }
 
   orderByAsc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
     return OrderByQuery.create(
       new QuerySource({type: 'query', query: this}),
       [],
-      {selector, options: {...(options ?? {}), asc: true}}
+      {selector, options: {asc: true}}
     );
   }
 
   orderByDesc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
     return OrderByQuery.create(
       new QuerySource({type: 'query', query: this}),
       [],
-      {selector, options: {...(options ?? {}), desc: true}}
+      {selector, options: {desc: true}}
     );
   }
 
   thenByAsc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
-    return this.orderByAsc(selector, options);
+    return this.orderByAsc(selector);
   }
 
   thenByDesc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
-    return this.orderByDesc(selector, options);
+    return this.orderByDesc(selector);
   }
 
   sortByDesc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): Query<T> {
-    return this.orderByDesc(selector, options);
+    return this.orderByDesc(selector);
   }
 
   sortByAsc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): Query<T> {
-    return this.orderByAsc(selector, options);
+    return this.orderByAsc(selector);
   }
 
   join<Right extends Value<Right>, Result extends Mapping>(
@@ -950,22 +937,20 @@ export class OrderByQuery<T extends Value<T>> extends Query<T> {
   }
 
   thenByAsc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
     return OrderByQuery.create(this.source, this.terms, {
       selector,
-      options: {...(options ?? {}), asc: true},
+      options: {asc: true},
     });
   }
 
   thenByDesc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>,
-    options?: OrderByNullsOptions
+    selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
     return OrderByQuery.create(this.source, this.terms, {
       selector,
-      options: {...(options ?? {}), desc: true},
+      options: {desc: true},
     });
   }
 }

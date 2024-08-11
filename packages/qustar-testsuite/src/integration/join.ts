@@ -42,7 +42,7 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
             condition: (child, parent) => child.parent_id.eq(parent.id),
           })
           .filter(x => x.ne(1))
-          .orderByAsc(x => x, {nulls: 'first'});
+          .orderByAsc(x => x);
 
         await expectQuery(query, [null, null, 5, 5]);
       });
@@ -56,9 +56,9 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
             condition: (child, parent) => child.parent_id.eq(parent.id),
           })
           .filter(x => x.ne(1))
-          .orderByAsc(x => x, {nulls: 'last'});
+          .orderByAsc(x => x);
 
-        await expectQuery(query, [6, 8, null, null, null]);
+        await expectQuery(query, [null, null, null, 6, 8]);
       });
 
       test('full', async ({comments}) => {
@@ -73,8 +73,8 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
             condition: (child, parent) => child.parent_id.eq(parent.id),
           })
           .filter(x => x.c.ne(1))
-          .orderByAsc(x => x.c, {nulls: 'last'})
-          .thenByAsc(x => x.p, {nulls: 'last'});
+          .orderByAsc(x => x.c)
+          .thenByAsc(x => x.p);
 
         // in postgreSQL FULL JOIN is only supported with merge-joinable or hash-joinable
         // join condition
@@ -83,13 +83,13 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
         await expectQuery(
           query,
           [
+            {c: null, p: 6},
+            {c: null, p: 7},
+            {c: null, p: 8},
             {c: 5, p: null},
             {c: 6, p: 5},
             {c: 7, p: null},
             {c: 8, p: 5},
-            {c: null, p: 6},
-            {c: null, p: 7},
-            {c: null, p: 8},
           ],
           {optOnly: true}
         );

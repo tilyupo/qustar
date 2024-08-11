@@ -1,4 +1,5 @@
 import {Query} from 'qustar';
+import {match} from 'ts-pattern';
 
 export interface User {
   id: number;
@@ -99,54 +100,80 @@ export const comments: Query<Comment> = Query.table({
   },
 });
 
-export const EXAMPLE_SCHEMA_INIT_SQL = /*sql*/ `
-  CREATE TABLE users (
-    id INT NOT NULL,
-    name TEXT NOT NULL
-  );
+export function createInitSqlScript(
+  dialect: 'sqlite' | 'postgresql' | 'mysql'
+) {
+  const bitType = match(dialect)
+    .with('mysql', () => 'BIT(1)')
+    .with('postgresql', () => 'BIT')
+    .with('sqlite', () => 'BIT')
+    .exhaustive();
 
-  CREATE TABLE posts (
-    id INT NOT NULL,
-    title TEXT NOT NULL,
-    author_id INT NOT NULL
-  );
+  const bitOne = match(dialect)
+    .with('mysql', () => "b'1'")
+    .with('postgresql', () => ' CAST(1 as BIT)')
+    .with('sqlite', () => '1')
+    .exhaustive();
 
-  CREATE TABLE comments (
-    id INT NOT NULL,
-    text TEXT NOT NULL,
-    post_id INT NOT NULL,
-    commenter_id INT NOT NULL,
-    deleted BIT NOT NULL,
-    parent_id INT NULL
-  );
+  const bitZero = match(dialect)
+    .with('mysql', () => "b'0'")
+    .with('postgresql', () => ' CAST(0 as BIT)')
+    .with('sqlite', () => '0')
+    .exhaustive();
 
-  --
-
-  INSERT INTO
-    users
-  VALUES
-    (1, 'Dima'),
-    (2, 'Anna'),
-    (3, 'Max');
-
-  INSERT INTO
-    posts
-  VALUES
-    (1, 'TypeScript', 1),
-    (2, 'rust', 1),
-    (3, 'C#', 1),
-    (4, 'Ruby', 2),
-    (5, 'C++', 2),
-    (6, 'Python', 3);
-
-  INSERT INTO
-    comments(id, text, post_id, commenter_id, deleted, parent_id)
-  VALUES
-    (5, 'cool', 1, 1, 0, NULL),
-    (6, '+1', 1, 1, 0, 5),
-    (7, 'me too', 1, 2, 0, NULL),
-    (8, 'nah', 2, 3, 1, 5);
-`;
+  return /*sql*/ `
+    CREATE TABLE IF NOT EXISTS users (
+      id INT NOT NULL,
+      name TEXT NOT NULL
+    );
+    --
+    DELETE FROM users;
+    --
+    INSERT INTO
+      users
+    VALUES
+      (1, 'Dima'),
+      (2, 'Anna'),
+      (3, 'Max');
+    --
+    CREATE TABLE IF NOT EXISTS posts (
+      id INT NOT NULL,
+      title TEXT NOT NULL,
+      author_id INT NOT NULL
+    );
+    --
+    DELETE FROM posts;
+    --
+    INSERT INTO
+      posts
+    VALUES
+      (1, 'TypeScript', 1),
+      (2, 'rust', 1),
+      (3, 'C#', 1),
+      (4, 'Ruby', 2),
+      (5, 'C++', 2),
+      (6, 'Python', 3);
+    --
+    CREATE TABLE IF NOT EXISTS comments (
+      id INT NOT NULL,
+      text TEXT NOT NULL,
+      post_id INT NOT NULL,
+      commenter_id INT NOT NULL,
+      deleted ${bitType} NOT NULL,
+      parent_id INT NULL
+    );
+    --
+    DELETE FROM comments;
+    --
+    INSERT INTO
+      comments(id, text, post_id, commenter_id, deleted, parent_id)
+    VALUES
+      (5, 'cool', 1, 1, ${bitZero}, NULL),
+      (6, '+1', 1, 1, ${bitZero}, 5),
+      (7, 'me too', 1, 2, ${bitZero}, NULL),
+      (8, 'nah', 2, 3, ${bitOne}, 5);
+  `.split('--');
+}
 
 export const EXAMPLE_DB = {
   users: [

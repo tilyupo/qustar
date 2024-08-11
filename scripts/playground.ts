@@ -1,23 +1,43 @@
 /* eslint-disable n/no-unpublished-import */
 /* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
-import {Expr, Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
+import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
-import {users} from '../packages/qustar-testsuite/src/db.js';
-import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
+import {BetterSqlite3Connector} from '../packages/qustar-better-sqllite3/src/better-sqlite3.js';
+import {Mysql2Connector} from '../packages/qustar-mysql2/src/mysql2.js';
+import {
+  comments,
+  createInitSqlScript,
+} from '../packages/qustar-testsuite/src/db.js';
 
 interface ExecOptions {
   readonly silent?: boolean;
   readonly noOpt?: boolean;
 }
 
-function init() {
-  const connector = (true as any)
-    ? new PgConnector('postgresql://qustar:test@localhost:22783')
-    : new Sqlite3Connector(':memory:');
+function connect(connector: string) {
+  if (connector === 'mysql2') {
+    return new Mysql2Connector('mysql://qustar:test@localhost:22784/qustar');
+  } else if (connector === 'pg') {
+    return new PgConnector('postgresql://qustar:test@localhost:22783');
+  } else if (connector === 'sqlite3') {
+    return new Sqlite3Connector(':memory:');
+  } else if (connector === 'better-sqlite3') {
+    return new BetterSqlite3Connector(':memory:');
+  } else {
+    throw new Error('unknown connector: ' + connector);
+  }
+}
 
-  connector.execute(EXAMPLE_SCHEMA_INIT_SQL);
+async function init(variant: string) {
+  const connector = connect(variant);
+
+  const initScripts = createInitSqlScript('mysql');
+
+  for (const script of initScripts) {
+    await connector.execute(script);
+  }
 
   async function execute<T>(
     query: Query<T> | QueryTerminatorExpr<any>,
@@ -92,11 +112,20 @@ function init() {
 }
 
 (async () => {
-  const {execute, close} = init();
+  const {execute, close} = await init('mysql2');
 
   try {
-    const query = users.map(() => Expr.ne(null, null));
-    await execute(query, {noOpt: true});
+    const query = comments
+      .join({
+        type: 'left',
+        right: comments,
+        select: (child, parent) => parent.id,
+        condition: (child, parent) => child.parent_id.eq(parent.id),
+      })
+      .filter(x => x.ne(1))
+      .orderByAsc(x => x, {nulls: 'first'});
+
+    await execute(query, {noOpt: false});
   } finally {
     await close();
   }
