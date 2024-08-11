@@ -95,20 +95,7 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = users
-      .orderByAsc(x => x.id)
-      .drop(1)
-      .limit(1)
-      .map(() =>
-        Expr.case(
-          3,
-          [
-            {condition: 1, result: 'one'},
-            {condition: 2, result: 'two'},
-          ],
-          'none'
-        )
-      );
+    const query = users.map(() => Expr.in(1, [1, 2, 3]));
     await execute(query, {noOpt: false});
   } finally {
     await close();
