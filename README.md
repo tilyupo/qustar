@@ -69,7 +69,9 @@ To execute query against a database you need a _connector_. There are many ready
   - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3)
   - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3)
 - MySQL
-  - coming soon
+  - [qustar-mysql2](https://www.npmjs.com/package/qustar-mysql2)
+- MariaDB
+  - [qustar-mysql2](https://www.npmjs.com/package/qustar-mysql2)
 
 If you implemented your own connector, let me know and I will add it to the list above!
 
