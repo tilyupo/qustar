@@ -283,7 +283,6 @@ function propagateOrdering(source: SqlSource): OrderPropagation {
         orderBy: x.orderBy?.map(
           (orderBy, index): SqlOrderBy => ({
             type: orderBy.type,
-            nulls: orderBy.nulls,
             expr: {
               type: 'lookup',
               subject: {type: 'alias', name: source.as},
@@ -421,7 +420,6 @@ function compileOrderByQuery(
     const {sql: orderBySql, joins: orderJoins} = _compileExpr(expr, ctx);
     orderBy.push({
       type: options.desc ? 'desc' : 'asc',
-      nulls: options.nulls,
       expr: orderBySql,
     });
     joins.push(...orderJoins);
@@ -618,7 +616,6 @@ function compileCombineQuery(
           subject: {type: 'alias', name: sourceAlias},
           prop: primaryOrderCol,
         },
-        nulls: undefined,
       },
       {
         type: 'asc',
@@ -627,7 +624,6 @@ function compileCombineQuery(
           subject: {type: 'alias', name: sourceAlias},
           prop: secondaryOrderCol,
         },
-        nulls: undefined,
       },
     ];
     return {
