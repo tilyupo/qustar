@@ -466,7 +466,6 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
 
   for (const join of sql.joins) {
     let joinType = match(join.type)
-      .with('full', () => 'FULL')
       .with('left', () => 'LEFT')
       .with('right', () => 'RIGHT')
       .with('inner', () => 'INNER')

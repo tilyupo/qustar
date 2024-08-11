@@ -48,7 +48,7 @@ import {
 } from './projection.js';
 import {ChildrenRef, ParentRef, Ref, Schema, SqlTemplate} from './schema.js';
 
-export type JoinType = 'inner' | 'left' | 'right' | 'full';
+export type JoinType = 'inner' | 'left' | 'right';
 
 export interface JoinOptionsPublic<
   Left extends Value<Left>,
@@ -376,14 +376,8 @@ export abstract class Query<T extends Value<T>> {
       query: options.right,
     });
 
-    const leftProjHandle = createHandle(
-      left,
-      options.type === 'full' || options.type === 'right'
-    );
-    const rightProjHandle = createHandle(
-      right,
-      options.type === 'full' || options.type === 'left'
-    );
+    const leftProjHandle = createHandle(left, options.type === 'right');
+    const rightProjHandle = createHandle(right, options.type === 'left');
 
     return new JoinQuery(left, {
       projection: inferProjection(
@@ -422,15 +416,6 @@ export abstract class Query<T extends Value<T>> {
     return this.join({
       ...options,
       type: 'right',
-    });
-  }
-
-  fullJoin<Right extends Value<Right>, Result extends Mapping>(
-    options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
-  ): Query<Expand<ConvertMappingToValue<Result>>> {
-    return this.join({
-      ...options,
-      type: 'full',
     });
   }
 

@@ -60,40 +60,6 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
 
         await expectQuery(query, [null, null, null, 6, 8]);
       });
-
-      test('full', async ({comments}) => {
-        const query = comments
-          .join({
-            type: 'full',
-            right: comments,
-            select: (child, parent) => ({
-              c: child.id,
-              p: parent.id,
-            }),
-            condition: (child, parent) => child.parent_id.eq(parent.id),
-          })
-          .filter(x => x.c.ne(1))
-          .orderByAsc(x => x.c)
-          .thenByAsc(x => x.p);
-
-        // in postgreSQL FULL JOIN is only supported with merge-joinable or hash-joinable
-        // join condition
-        // it should be possible to solve this with FULL JOIN emulation through UNION ALL of
-        // LEFT and RIGHT joins
-        await expectQuery(
-          query,
-          [
-            {c: null, p: 6},
-            {c: null, p: 7},
-            {c: null, p: 8},
-            {c: 5, p: null},
-            {c: 6, p: 5},
-            {c: 7, p: null},
-            {c: 8, p: 5},
-          ],
-          {optOnly: true}
-        );
-      });
     });
   });
 }

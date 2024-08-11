@@ -170,7 +170,6 @@ function optimizeFilters(sql: SelectSql): SelectSql {
     type: sql.type,
     orderBy: sql.orderBy?.map(x => ({
       type: x.type,
-      nulls: x.nulls,
       expr: x.expr,
     })),
     joins: sql.joins.map(x => ({

@@ -197,7 +197,6 @@ export function mapSelect(sql: SelectSql, mapper: SqlMapper): SelectSql {
         : sql.orderBy.map(x => ({
             expr: mapSql(x.expr, mapper),
             type: x.type,
-            nulls: x.nulls,
           })),
     limit: sql.limit,
     offset: sql.offset,
@@ -226,7 +225,6 @@ function mapRowNumber(sql: RowNumberSql, mapper: SqlMapper): Sql {
     orderBy: sql.orderBy
       ? sql.orderBy.map(x => ({
           type: x.type,
-          nulls: x.nulls,
           expr: mapSql(x.expr, mapper),
         }))
       : undefined,
