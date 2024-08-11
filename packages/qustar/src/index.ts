@@ -1,9 +1,8 @@
 export {Connector, SqlCommand, cmd, materialize} from './connector.js';
 export {compileQuery} from './expr/compiler.js';
 export {Expr, QueryTerminatorExpr} from './expr/expr.js';
-export {gen} from './expr/gen.js';
-export {interpretQuery} from './expr/interpreter.js';
 export {Query} from './expr/query.js';
+export {sql} from './expr/sql.js';
 export {SingleLiteralValue} from './literal.js';
 export {renderPostgreSql} from './render/postgresql.js';
 export {convertToArgument} from './render/sql.js';
@@ -50,3 +49,7 @@ export {
   Mapping,
   ScalarMapping,
 } from './types.js';
+
+export function interpretQuery(...args: any[]): any {
+  throw new Error('todo: implement interpretQuery');
+}

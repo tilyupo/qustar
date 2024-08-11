@@ -5,7 +5,6 @@ docs:
   - move comparison out of why and far away
   - it's not obvious that map works at SQL level
   - Usage doc is too verbose, Andrei whats an high level overview like https://diesel.rs/ examples
-  - dynamic schema is not obvious
   - list of features at the top
 
 bugs:
@@ -26,8 +25,10 @@ features:
   - support decimal type
   - support Date types (date, time, timetz, timestamp, timestamptz)
   - support UUID
+  - support CHAR(N)
   - now that we know about all properties in a query, we can throw an error when accessing an unknown prop
   - validate that query result is good according to projection schema during materialization
+  - render single and array literal inline if type/itemType is null (because PostgreSQL can freak out during parsing if placeholder type wasn't specified explicitly via $1::type)
 
 tech:
   - refactor combine query compiler
@@ -83,6 +84,10 @@ release:
   - JSDoc
   - README.md
   - website
+
+typecheck:
+  - don't allow to parse invalid strings
+  - don't allow to cast boolean to float
 
 renderers:
   sql:

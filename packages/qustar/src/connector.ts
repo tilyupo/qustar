@@ -133,7 +133,7 @@ export function materialize(row: any, projection: Projection): any {
       return materializeBoolean(value);
     }
 
-    if (isNumeric(scalarType) && scalarType.type !== 'dynamic') {
+    if (isNumeric(scalarType)) {
       return materializeNumber(value);
     }
 

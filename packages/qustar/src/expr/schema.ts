@@ -23,13 +23,13 @@ export interface Collection {
   readonly schema: Schema;
 }
 
-export interface SqlTeamplte {
+export interface SqlTemplate {
   readonly src: TemplateStringsArray;
   readonly args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>;
 }
 
 export interface View {
-  readonly sql: SqlTeamplte;
+  readonly sql: SqlTemplate;
   readonly schema: Schema;
 }
 

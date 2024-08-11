@@ -43,6 +43,5 @@ function toPostgreSqlType(type: ScalarType): string | undefined {
     .with({type: 'f64'}, () => 'double precision')
     .with({type: 'text'}, () => 'text')
     .with({type: 'null'}, () => undefined)
-    .with({type: 'dynamic'}, () => undefined)
     .exhaustive();
 }

@@ -304,9 +304,6 @@ function renderSingleLiteralInline(
     .with({type: {type: 'i64'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'null'}}, () => cmd`NULL`)
     .with({type: {type: 'text'}}, ({value}) => cmd`'${value}'`)
-    .with({type: {type: 'dynamic'}}, () => {
-      throw new Error('cannot inline scalar dynamic value');
-    })
     .exhaustive();
 
   if (

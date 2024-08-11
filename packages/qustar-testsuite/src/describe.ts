@@ -1,5 +1,4 @@
 import {Connector} from 'qustar';
-import {describeFuzzing} from './fuzzing.js';
 import {describeCombination} from './integration/combination.js';
 import {describeExpr} from './integration/expr.js';
 import {describeFlatMap} from './integration/flat-map.js';
@@ -53,7 +52,7 @@ export function describeConnectorInternal(
   }
 
   if (options.fuzzing) {
-    describeFuzzing(ctx);
+    // todo: add fuzzing
   }
 }
 

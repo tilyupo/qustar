@@ -25,7 +25,7 @@ export interface GenericLiteral<
   readonly value: TValue;
 }
 
-export type SingleLiteralValue = InferLiteralValue<StaticSingleLiteral>;
+export type SingleLiteralValue = InferLiteralValue<SingleLiteral>;
 export type ArrayLiteralValue = InferLiteralValue<ArrayLiteral>;
 export type LiteralValue = SingleLiteralValue | ArrayLiteralValue;
 
@@ -45,12 +45,10 @@ export interface F32Literal
   extends GenericLiteral<GenericScalarType<'f32'>, number> {}
 export interface F64Literal
   extends GenericLiteral<GenericScalarType<'f64'>, number> {}
-export interface DynamicLiteral
-  extends GenericLiteral<GenericScalarType<'dynamic'>, SingleLiteralValue> {}
 export interface TextLiteral
   extends GenericLiteral<GenericScalarType<'text'>, string> {}
 
-export type StaticSingleLiteral =
+export type SingleLiteral =
   | BooleanLiteral
   | NullLiteral
   | I8Literal
@@ -60,8 +58,6 @@ export type StaticSingleLiteral =
   | F32Literal
   | F64Literal
   | TextLiteral;
-
-export type SingleLiteral = StaticSingleLiteral | DynamicLiteral;
 
 export type ArrayLiteral = InferArrayLiteral<SingleLiteral>;
 

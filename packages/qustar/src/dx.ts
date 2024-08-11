@@ -1,46 +1,52 @@
 import {match} from 'ts-pattern';
 import {ProxyQuery, Query, QuerySource} from './expr/query.js';
 import {ChildrenRef, Field, ParentRef, Schema, View} from './expr/schema.js';
-import {SingleScalarType} from './literal.js';
+import {ScalarType, SingleScalarType} from './literal.js';
 import {JoinFilterFn, Value} from './types.js';
 
 export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;
 }
 
-export interface ForwardRefPropertyDescriptor
-  extends GenericPropertyDescriptor<'ref'> {
+export interface ForwardRefDescriptor extends GenericPropertyDescriptor<'ref'> {
   readonly required?: boolean;
   readonly references: () => Query<any>;
   readonly condition: JoinFilterFn<any, any>;
 }
 
-export interface BackRefPropertyDescriptor
+export interface BackRefDescriptor
   extends GenericPropertyDescriptor<'back_ref'> {
   readonly references: () => Query<any>;
   readonly condition: JoinFilterFn<any, any>;
 }
 
-type RefPropertyDescriptor =
-  | ForwardRefPropertyDescriptor
-  | BackRefPropertyDescriptor;
+type RefDescriptor = ForwardRefDescriptor | BackRefDescriptor;
 
-export type ScalarPropertyDescriptor = Omit<SingleScalarType, 'nullable'> & {
-  nullable?: boolean;
-};
-
-export type PropertyDescriptor =
-  | RefPropertyDescriptor
-  | ScalarPropertyDescriptor
+export type ScalarDescriptor =
+  | (Omit<SingleScalarType, 'nullable'> & {
+      nullable?: boolean;
+    })
   | SingleScalarType['type'];
 
-export type TableSchema = Readonly<Record<string, PropertyDescriptor>>;
+export type Descriptor = RefDescriptor | ScalarDescriptor;
+
+export type TableSchema = Readonly<Record<string, Descriptor>>;
 
 export type TableSource =
   | {readonly name: string; readonly sql?: undefined}
   | {readonly name?: undefined; readonly sql: string | View};
 
 export type TableDescriptor = {readonly schema: TableSchema} & TableSource;
+
+export function scalarDescriptorToScalarType(
+  descriptor: ScalarDescriptor
+): ScalarType {
+  if (typeof descriptor === 'string') {
+    return {type: descriptor, nullable: false};
+  } else {
+    return {...descriptor, nullable: descriptor.nullable ?? false};
+  }
+}
 
 export function publicSchemaToInternalSchema(
   table: () => Query<any>,
@@ -49,22 +55,12 @@ export function publicSchemaToInternalSchema(
   const descriptors = Object.entries(columns ?? {});
   const nonRefDescriptors = descriptors
     .filter(
-      (
-        entry
-      ): entry is [
-        string,
-        ScalarPropertyDescriptor | SingleScalarType['type'],
-      ] =>
+      (entry): entry is [string, ScalarDescriptor | SingleScalarType['type']] =>
         typeof entry[1] === 'string' ||
         (entry[1].type !== 'ref' && entry[1].type !== 'back_ref')
     )
-    .map((entry): [string, ScalarPropertyDescriptor] => {
-      const descriptor = entry[1];
-      if (typeof descriptor === 'string') {
-        return [entry[0], {type: descriptor}];
-      } else {
-        return [entry[0], descriptor];
-      }
+    .map((entry): [string, ScalarType] => {
+      return [entry[0], scalarDescriptorToScalarType(entry[1])];
     });
   if (nonRefDescriptors.length === 0) {
     throw new Error('schema must define at least one field');
@@ -82,7 +78,7 @@ export function publicSchemaToInternalSchema(
     ),
     refs: descriptors
       .filter(
-        (entry): entry is [string, RefPropertyDescriptor] =>
+        (entry): entry is [string, RefDescriptor] =>
           typeof entry[1] !== 'string' &&
           (entry[1].type === 'ref' || entry[1].type === 'back_ref')
       )

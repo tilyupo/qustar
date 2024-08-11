@@ -3,7 +3,7 @@ import {SuiteContext} from '../describe.js';
 export function describeJoin({describe, expectQuery, test}: SuiteContext) {
   describe('query', () => {
     describe('join', () => {
-      test('without condition', async ({posts, users}) => {
+      test('without condition', async ({users}) => {
         const query = users
           .join({
             type: 'inner',

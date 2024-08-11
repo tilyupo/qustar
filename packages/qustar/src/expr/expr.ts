@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
+import {ScalarDescriptor, scalarDescriptorToScalarType} from '../dx.js';
 import {
-  ArrayLiteralValue,
   Literal,
   ScalarType,
   SingleLiteralValue,
@@ -10,7 +10,7 @@ import {Assert, Equal} from '../types.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
 import {Query, QuerySource} from './query.js';
-import {SqlTeamplte} from './schema.js';
+import {SqlTemplate} from './schema.js';
 
 // expr
 
@@ -62,11 +62,14 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // sql
 
-  static sql<T extends SingleLiteralValue>(
-    src: TemplateStringsArray,
-    ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
-  ): Expr<T> {
-    return new SqlExpr<T>({src, args});
+  static raw<T extends SingleLiteralValue>(options: {
+    sql: SqlTemplate;
+    schema: ScalarDescriptor;
+  }): Expr<T> {
+    return new SqlExpr<T>(
+      options.sql,
+      scalarDescriptorToScalarType(options.schema)
+    );
   }
 
   // unary
@@ -1176,7 +1179,10 @@ export class LiteralExpr<T extends SingleLiteralValue> extends Expr<T> {
 }
 
 export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
-  constructor(readonly sql: SqlTeamplte) {
+  constructor(
+    readonly sql: SqlTemplate,
+    readonly scalarType: ScalarType
+  ) {
     super();
   }
 
@@ -1188,7 +1194,7 @@ export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
     return {
       type: 'scalar',
       expr: this,
-      scalarType: {type: 'dynamic', nullable: true},
+      scalarType: this.scalarType,
     };
   }
 }
@@ -1297,27 +1303,15 @@ export function assertNumeric(type: ScalarType): void {
 }
 
 export function isFloat(type: ScalarType): boolean {
-  return (
-    type.type === 'f64' ||
-    type.type === 'f32' ||
-    type.type === 'dynamic' ||
-    type.type === 'null'
-  );
+  return type.type === 'f64' || type.type === 'f32' || type.type === 'null';
 }
 
 export function isNumeric(type: ScalarType): boolean {
-  return (
-    isFloat(type) ||
-    isInt(type) ||
-    type.type === 'dynamic' ||
-    type.type === 'null'
-  );
+  return isFloat(type) || isInt(type) || type.type === 'null';
 }
 
 export function isChar(type: ScalarType): boolean {
-  return (
-    type.type === 'text' || type.type === 'dynamic' || type.type === 'null'
-  );
+  return type.type === 'text' || type.type === 'null';
 }
 
 export function isInt(type: ScalarType): boolean {
@@ -1326,15 +1320,12 @@ export function isInt(type: ScalarType): boolean {
     type.type === 'i16' ||
     type.type === 'i32' ||
     type.type === 'i64' ||
-    type.type === 'dynamic' ||
     type.type === 'null'
   );
 }
 
 export function isString(type: ScalarType): boolean {
-  return (
-    type.type === 'text' || type.type === 'dynamic' || type.type === 'null'
-  );
+  return type.type === 'text' || type.type === 'null';
 }
 
 export function assertInt(type: ScalarType): void {

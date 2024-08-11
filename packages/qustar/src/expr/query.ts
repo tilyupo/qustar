@@ -1,7 +1,7 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
 import {collection, publicSchemaToInternalSchema, TableSchema} from '../dx.js';
-import {ArrayLiteralValue, SingleLiteralValue} from '../literal.js';
+import {SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
@@ -42,6 +42,7 @@ import {
   ParentRef,
   Ref,
   Schema,
+  SqlTemplate,
   View,
 } from './schema.js';
 
@@ -152,34 +153,23 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 
 export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
-export class RawSqlQuery<T extends Value<T>> {
-  constructor(
-    private src: TemplateStringsArray,
-    private args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
-  ) {}
+export abstract class Query<T extends Value<T>> {
+  static readonly table = collection;
 
-  schema<TNew extends Value<TNew> = T>(schema: TableSchema): Query<TNew> {
+  static raw<T extends Value<T> = any>(options: {
+    sql: SqlTemplate;
+    schema: TableSchema;
+  }): Query<T> {
     const query = new ProxyQuery(
       new QuerySource({
         type: 'view',
         view: {
-          sql: {src: this.src, args: this.args},
-          schema: publicSchemaToInternalSchema(() => query, schema),
+          sql: options.sql,
+          schema: publicSchemaToInternalSchema(() => query, options.schema),
         },
       })
     );
     return query;
-  }
-}
-
-export abstract class Query<T extends Value<T>> {
-  static readonly table = collection;
-
-  static sql<T extends Value<T> = any>(
-    src: TemplateStringsArray,
-    ...args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>
-  ): RawSqlQuery<T> {
-    return new RawSqlQuery(src, args);
   }
 
   constructor(

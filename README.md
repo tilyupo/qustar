@@ -367,7 +367,6 @@ The list of supported column types:
 - **i64**: 64 bit integer
 - **f32**: 32 bit floating point number
 - **f64**: 64 bit floating point number
-- **dynamic**: any type
 - **text**: variable length string
 
 [//]: '#' 'todo: add ref/back_ref docs'
