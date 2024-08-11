@@ -1,1 +1,1 @@
-export {PgConnector} from './mysql2.js';
+export {Mysql2Connector} from './mysql2.js';
