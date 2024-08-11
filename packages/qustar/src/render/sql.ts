@@ -57,6 +57,7 @@ export interface SqlRenderingOptions {
   // so we need to alter SQL generation to preserve intended behavior
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
+  castToIntAfterBitwiseNot?: boolean;
   emulateXor?: boolean;
   xor: '^' | '#' | (string & {});
   emulateBoolean?: boolean;
@@ -235,7 +236,13 @@ function renderUnary(sql: UnarySql, ctx: RenderingContext): SqlCommand {
 
   const inner = renderWrap(sql.inner, ctx);
 
-  return prefix ? cmd`${op} ${inner}` : cmd`${inner} ${op}`;
+  let result = prefix ? cmd`${op} ${inner}` : cmd`${inner} ${op}`;
+
+  if (sql.op === '~' && ctx.options.castToIntAfterBitwiseNot) {
+    result = cmd`CAST(${result} as ${ctx.options.int32Type})`;
+  }
+
+  return result;
 }
 
 function renderRaw(sql: RawSql, ctx: RenderingContext): SqlCommand {

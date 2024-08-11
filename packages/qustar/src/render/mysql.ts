@@ -8,6 +8,7 @@ export function renderMySql(sql: QuerySql): SqlCommand {
     int32Type: 'SIGNED',
     textType: 'CHAR',
     xor: '^',
+    castToIntAfterBitwiseNot: true,
     emulateArrayLiteralParam: true,
     escapeId(id: string): string {
       return '`' + id.split('`').join('``') + '`';
