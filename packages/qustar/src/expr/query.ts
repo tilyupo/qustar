@@ -24,7 +24,13 @@ import {
   ScalarMapping,
   Value,
 } from '../types.js';
-import {arrayEqual, assert, assertNever, startsWith} from '../utils.js';
+import {
+  arrayEqual,
+  assert,
+  assertNever,
+  deduplicateFirstWins,
+  startsWith,
+} from '../utils.js';
 import {CompilationOptions, compileQuery} from './compiler.js';
 import {
   Expr,
@@ -886,13 +892,6 @@ function inferProjection(value: Mapping, depth = 0): Projection {
   }
 
   return assertNever(value, 'unsupported selection');
-}
-
-function deduplicateFirstWins<T>(
-  arr: readonly T[],
-  eq: (a: T, b: T) => boolean
-) {
-  return arr.filter((val, idx) => arr.findIndex(x => eq(x, val)) === idx);
 }
 
 export class MapQuery<T extends Value<T>> extends Query<T> {

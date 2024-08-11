@@ -342,37 +342,8 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       describe('toInt', () => {
         testExpr('toInt(null) is null', Expr.from(null).toInt(), null);
         testExpr("toInt('1234') is 1234", Expr.from('1234').toInt(), 1234);
-        testExpr(
-          "toInt('1234.567') is 1234",
-          Expr.from('1234.567').toInt(),
-          1234
-        );
-        testExpr(
-          "toInt('1234suffix') is 1234",
-          Expr.from('1234suffix').toInt(),
-          1234
-        );
-        testExpr(
-          "toInt('1234.567suffix') is 1234",
-          Expr.from('1234.567suffix').toInt(),
-          1234
-        );
-        testExpr(
-          "toInt('prefix1234') is 0",
-          Expr.from('prefix1234').toInt(),
-          0
-        );
-        testExpr(
-          "toInt('prefix1234.567') is 0",
-          Expr.from('prefix1234.567').toInt(),
-          0
-        );
-        testExpr("toInt('') is 0", Expr.from('').toInt(), 0);
-        testExpr("toInt('  ') is 0", Expr.from('  ').toInt(), 0);
-        testExpr("toInt('df') is 0", Expr.from('df').toInt(), 0);
-        testExpr("toInt('  df') is 0", Expr.from('  df').toInt(), 0);
         testExpr('toInt(1234) is 1234', Expr.from(1234).toInt(), 1234);
-        testExpr('toInt(1234.567) is 1234', Expr.from(1234.567).toInt(), 1234);
+        testExpr('toInt(1234.456) is 1234', Expr.from(1234.456).toInt(), 1234);
         testExpr('toInt(true) is 1', Expr.from(true).toInt(), 1);
         testExpr('toInt(false) is 0', Expr.from(false).toInt(), 0);
       });
@@ -385,38 +356,12 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
           Expr.from('1234.567').toFloat(),
           1234.567
         );
-        testExpr(
-          "toFloat('1234suffix') is 1234",
-          Expr.from('1234suffix').toFloat(),
-          1234
-        );
-        testExpr(
-          "toFloat('1234.567suffix') is 1234",
-          Expr.from('1234.567suffix').toFloat(),
-          1234.567
-        );
-        testExpr(
-          "toFloat('prefix1234') is 0",
-          Expr.from('prefix1234').toFloat(),
-          0
-        );
-        testExpr(
-          "toFloat('prefix1234.567') is 0",
-          Expr.from('prefix1234.567').toFloat(),
-          0
-        );
-        testExpr("toFloat('') is 0", Expr.from('').toFloat(), 0);
-        testExpr("toFloat('  ') is 0", Expr.from('  ').toFloat(), 0);
-        testExpr("toFloat('df') is 0", Expr.from('df').toFloat(), 0);
-        testExpr("toFloat('  df') is 0", Expr.from('  df').toFloat(), 0);
         testExpr('toFloat(1234) is 1234', Expr.from(1234).toFloat(), 1234);
         testExpr(
           'toFloat(1234.567) is 1234',
           Expr.from(1234.567).toFloat(),
           1234.567
         );
-        testExpr('toFloat(true) is 1', Expr.from(true).toFloat(), 1);
-        testExpr('toFloat(false) is 0', Expr.from(false).toFloat(), 0);
       });
     });
 

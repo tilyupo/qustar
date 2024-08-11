@@ -238,6 +238,10 @@ function compileProjection(
     .exhaustive();
 }
 
+export function isSystemColumn(name: string) {
+  return name.startsWith(SYSTEM_COLUMN_PREFIX);
+}
+
 export const SYSTEM_COLUMN_PREFIX = '__orm_system_';
 export const SYSTEM_ORDERING_COLUMN_PREFIX = `${SYSTEM_COLUMN_PREFIX}_ordering_`;
 
@@ -433,7 +437,7 @@ function compileOrderByQuery(
             expr: exor.expr,
           })
         )
-        .concat(selectSql.columns),
+        .concat(selectSql.columns.filter(column => !isSystemColumn(column.as))),
       orderBy,
     },
     joins,
@@ -637,7 +641,7 @@ function compileCombineQuery(
             })
           ),
           ...lhsColumns
-            .filter(x => !x.startsWith(SYSTEM_COLUMN_PREFIX))
+            .filter(column => !isSystemColumn(column))
             .map(
               (x): SelectSqlColumn => ({
                 as: x,
@@ -685,9 +689,7 @@ function prepareForCombination(
 
   return {
     ...sql,
-    columns: sql.columns.filter(
-      x => !x.as.startsWith(SYSTEM_ORDERING_COLUMN_PREFIX)
-    ),
+    columns: sql.columns.filter(x => !isSystemColumn(x.as)),
     orderBy: preserveOrderBy ? sql.orderBy : undefined,
   };
 }
@@ -748,15 +750,28 @@ function compileFlatMapQuery(
   ctx: CompilationContext
 ): QueryCompilationResult {
   const right = compileQuerySource(query.options.right, ctx);
-  const ordering = propagateOrdering(right.sql);
+  const rightOrderPropagation = propagateOrdering(right.sql);
   const joinQuery = compileJoinQuery(query, ctx);
 
   return {
     sql: {
       ...joinQuery.sql,
+      columns: (rightOrderPropagation.orderBy ?? [])
+        .map(
+          (term, index): SelectSqlColumn => ({
+            as: orderingColumnAlias(
+              (joinQuery.sql.orderBy ?? []).length + index
+            ),
+            expr: term.expr,
+          })
+        )
+        .concat(joinQuery.sql.columns),
       orderBy:
-        ordering.orderBy || joinQuery.sql.orderBy
-          ? [...(joinQuery.sql.orderBy ?? []), ...(ordering.orderBy ?? [])]
+        joinQuery.sql.orderBy || rightOrderPropagation.orderBy
+          ? [
+              ...(joinQuery.sql.orderBy ?? []),
+              ...(rightOrderPropagation.orderBy ?? []),
+            ]
           : undefined,
     },
     joins: joinQuery.joins,

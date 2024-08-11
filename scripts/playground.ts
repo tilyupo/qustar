@@ -99,7 +99,6 @@ function init() {
       .flatMap(x => x.posts.orderByAsc(x => x.id))
       .orderByAsc(x => x.id)
       .map(x => x.id);
-
     await execute(query, {noOpt: true});
   } finally {
     await close();

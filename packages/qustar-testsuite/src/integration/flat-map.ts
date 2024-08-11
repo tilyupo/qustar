@@ -11,18 +11,30 @@ export function describeFlatMap({describe, test, expectQuery}: SuiteContext) {
           .orderByAsc(x => x.id)
           .map(x => x.id);
 
-        await expectQuery(query, []);
+        await expectQuery(query, [1, 2, 3, 4, 5, 6]);
       });
 
-      test('user posts', async ({users}) => {
+      test('user posts (order by title)', async ({users}) => {
         const query = users
           .orderByDesc(x => x.id)
           .flatMap(x => x.posts.orderByAsc(x => x.id).map(y => y.title))
-          .orderByAsc(x => x);
+          .orderByAsc(x => x.toLowerCase());
 
         await expectQuery(
           query,
-          ['C#', 'C++', 'Python', 'Ruby', 'TypeScript', 'rust'],
+          ['C#', 'C++', 'Python', 'Ruby', 'rust', 'TypeScript'],
+          {optOnly: true}
+        );
+      });
+
+      test('user posts (preserve flat map order)', async ({users}) => {
+        const query = users
+          .orderByDesc(x => x.id)
+          .flatMap(x => x.posts.orderByAsc(x => x.id).map(y => y.title));
+
+        await expectQuery(
+          query,
+          ['Python', 'Ruby', 'C++', 'TypeScript', 'rust', 'C#'],
           {optOnly: true}
         );
       });

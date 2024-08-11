@@ -33,12 +33,20 @@ export function describeCombination({
         ]);
       });
 
-      test('concat', async ({posts, users}) => {
+      test('concat (asc, desc)', async ({posts, users}) => {
         const lhs = users.select(x => x.id).orderByAsc(x => x);
         const rhs = posts.select(x => x.id).orderByDesc(x => x);
         const query = lhs.concat(rhs);
 
         await expectQuery(query, [1, 2, 3, 6, 5, 4, 3, 2, 1]);
+      });
+
+      test('concat (desc, asc)', async ({posts, users}) => {
+        const lhs = users.select(x => x.id).orderByDesc(x => x);
+        const rhs = posts.select(x => x.id).orderByAsc(x => x);
+        const query = lhs.concat(rhs);
+
+        await expectQuery(query, [3, 2, 1, 1, 2, 3, 4, 5, 6]);
       });
     });
   });

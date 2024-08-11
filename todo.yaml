@@ -29,6 +29,9 @@ features:
   - now that we know about all properties in a query, we can throw an error when accessing an unknown prop
   - validate that query result is good according to projection schema during materialization
   - render single and array literal inline if type/itemType is null (because PostgreSQL can freak out during parsing if placeholder type wasn't specified explicitly via $1::type)
+  - strict mode:
+      - raise an error in sqlite if cast to int/float has non numeric chars
+      - use round in sqlite instead of cast for float -> int
 
 tech:
   - refactor combine query compiler
