@@ -233,6 +233,15 @@ export interface CombinationSql extends GenericSql<'combination'> {
 
 // literals
 
+export const nullLiteral: LiteralSql = {
+  type: 'literal',
+  parameter: false,
+  literal: {
+    type: {type: 'null', nullable: true},
+    value: null,
+  },
+};
+
 export const oneLiteral: LiteralSql = {
   type: 'literal',
   parameter: false,

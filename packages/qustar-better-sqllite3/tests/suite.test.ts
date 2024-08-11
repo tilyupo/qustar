@@ -6,5 +6,5 @@ import {BetterSqlite3Connector} from '../src/better-sqlite3.js';
 describeConnector(
   {test, describe},
   new BetterSqlite3Connector(new Database(':memory:')),
-  {fuzzing: false}
+  {fuzzing: false, lateralSupport: false}
 );

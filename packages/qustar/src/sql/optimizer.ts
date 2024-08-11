@@ -6,6 +6,7 @@ import {
   BinarySql,
   falseLiteral,
   LookupSql,
+  nullLiteral,
   QuerySql,
   SelectSql,
   Sql,
@@ -23,6 +24,12 @@ export function optimize(sql: QuerySql): QuerySql {
     ...ID_SQL_MAPPER,
     join: x =>
       x.right.type === 'table' && x.lateral ? {...x, lateral: false} : x,
+  });
+
+  result = mapQuery(result, {
+    ...ID_SQL_MAPPER,
+    unary: propagateNull,
+    binary: propagateNull,
   });
 
   if (result.type === 'select') {
@@ -72,6 +79,56 @@ function optimizeLogicalBinaryTrivial(sql: BinarySql): Sql {
       }
     }
   }
+  return sql;
+}
+
+function propagateNull(sql: Sql): Sql {
+  function isNullLiteral(sql: Sql) {
+    return sql.type === 'literal' && sql.literal.type.type === 'null';
+  }
+
+  if (sql.type === 'unary') {
+    if (isNullLiteral(sql.inner)) {
+      return match(sql.op)
+        .with('!', () => trueLiteral)
+        .with('+', () => nullLiteral)
+        .with('-', () => nullLiteral)
+        .with('exists', () => nullLiteral)
+        .with('is_not_null', () => falseLiteral)
+        .with('is_null', () => trueLiteral)
+        .with('not_exists', () => nullLiteral)
+        .with('~', () => nullLiteral)
+        .exhaustive();
+    }
+  }
+
+  if (sql.type === 'binary') {
+    if (isNullLiteral(sql.lhs) || isNullLiteral(sql.rhs)) {
+      return match(sql.op)
+        .with('!=', () => nullLiteral)
+        .with('%', () => nullLiteral)
+        .with('&', () => nullLiteral)
+        .with('*', () => nullLiteral)
+        .with('+', () => nullLiteral)
+        .with('-', () => nullLiteral)
+        .with('/', () => nullLiteral)
+        .with('<', () => nullLiteral)
+        .with('<<', () => nullLiteral)
+        .with('<=', () => nullLiteral)
+        .with('==', () => nullLiteral)
+        .with('>', () => nullLiteral)
+        .with('>=', () => nullLiteral)
+        .with('>>', () => nullLiteral)
+        .with('^', () => nullLiteral)
+        .with('and', () => sql)
+        .with('in', () => nullLiteral)
+        .with('like', () => nullLiteral)
+        .with('or', () => sql)
+        .with('|', () => nullLiteral)
+        .exhaustive();
+    }
+  }
+
   return sql;
 }
 

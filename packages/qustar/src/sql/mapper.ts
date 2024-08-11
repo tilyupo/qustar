@@ -204,12 +204,12 @@ export function mapSelect(sql: SelectSql, mapper: SqlMapper): SelectSql {
   });
 }
 
-function mapUnary(sql: UnarySql, mapper: SqlMapper): UnarySql {
-  return {
+function mapUnary(sql: UnarySql, mapper: SqlMapper): Sql {
+  return mapper.unary({
     type: sql.type,
     op: sql.op,
     inner: mapSql(sql.inner, mapper),
-  };
+  });
 }
 
 function mapRaw(sql: RawSql, mapper: SqlMapper): Sql {

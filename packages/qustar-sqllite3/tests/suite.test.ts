@@ -6,5 +6,5 @@ import {Sqlite3Connector} from '../src/sqlite3.js';
 describeConnector(
   {test, describe},
   new Sqlite3Connector(new sqlite3.Database(':memory:')),
-  {fuzzing: false}
+  {fuzzing: false, lateralSupport: false}
 );

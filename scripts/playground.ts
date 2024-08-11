@@ -95,8 +95,8 @@ function init() {
   const {execute, close} = init();
 
   try {
-    const query = users.map(() => Expr.in(1, [1, 2, 3]));
-    await execute(query, {noOpt: false});
+    const query = users.map(() => Expr.ne(null, null));
+    await execute(query, {noOpt: true});
   } finally {
     await close();
   }

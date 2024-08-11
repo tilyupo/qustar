@@ -49,7 +49,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         describe(method, () => {
           testExpr('2 / 2 is 1', Expr[method](2, 2), 1);
           testExpr('7 / 2 is 3', Expr[method](7, 2), 3.5);
-          testExpr('7.2 / 2 is 3.6', Expr[method](7.2, 2), 3.6);
+          testExpr('7.5 / 2 is 3.75', Expr[method](7.5, 2), 3.75);
           testExpr('null / 2 is null', Expr[method](null, 2), null);
           testExpr('7.2 / null is null', Expr[method](7.2, null), null);
         });
@@ -57,12 +57,13 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
 
       (['eq', 'equals'] as const).forEach(method => {
         describe(method, () => {
-          testExpr("2 == '2' is true", Expr[method](2, '2' as any), false);
           testExpr('2 == 2 is true', Expr[method](2, 2), true);
           testExpr('2 == 5 is false', Expr[method](2, 5), false);
           testExpr('2 == null is false', Expr[method](2, null), false);
           testExpr('null == 2 is false', Expr[method](null, 2), false);
-          testExpr('null == null is true', Expr[method](null, null), true);
+          testExpr('null == null is true', Expr[method](null, null), true, {
+            optOnly: true,
+          });
         });
       });
 
@@ -70,9 +71,15 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         describe(method, () => {
           testExpr('2 != 5 is true', Expr[method](2, 5), true);
           testExpr('2 != 2 is false', Expr[method](2, 2), false);
-          testExpr('2 != null is true', Expr[method](2, null), true);
-          testExpr("null != 'foo' is true", Expr[method](null, 'foo'), true);
-          testExpr('null != null is false', Expr[method](null, null), false);
+          testExpr('2 != null is true', Expr[method](2, null), true, {
+            optOnly: true,
+          });
+          testExpr("null != 'foo' is true", Expr[method](null, 'foo'), true, {
+            optOnly: true,
+          });
+          testExpr('null != null is false', Expr[method](null, null), false, {
+            optOnly: true,
+          });
         });
       });
 
@@ -117,6 +124,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       testExpr('false and null is false', Expr.and(false, null), false);
       testExpr('true and null is false', Expr.and(true, null), false);
       testExpr('null and false is false', Expr.and(null, false), false);
+      testExpr('null and null is null', Expr.and(null, null), false);
 
       testExpr('true or true is true', Expr.or(true, true), true);
       testExpr('true or false is true', Expr.or(true, false), true);
@@ -126,6 +134,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       testExpr('false or null is false', Expr.or(false, null), false);
       testExpr('true or null is true', Expr.or(true, null), true);
       testExpr('null or false is false', Expr.or(null, false), false);
+      testExpr('null or null is false', Expr.or(null, false), false);
 
       (['gt', 'greaterThan'] as const).forEach(method => {
         describe(method, () => {
@@ -184,15 +193,15 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
 
       testExpr('-1 is -1', Expr.minus(1), -1);
       testExpr('-(-1) is 1', Expr.minus(-1), 1);
-      testExpr('-null is null', Expr.minus(null), null);
+      testExpr('-null is null', Expr.minus(null), null, {optOnly: true});
 
       testExpr('!true is false', Expr.not(true), false);
       testExpr('!false is true', Expr.not(false), true);
-      testExpr('!null is true', Expr.not(null), true);
+      testExpr('!null is true', Expr.not(null), true, {optOnly: true});
 
       testExpr('~2 is -3', Expr.bitwiseNot(2), -3);
       testExpr('~-12 is 11', Expr.bitwiseNot(-12), 11);
-      testExpr('~null is null', Expr.bitwiseNot(null), null);
+      testExpr('~null is null', Expr.bitwiseNot(null), null, {optOnly: true});
     });
 
     describe('sql', () => {

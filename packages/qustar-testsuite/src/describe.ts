@@ -20,6 +20,7 @@ export interface TestApi {
 export interface TestSuiteOptions {
   fuzzing: boolean;
   rawSql: boolean;
+  lateralSupport: boolean;
 }
 
 export function describeConnectorInternal(
@@ -34,6 +35,7 @@ export function describeConnectorInternal(
   const ctx: SuiteContext = {
     ...buildUtils(api, provider),
     describe: api.describe,
+    lateralSupport: options.lateralSupport,
   };
 
   describeCombination(ctx);
@@ -64,12 +66,14 @@ export function describeConnector(
   describeConnectorInternal(api, provider, {
     fuzzing: true,
     rawSql: true,
+    lateralSupport: options.lateralSupport ?? true,
     ...options,
   });
 }
 
 export interface SuiteContext extends DescribeOrmUtils {
   describe: (name: string, f: () => Promise<void> | void) => void;
+  lateralSupport: boolean;
 }
 
 export async function init(provider: Connector) {

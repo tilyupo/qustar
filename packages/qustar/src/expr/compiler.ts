@@ -885,6 +885,26 @@ function compileBinaryExpr(
     };
   }
 
+  if (expr.op === '<<' || expr.op === '>>') {
+    return {
+      sql: {
+        type: 'binary',
+        op: expr.op,
+        lhs: {
+          type: 'func',
+          func: 'to_int32',
+          args: [lhs.sql],
+        },
+        rhs: {
+          type: 'func',
+          func: 'to_int32',
+          args: [rhs.sql],
+        },
+      },
+      joins: [...lhs.joins, ...rhs.joins],
+    };
+  }
+
   if (
     expr.op === '==' &&
     lhsProj.scalarType.nullable &&
