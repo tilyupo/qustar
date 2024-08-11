@@ -307,8 +307,9 @@ function renderSingleLiteralInline(
     .exhaustive();
 
   if (
-    isNumeric(literal.type) ||
-    (literal.type.type === 'boolean' && ctx.options.emulateBoolean)
+    (isNumeric(literal.type) ||
+      (literal.type.type === 'boolean' && ctx.options.emulateBoolean)) &&
+    literal.type.type !== 'null'
   ) {
     // we need to add plus to make sure that DB treats it as an expression
     // by default it will treat numbers as column indexes in GROUP/ORDER BY context

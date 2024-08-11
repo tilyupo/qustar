@@ -1,7 +1,7 @@
 /* eslint-disable n/no-unpublished-import */
 /* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
-import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
+import {Expr, Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
 import {users} from '../packages/qustar-testsuite/src/db.js';
@@ -24,7 +24,7 @@ function init() {
     options?: ExecOptions
   ) {
     try {
-      const compiledQuery = compileQuery(query, {parameters: true});
+      const compiledQuery = compileQuery(query, {parameters: false});
       writeFileSync(
         './debug/sql-raw.json',
         JSON.stringify(compiledQuery, undefined, 2)
@@ -96,10 +96,11 @@ function init() {
 
   try {
     const query = users
-      .flatMap(x => x.posts.orderByAsc(x => x.id))
       .orderByAsc(x => x.id)
-      .map(x => x.id);
-    await execute(query, {noOpt: true});
+      .drop(1)
+      .limit(1)
+      .map(() => Expr.toUpperCase(Expr.from(null)));
+    await execute(query, {noOpt: false});
   } finally {
     await close();
   }
