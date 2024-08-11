@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {Query} from '../../src/expr/query.js';
+import {Query} from '../src/expr/query.js';
 
 expect.addSnapshotSerializer({
   test(val) {
@@ -44,7 +44,7 @@ describe('expr', () => {
           condition: (child, parent) => child.parent_id.eq(parent.id),
         })
         .renderInline('sqlite')
-    ).toMatchInlineSnapshot(`
+    ).toMatchInlineSnapshot(/* sql */ `
       SELECT
         "s2"."id" AS "p",
         "s3"."id" AS "c"
