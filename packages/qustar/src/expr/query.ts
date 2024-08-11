@@ -2,9 +2,9 @@ import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
 import {
   publicSchemaToInternalSchema,
-  TableDescriptor,
-  TableSchema,
-} from '../dx.js';
+  SchemaDescriptor,
+  TableOptions,
+} from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
@@ -40,15 +40,7 @@ import {
   PropProjection,
   ScalarProjection,
 } from './projection.js';
-import {
-  ChildrenRef,
-  Collection,
-  ParentRef,
-  Ref,
-  Schema,
-  SqlTemplate,
-  View,
-} from './schema.js';
+import {ChildrenRef, ParentRef, Ref, Schema, SqlTemplate} from './schema.js';
 
 export type JoinType = 'inner' | 'left' | 'right' | 'full';
 
@@ -116,22 +108,21 @@ export class QuerySource {
 
   constructor(
     public readonly inner:
-      | {readonly type: 'collection'; readonly collection: Collection}
+      | {readonly type: 'table'; readonly name: string; readonly schema: Schema}
       | {
           readonly type: 'query';
           readonly query: Query<any>;
         }
       | {
-          readonly type: 'view';
-          readonly view: View;
+          readonly type: 'sql';
+          readonly sql: SqlTemplate;
+          readonly schema: Schema;
         }
   ) {
     this.projection = match(this.inner)
-      .with({type: 'collection'}, ({collection}) =>
-        schemaProjection(this, collection.schema)
-      )
+      .with({type: 'table'}, ({schema}) => schemaProjection(this, schema))
       .with({type: 'query'}, ({query}) => query.projection)
-      .with({type: 'view'}, ({view}) => schemaProjection(this, view.schema))
+      .with({type: 'sql'}, ({schema}) => schemaProjection(this, schema))
       .exhaustive();
   }
 }
@@ -158,68 +149,29 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
 export abstract class Query<T extends Value<T>> {
-  static table<T extends Value<T> = any>(descriptor: TableDescriptor): Query<T>;
-  static table<T extends Value<T> = any>(
-    descriptor: TableDescriptor
-  ): Query<T> {
+  static table<T extends Value<T> = any>(descriptor: TableOptions): Query<T>;
+  static table<T extends Value<T> = any>(descriptor: TableOptions): Query<T> {
     const schema: (table: () => Query<any>) => Schema = table =>
       publicSchemaToInternalSchema(table, descriptor.schema);
-    if (descriptor.name) {
-      const table: Query<T> = new ProxyQuery<T>(
-        new QuerySource({
-          type: 'collection',
-          collection: {
-            name: descriptor.name,
-            schema: schema(() => table),
-          },
-        })
-      );
-      return table;
-    } else if (descriptor.sql) {
-      if (typeof descriptor.sql === 'string') {
-        const table: Query<T> = new ProxyQuery<T>(
-          new QuerySource({
-            type: 'view',
-            view: {
-              sql: {
-                src: {
-                  raw: [descriptor.sql],
-                  ...[descriptor.sql],
-                },
-                args: [],
-              },
-              schema: schema(() => table),
-            },
-          })
-        );
-        return table;
-      } else {
-        const table: Query<T> = new ProxyQuery<T>(
-          new QuerySource({
-            type: 'view',
-            view: descriptor.sql,
-          })
-        );
-        return table;
-      }
-    } else {
-      throw new Error(
-        'invalid collection descriptor: collection name or sql is required'
-      );
-    }
+    const table: Query<T> = new ProxyQuery<T>(
+      new QuerySource({
+        type: 'table',
+        name: descriptor.name,
+        schema: schema(() => table),
+      })
+    );
+    return table;
   }
 
   static raw<T extends Value<T> = any>(options: {
     sql: SqlTemplate;
-    schema: TableSchema;
+    schema: SchemaDescriptor;
   }): Query<T> {
     const query = new ProxyQuery(
       new QuerySource({
-        type: 'view',
-        view: {
-          sql: options.sql,
-          schema: publicSchemaToInternalSchema(() => query, options.schema),
-        },
+        type: 'sql',
+        sql: options.sql,
+        schema: publicSchemaToInternalSchema(() => query, options.schema),
       })
     );
     return query;

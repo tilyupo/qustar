@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {ScalarDescriptor, scalarDescriptorToScalarType} from '../dx.js';
+import {ScalarDescriptor, scalarDescriptorToScalarType} from '../descriptor.js';
 import {
   Literal,
   ScalarType,

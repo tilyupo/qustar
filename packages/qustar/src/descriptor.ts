@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
 import {Query} from './expr/query.js';
-import {ChildrenRef, Field, ParentRef, Schema, View} from './expr/schema.js';
+import {ChildrenRef, Field, ParentRef, Schema} from './expr/schema.js';
 import {ScalarType, SingleScalarType} from './literal.js';
 import {JoinFilterFn} from './types.js';
 
@@ -28,15 +28,14 @@ export type ScalarDescriptor =
     })
   | SingleScalarType['type'];
 
-export type Descriptor = RefDescriptor | ScalarDescriptor;
+export type SchemaDescriptor = Readonly<
+  Record<string, RefDescriptor | ScalarDescriptor>
+>;
 
-export type TableSchema = Readonly<Record<string, Descriptor>>;
-
-export type TableSource =
-  | {readonly name: string; readonly sql?: undefined}
-  | {readonly name?: undefined; readonly sql: string | View};
-
-export type TableDescriptor = {readonly schema: TableSchema} & TableSource;
+export interface TableOptions {
+  readonly name: string;
+  readonly schema: SchemaDescriptor;
+}
 
 export function scalarDescriptorToScalarType(
   descriptor: ScalarDescriptor
@@ -50,7 +49,7 @@ export function scalarDescriptorToScalarType(
 
 export function publicSchemaToInternalSchema(
   table: () => Query<any>,
-  columns: TableSchema
+  columns: SchemaDescriptor
 ): Schema {
   const descriptors = Object.entries(columns ?? {});
   const nonRefDescriptors = descriptors

@@ -50,6 +50,7 @@ export {
   ScalarMapping,
 } from './types.js';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function interpretQuery(...args: any[]): any {
   throw new Error('todo: implement interpretQuery');
 }

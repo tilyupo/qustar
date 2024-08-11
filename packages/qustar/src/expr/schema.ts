@@ -18,19 +18,9 @@ export interface Schema {
   readonly refs: readonly Ref[];
 }
 
-export interface Collection {
-  readonly name: string;
-  readonly schema: Schema;
-}
-
 export interface SqlTemplate {
   readonly src: TemplateStringsArray;
   readonly args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>;
-}
-
-export interface View {
-  readonly sql: SqlTemplate;
-  readonly schema: Schema;
 }
 
 export interface GenericRef<TType extends string> {

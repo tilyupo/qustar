@@ -178,39 +178,37 @@ function compileQuerySource(
       },
       joins: query.joins,
     };
-  } else if (source.inner.type === 'collection') {
+  } else if (source.inner.type === 'table') {
     return {
       sql: {
         type: 'table',
         as: ctx.getAlias(source),
-        table: source.inner.collection.name,
+        table: source.inner.name,
       },
       joins: [],
     };
-  } else if (source.inner.type === 'view') {
-    const args = source.inner.view.sql.args.map(
-      (arg): ExprCompilationResult => {
-        if (arg instanceof Expr) {
-          return _compileExpr(arg, ctx);
-        }
-
-        return {
-          sql: {
-            type: 'literal',
-            literal: inferLiteral(arg),
-            parameter: ctx.parameters,
-          },
-          joins: [],
-        };
+  } else if (source.inner.type === 'sql') {
+    const args = source.inner.sql.args.map((arg): ExprCompilationResult => {
+      if (arg instanceof Expr) {
+        return _compileExpr(arg, ctx);
       }
-    );
+
+      return {
+        sql: {
+          type: 'literal',
+          literal: inferLiteral(arg),
+          parameter: ctx.parameters,
+        },
+        joins: [],
+      };
+    });
 
     return {
       sql: {
         type: 'sql',
         sql: {
           type: 'raw',
-          src: source.inner.view.sql.src,
+          src: source.inner.sql.src,
           args: args.map(x => x.sql),
         },
         as: ctx.getAlias(source),
