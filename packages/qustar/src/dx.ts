@@ -1,8 +1,8 @@
 import {match} from 'ts-pattern';
-import {ProxyQuery, Query, QuerySource} from './expr/query.js';
+import {Query} from './expr/query.js';
 import {ChildrenRef, Field, ParentRef, Schema, View} from './expr/schema.js';
 import {ScalarType, SingleScalarType} from './literal.js';
-import {JoinFilterFn, Value} from './types.js';
+import {JoinFilterFn} from './types.js';
 
 export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;
@@ -110,57 +110,4 @@ export function publicSchemaToInternalSchema(
           .exhaustive()
       ),
   };
-}
-
-export function collection<T extends Value<T> = any>(
-  descriptor: TableDescriptor
-): Query<T>;
-export function collection<T extends Value<T> = any>(
-  descriptor: TableDescriptor
-): Query<T> {
-  const schema: (table: () => Query<any>) => Schema = table =>
-    publicSchemaToInternalSchema(table, descriptor.schema);
-  if (descriptor.name) {
-    const table: Query<T> = new ProxyQuery<T>(
-      new QuerySource({
-        type: 'collection',
-        collection: {
-          name: descriptor.name,
-          schema: schema(() => table),
-        },
-      })
-    );
-    return table;
-  } else if (descriptor.sql) {
-    if (typeof descriptor.sql === 'string') {
-      const table: Query<T> = new ProxyQuery<T>(
-        new QuerySource({
-          type: 'view',
-          view: {
-            sql: {
-              src: {
-                raw: [descriptor.sql],
-                ...[descriptor.sql],
-              },
-              args: [],
-            },
-            schema: schema(() => table),
-          },
-        })
-      );
-      return table;
-    } else {
-      const table: Query<T> = new ProxyQuery<T>(
-        new QuerySource({
-          type: 'view',
-          view: descriptor.sql,
-        })
-      );
-      return table;
-    }
-  } else {
-    throw new Error(
-      'invalid collection descriptor: collection name or sql is required'
-    );
-  }
 }

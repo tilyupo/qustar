@@ -1,6 +1,10 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
-import {collection, publicSchemaToInternalSchema, TableSchema} from '../dx.js';
+import {
+  publicSchemaToInternalSchema,
+  TableDescriptor,
+  TableSchema,
+} from '../dx.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
@@ -154,7 +158,56 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
 export abstract class Query<T extends Value<T>> {
-  static readonly table = collection;
+  static table<T extends Value<T> = any>(descriptor: TableDescriptor): Query<T>;
+  static table<T extends Value<T> = any>(
+    descriptor: TableDescriptor
+  ): Query<T> {
+    const schema: (table: () => Query<any>) => Schema = table =>
+      publicSchemaToInternalSchema(table, descriptor.schema);
+    if (descriptor.name) {
+      const table: Query<T> = new ProxyQuery<T>(
+        new QuerySource({
+          type: 'collection',
+          collection: {
+            name: descriptor.name,
+            schema: schema(() => table),
+          },
+        })
+      );
+      return table;
+    } else if (descriptor.sql) {
+      if (typeof descriptor.sql === 'string') {
+        const table: Query<T> = new ProxyQuery<T>(
+          new QuerySource({
+            type: 'view',
+            view: {
+              sql: {
+                src: {
+                  raw: [descriptor.sql],
+                  ...[descriptor.sql],
+                },
+                args: [],
+              },
+              schema: schema(() => table),
+            },
+          })
+        );
+        return table;
+      } else {
+        const table: Query<T> = new ProxyQuery<T>(
+          new QuerySource({
+            type: 'view',
+            view: descriptor.sql,
+          })
+        );
+        return table;
+      }
+    } else {
+      throw new Error(
+        'invalid collection descriptor: collection name or sql is required'
+      );
+    }
+  }
 
   static raw<T extends Value<T> = any>(options: {
     sql: SqlTemplate;

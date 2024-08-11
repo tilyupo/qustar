@@ -1,35 +1,13 @@
 /* eslint-disable n/no-unpublished-import */
 /* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
-import pg from 'pg';
 import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
 import {posts} from '../packages/qustar-testsuite/src/db.js';
 import {EXAMPLE_SCHEMA_INIT_SQL} from './common/example-schema.js';
 
-import {interpretQuery, materialize, renderSqlite} from 'qustar';
-import {
-  EXAMPLE_DB,
-  comments,
-  users,
-} from '../packages/qustar-testsuite/src/db.js';
-
-console.log({
-  Query,
-  compileQuery,
-  interpretQuery,
-  materialize,
-  optimize,
-  renderSqlite,
-  EXAMPLE_DB,
-  comments,
-  posts,
-  users,
-});
-
 function init() {
-  console.log('pg', pg);
   const connector = (true as any)
     ? new PgConnector('postgresql://qustar:test@localhost:22783')
     : new Sqlite3Connector(':memory:');
