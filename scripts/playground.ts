@@ -7,8 +7,8 @@ import {Sqlite3Connector} from 'qustar-sqlite3';
 import {BetterSqlite3Connector} from '../packages/qustar-better-sqllite3/src/better-sqlite3.js';
 import {Mysql2Connector} from '../packages/qustar-mysql2/src/mysql2.js';
 import {
-  comments,
   createInitSqlScript,
+  users,
 } from '../packages/qustar-testsuite/src/db.js';
 
 interface ExecOptions {
@@ -34,6 +34,8 @@ async function init(variant: string) {
   const connector = connect(variant);
 
   const initScripts = createInitSqlScript('mysql');
+
+  console.log(initScripts.join('\n'));
 
   for (const script of initScripts) {
     await connector.execute(script);
@@ -115,15 +117,10 @@ async function init(variant: string) {
   const {execute, close} = await init('mysql2');
 
   try {
-    const query = comments
-      .join({
-        type: 'left',
-        right: comments,
-        select: (child, parent) => parent.id,
-        condition: (child, parent) => child.parent_id.eq(parent.id),
-      })
-      .filter(x => x.ne(1))
-      .orderByAsc(x => x, {nulls: 'first'});
+    const query = users
+      .flatMap(x => x.comments.map(x => ({id: x.id, deleted: x.deleted})))
+      .orderByAsc(x => x.id)
+      .map(x => x.deleted);
 
     await execute(query, {noOpt: false});
   } finally {

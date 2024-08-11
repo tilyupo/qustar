@@ -103,21 +103,21 @@ export const comments: Query<Comment> = Query.table({
 export function createInitSqlScript(
   dialect: 'sqlite' | 'postgresql' | 'mysql'
 ) {
-  const bitType = match(dialect)
-    .with('mysql', () => 'BIT(1)')
-    .with('postgresql', () => 'BIT')
+  const booleanType = match(dialect)
+    .with('mysql', () => 'BOOLEAN')
+    .with('postgresql', () => 'BOOLEAN')
     .with('sqlite', () => 'BIT')
     .exhaustive();
 
-  const bitOne = match(dialect)
-    .with('mysql', () => "b'1'")
-    .with('postgresql', () => ' CAST(1 as BIT)')
+  const trueValue = match(dialect)
+    .with('mysql', () => 'true')
+    .with('postgresql', () => 'true')
     .with('sqlite', () => '1')
     .exhaustive();
 
-  const bitZero = match(dialect)
-    .with('mysql', () => "b'0'")
-    .with('postgresql', () => ' CAST(0 as BIT)')
+  const falseValue = match(dialect)
+    .with('mysql', () => 'false')
+    .with('postgresql', () => 'false')
     .with('sqlite', () => '0')
     .exhaustive();
 
@@ -159,7 +159,7 @@ export function createInitSqlScript(
       text TEXT NOT NULL,
       post_id INT NOT NULL,
       commenter_id INT NOT NULL,
-      deleted ${bitType} NOT NULL,
+      deleted ${booleanType} NOT NULL,
       parent_id INT NULL
     );
     --
@@ -168,10 +168,10 @@ export function createInitSqlScript(
     INSERT INTO
       comments(id, text, post_id, commenter_id, deleted, parent_id)
     VALUES
-      (5, 'cool', 1, 1, ${bitZero}, NULL),
-      (6, '+1', 1, 1, ${bitZero}, 5),
-      (7, 'me too', 1, 2, ${bitZero}, NULL),
-      (8, 'nah', 2, 3, ${bitOne}, 5);
+      (5, 'cool', 1, 1, ${falseValue}, NULL),
+      (6, '+1', 1, 1, ${falseValue}, 5),
+      (7, 'me too', 1, 2, ${falseValue}, NULL),
+      (8, 'nah', 2, 3, ${trueValue}, 5);
   `.split('--');
 }
 

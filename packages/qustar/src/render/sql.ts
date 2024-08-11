@@ -63,7 +63,7 @@ export interface SqlRenderingOptions {
   escapeId: (id: string) => string;
   placeholder: (index: number, literal: Literal) => string;
   int32Type: 'INT' | 'SIGNED' | (string & {});
-  float32Type: 'REAL' | 'DECIMAL' | (string & {});
+  float32Type: 'REAL' | 'FLOAT' | (string & {});
   textType: 'TEXT' | 'CHAR' | (string & {});
 }
 

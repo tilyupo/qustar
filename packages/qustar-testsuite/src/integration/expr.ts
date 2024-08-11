@@ -353,7 +353,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         testExpr('toInt(null) is null', Expr.from(null).toInt(), null);
         testExpr("toInt('1234') is 1234", Expr.from('1234').toInt(), 1234);
         testExpr('toInt(1234) is 1234', Expr.from(1234).toInt(), 1234);
-        testExpr('toInt(1234.456) is 1234', Expr.from(1234.456).toInt(), 1234);
+        testExpr('toInt(234.456) is 234', Expr.from(234.456).toInt(), 234);
         testExpr('toInt(true) is 1', Expr.from(true).toInt(), 1);
         testExpr('toInt(false) is 0', Expr.from(false).toInt(), 0);
       });
@@ -362,15 +362,15 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         testExpr('toFloat(null) is null', Expr.from(null).toFloat(), null);
         testExpr("toFloat('1234') is 1234", Expr.from('1234').toFloat(), 1234);
         testExpr(
-          "toFloat('1234.567') is 1234",
-          Expr.from('1234.567').toFloat(),
-          1234.567
+          "toFloat('234.567') is 234.567",
+          Expr.from('234.567').toFloat(),
+          234.567
         );
         testExpr('toFloat(1234) is 1234', Expr.from(1234).toFloat(), 1234);
         testExpr(
-          'toFloat(1234.567) is 1234',
-          Expr.from(1234.567).toFloat(),
-          1234.567
+          'toFloat(234.567) is 234.567',
+          Expr.from(234.567).toFloat(),
+          234.567
         );
       });
     });

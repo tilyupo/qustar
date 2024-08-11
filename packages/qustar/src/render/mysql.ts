@@ -4,7 +4,7 @@ import {renderSql} from './sql.js';
 
 export function renderMySql(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
-    float32Type: 'DECIMAL',
+    float32Type: 'FLOAT',
     int32Type: 'SIGNED',
     textType: 'CHAR',
     xor: '^',

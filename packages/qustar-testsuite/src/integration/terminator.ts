@@ -69,8 +69,8 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
           );
           testTerm(
             'author.id',
-            posts => posts[method](x => x.author.id),
-            (1 + 1 + 1 + 2 + 2 + 3) / 6
+            posts => posts[method](x => x.author.id.mul(3).div(2)),
+            ((1 + 1 + 1 + 2 + 2 + 3) * 3) / 2 / 6
           );
         })
       );
