@@ -54,7 +54,7 @@ console.log('users:', await query.execute(connector));
 - High level query builder that doesn't limit you (seriously)
 - Full TypeScript support
 - Supports PostgreSQL, SQLite, MySQL and any other database through a custom connector
-- High level features like `refs` and `back_refs`
+- Navigation properties
 - No codegen, works with plain TypeScript/JavaScript
 - All queries are translated into 100% SQL
 - Raw SQL support
