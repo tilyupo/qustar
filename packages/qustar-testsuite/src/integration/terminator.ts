@@ -26,6 +26,11 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
 
       describe('min', () => {
         testTerm('id', posts => posts.min(x => x.id), 1);
+        testTerm(
+          'id (with order)',
+          posts => posts.orderByAsc(x => x.id).min(x => x.id),
+          1
+        );
         testTerm('title', posts => posts.min(x => x.title), 'C#');
         testTerm('author.id', posts => posts.min(x => x.author.id), 1);
       });
@@ -33,6 +38,11 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
       (['size', 'length', 'count'] as const).forEach(method =>
         describe(method, () => {
           testTerm('id', posts => posts[method](), 6);
+          testTerm(
+            'id (with order)',
+            posts => posts.orderByAsc(x => x.id)[method](),
+            6
+          );
           testTerm('title', posts => posts.limit(2)[method](), 2);
           testTerm(
             'comments',
@@ -53,6 +63,11 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
             (1 + 2 + 3 + 4 + 5 + 6) / 6
           );
           testTerm(
+            'id (with order)',
+            posts => posts.orderByAsc(x => x.id)[method](x => x.id),
+            (1 + 2 + 3 + 4 + 5 + 6) / 6
+          );
+          testTerm(
             'author.id',
             posts => posts[method](x => x.author.id),
             (1 + 1 + 1 + 2 + 2 + 3) / 6
@@ -62,6 +77,11 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
 
       describe('sum', () => {
         testTerm('id', posts => posts.sum(x => x.id), 1 + 2 + 3 + 4 + 5 + 6);
+        testTerm(
+          'id (with order)',
+          posts => posts.orderByAsc(x => x.id).sum(x => x.id),
+          1 + 2 + 3 + 4 + 5 + 6
+        );
         testTerm(
           'author.id',
           posts => posts.sum(x => x.author.id),
@@ -81,6 +101,11 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
       describe('empty', () => {
         testTerm('true', posts => posts.empty(), false);
         testTerm(
+          'true (with order)',
+          posts => posts.orderByDesc(x => x.id).empty(),
+          false
+        );
+        testTerm(
           'false',
           posts => posts.filter(x => x.id.eq(-1)).empty(),
           true
@@ -88,17 +113,16 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
       });
 
       describe('first', () => {
-        // todo: fix the test
-        // testTerm(
-        //   'first comment order by id',
-        //   posts =>
-        //     posts
-        //       .map(post =>
-        //         post.comments.orderByDesc(x => x.id).first(x => x.id)
-        //       )
-        //       .sum(x => x),
-        //   1
-        // );
+        testTerm(
+          'first comment order by id',
+          posts =>
+            posts
+              .map(post =>
+                post.comments.orderByDesc(x => x.id).first(x => x.id)
+              )
+              .sum(x => x),
+          15
+        );
         testTerm(
           'comment id sum',
           posts => posts.map(post => post.comments.sum(x => x.id)).sum(x => x),

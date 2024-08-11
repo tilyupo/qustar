@@ -95,7 +95,6 @@ typecheck:
 
 renderers:
   sql:
-    - postgres
     - mysql
     - sql server
     - oracle
@@ -114,3 +113,4 @@ done:
   - support alias usage in raw sql
   - add toLowerCase/toUpperCase
   - sqlite support
+  - postgres support

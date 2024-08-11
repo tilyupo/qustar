@@ -1450,5 +1450,14 @@ function compileFirstTerminator(
   query: Query<any>,
   ctx: CompilationContext
 ): QueryCompilationResult {
-  return _compileQuery(query.take(1), ctx);
+  const {sql, joins} = _compileQuery(query.take(1), ctx);
+  assert(sql.type === 'select');
+
+  return {
+    sql: {
+      ...sql,
+      columns: sql.columns.filter(column => !isSystemColumn(column.as)),
+    },
+    joins,
+  };
 }
