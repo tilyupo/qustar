@@ -10,20 +10,19 @@ Query SQL database through an array-like API.
 
 ## Quick start
 
-To start using qustar with SQLite (the list of all supported data sources is [available below](#supported-database-drivers)) run the following command:
+To start using qustar with PostgreSQL (the list of all supported data sources is [available below](#supported-database-drivers)) run the following command:
 
 ```sh
-npm install qustar qustar-sqlite3 sqlite3
+npm install qustar qustar-pg pg
 ```
 
 Here an example usage of qustar:
 
 ```ts
-// qustar can work with a variety of SQL databases, we use PostgreSQL as an example
 import {PgConnector} from 'qustar-pg';
 import {Query} from 'qustar';
 
-// create a Connector
+// connect to your database
 const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
 
 // specify a schema
@@ -57,6 +56,8 @@ console.log(await query.execute(connector));
 - Supports PostgreSQL, SQLite, MySQL and any other database through a custom connector
 - High level features like `refs` and `back_refs`
 - No codegen, works with plain TypeScript/JavaScript
+- All queries are translated into 100% SQL
+- Raw SQL support
 
 ## Supported database drivers
 
@@ -114,9 +115,9 @@ import {Expr} from 'qustar';
 const b = users.map(user => Expr.eq(user.age.add(1), user.height.sub(5));
 ```
 
-We can't use native operators like `+` or `===` because JavaScript doesn't support operator overloading. You can find full list of supported operations [here](#expressions).
+We can't use native operators like `+` or `===` because JavaScript doesn't support operator overloading. You can find full list of supported expression operations [here](#expressions).
 
-Now lets talk about query methods.
+Now lets talk about queries and expressions.
 
 ### Query
 
@@ -383,7 +384,7 @@ You can use raw SQL like so:
 
 ```ts
 const users = Query.sql`SELECT * from users`
-  // we must specify schema so qustar knows how to compose query
+  // we must specify schema so qustar knows how to compose a query
   .schema({id: 'i32', age: 'i32'})
   .filter(user => user.age.lte(25))
   .map(user => user.id);
@@ -394,12 +395,12 @@ You can also use aliases in a nested query like so:
 ```ts
 const postIds = Query.table('users').flatMap(user =>
   Query.sql`
-      SELECT
-        id
-      FROM
-        posts p
-      WHERE p.authorId = ${user.id}'
-    `.schema({id: 'i32'})
+    SELECT
+      id
+    FROM
+      posts p
+    WHERE p.authorId = ${user.id}'
+  `.schema({id: 'i32'})
 );
 ```
 
