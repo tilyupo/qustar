@@ -732,16 +732,6 @@ function genSingleLiteralExpr(
   if (scalarType.type === 'boolean' || dynamic) {
     push(() => Expr.from(ctx.select(true, false)));
   }
-  if (scalarType.type === 'char' || dynamic) {
-    const n = scalarType.type === 'char' ? scalarType.n : ctx.int(0, 5);
-    push(
-      () =>
-        new LiteralExpr({
-          type: {type: 'char', n, nullable: false},
-          value: ctx.array(n, n + 1, () => ctx.int(0, 10).toString()).join(''),
-        })
-    );
-  }
   // todo: add date, time, timetz, timestamp, timestamptz support
   // todo: add uuid
   if (scalarType.type === 'f32' || dynamic) {

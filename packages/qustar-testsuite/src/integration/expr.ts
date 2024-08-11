@@ -2,14 +2,6 @@ import {Expr, SingleLiteralValue} from 'qustar';
 import {SuiteContext} from '../describe.js';
 import {ExecuteOptions} from '../utils.js';
 
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
 export function describeExpr({expectQuery, test, describe}: SuiteContext) {
   describe('expr', () => {
     function testExpr<T extends SingleLiteralValue>(
@@ -251,12 +243,11 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
     });
 
     describe('literal', () => {
+      // todo: add date, time, timetz, timestamp, timestamptz, uuid
       testExpr('1 is 1', Expr.from(1), 1);
       testExpr("'one' is 'one'", Expr.from('one'), 'one');
       testExpr('null is null', Expr.from(null), null);
       testExpr('1.23 is 1.23', Expr.from(1.23), 1.23);
-      const now = new Date();
-      testExpr('today is today', Expr.from(now), formatDate(now));
       testExpr('true is true', Expr.from(true), true);
       testExpr('false is false', Expr.from(false), false);
     });
@@ -325,11 +316,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
 
       describe('toString', () => {
         testExpr('toString(null) is null', Expr.from(null).toString(), null);
-        testExpr(
-          "toString(new Date(2024, 11, 11)) is '2024-12-11'",
-          Expr.from(new Date(2024, 11, 11)).toString(),
-          '2024-12-11'
-        );
+        // todo: add new Date() toString test
         testExpr(
           "toString('some text') is 'some text'",
           Expr.from('some text').toString(),

@@ -1316,10 +1316,7 @@ export function isNumeric(type: ScalarType): boolean {
 
 export function isChar(type: ScalarType): boolean {
   return (
-    type.type === 'text' ||
-    type.type === 'char' ||
-    type.type === 'dynamic' ||
-    type.type === 'null'
+    type.type === 'text' || type.type === 'dynamic' || type.type === 'null'
   );
 }
 
@@ -1336,10 +1333,7 @@ export function isInt(type: ScalarType): boolean {
 
 export function isString(type: ScalarType): boolean {
   return (
-    type.type === 'text' ||
-    type.type === 'char' ||
-    type.type === 'dynamic' ||
-    type.type === 'null'
+    type.type === 'text' || type.type === 'dynamic' || type.type === 'null'
   );
 }
 

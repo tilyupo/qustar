@@ -10,10 +10,6 @@ export interface GenericArrayScalarType<TScalarType extends SingleScalarType>
   readonly itemType: TScalarType;
 }
 
-export interface Char extends GenericScalarType<'char'> {
-  readonly n: number;
-}
-
 export type SingleScalarType = InferScalarType<SingleLiteral>;
 export type ArrayScalarType = InferScalarType<ArrayLiteral>;
 export type ScalarType = SingleScalarType | ArrayScalarType;
@@ -53,7 +49,6 @@ export interface DynamicLiteral
   extends GenericLiteral<GenericScalarType<'dynamic'>, SingleLiteralValue> {}
 export interface TextLiteral
   extends GenericLiteral<GenericScalarType<'text'>, string> {}
-export interface CharLiteral extends GenericLiteral<Char, string> {}
 
 export type StaticSingleLiteral =
   | BooleanLiteral
@@ -64,8 +59,7 @@ export type StaticSingleLiteral =
   | I64Literal
   | F32Literal
   | F64Literal
-  | TextLiteral
-  | CharLiteral;
+  | TextLiteral;
 
 export type SingleLiteral = StaticSingleLiteral | DynamicLiteral;
 

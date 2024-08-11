@@ -41,8 +41,8 @@ class RenderingContext {
 
   constructor(readonly options: SqlRenderingOptions) {}
 
-  placeholder() {
-    return this.options.placeholder(this.placeholderIndex++);
+  placeholder(literal: Literal) {
+    return this.options.placeholder(this.placeholderIndex++, literal);
   }
 
   escapeId(id: string): string {
@@ -60,7 +60,7 @@ export interface SqlRenderingOptions {
   emulateXor?: boolean;
   emulateBoolean?: boolean;
   escapeId: (id: string) => string;
-  placeholder: (index: number) => string;
+  placeholder: (index: number, literal: Literal) => string;
 }
 
 export function renderSql(
@@ -304,7 +304,6 @@ function renderSingleLiteralInline(
     .with({type: {type: 'i64'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'null'}}, () => cmd`NULL`)
     .with({type: {type: 'text'}}, ({value}) => cmd`'${value}'`)
-    .with({type: {type: 'char'}}, ({value}) => cmd`'${value}'`)
     .with({type: {type: 'dynamic'}}, () => {
       throw new Error('cannot inline scalar dynamic value');
     })
@@ -330,7 +329,7 @@ function renderSingleLiteral(
   if (parameter) {
     return {
       args: [literal],
-      src: ctx.placeholder(),
+      src: ctx.placeholder(literal),
     };
   } else {
     return renderSingleLiteralInline(literal, ctx);
@@ -359,7 +358,7 @@ function renderArrayLiteral(
 
   return {
     args: [literal],
-    src: ctx.placeholder(),
+    src: ctx.placeholder(literal),
   };
 }
 

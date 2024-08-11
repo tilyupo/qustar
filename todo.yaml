@@ -25,7 +25,9 @@ features:
   - allow nested wildcards because they sometimes can be optimized out later
   - support decimal type
   - support Date types (date, time, timetz, timestamp, timestamptz)
+  - support UUID
   - now that we know about all properties in a query, we can throw an error when accessing an unknown prop
+  - validate that query result is good according to projection schema during materialization
 
 tech:
   - refactor combine query compiler
@@ -60,6 +62,7 @@ testing:
   - add mean tests
   - add tests for every data type
   - add a test that selects parameter that is a number (SELECT ?), pg seems to don't work
+  - separate gen tests for optimizer and interpreter
 
 query compiler:
   - use one join for all props from the same ref
@@ -83,7 +86,6 @@ release:
 
 renderers:
   sql:
-    - done: sqlite
     - postgres
     - mysql
     - sql server
@@ -102,3 +104,4 @@ done:
   - Query.schema
   - support alias usage in raw sql
   - add toLowerCase/toUpperCase
+  - sqlite support
