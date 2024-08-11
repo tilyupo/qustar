@@ -1,12 +1,12 @@
-const axios = require('axios');
-const {exec, spawn} = require('child_process');
-const semver = require('semver');
-const path = require('path');
+import axios from 'axios';
+import {exec, spawn} from 'child_process';
+import {resolve as _resolve} from 'path';
+import {inc} from 'semver';
 // eslint-disable-next-line n/no-unsupported-features/node-builtins
-const {copyFileSync, rmSync} = require('fs');
+import {copyFileSync, readFileSync, rmSync} from 'fs';
 
-const packageJsonPath = path.resolve(process.cwd(), 'package.json');
-const packageJson = require(packageJsonPath);
+const packageJsonPath = _resolve(process.cwd(), 'package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 const packageName = packageJson.name;
 
 async function getCurrentVersion() {
@@ -62,7 +62,7 @@ function publishPackage() {
 async function publishPatch() {
   try {
     const currentVersion = await getCurrentVersion();
-    const nextVersion = semver.inc(currentVersion, 'patch');
+    const nextVersion = inc(currentVersion, 'patch');
 
     console.log(`Next version: ${nextVersion}`);
 

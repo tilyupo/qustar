@@ -853,6 +853,20 @@ function intFunc(expr: FuncExpr<Dynamic>, ctx: IntContext): unknown {
 
       return (target as string).substring(start, end);
     })
+    .with('lower', () => {
+      const target = intExpr(expr.args[0], ctx);
+
+      assert(target === null || typeof target === 'string');
+
+      return (target as string | null)?.toLowerCase();
+    })
+    .with('upper', () => {
+      const target = intExpr(expr.args[0], ctx);
+
+      assert(target === null || typeof target === 'string');
+
+      return (target as string | null)?.toUpperCase();
+    })
     .with('length', () => {
       const target = intExpr(expr.args[0], ctx);
 
