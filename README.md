@@ -56,7 +56,7 @@ Qustar provides familiar API and flexibility without sacrificing ease of use. We
 To execute query against a database you need a _connector_. There are many ready to use connectors that wrap existing NodeJS drivers:
 
 - PostgreSQL
-  - work in progress
+  - [qustar-pg](https://www.npmjs.com/package/qustar-pg)
 - SQLite
   - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3)
   - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3)
