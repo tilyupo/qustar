@@ -22,9 +22,6 @@ Here an example usage of qustar:
 import {PgConnector} from 'qustar-pg';
 import {Query} from 'qustar';
 
-// connect to your database
-const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
-
 // specify a schema
 const users = await Query.table({
   name: 'users',
@@ -45,8 +42,11 @@ const query = users
   }))
   .limit(3);
 
-// get the result
-console.log(await query.execute(connector));
+// connect to your database
+const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
+
+// run the query
+console.log('users:', await query.execute(connector));
 ```
 
 ## Features
