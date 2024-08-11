@@ -1329,10 +1329,6 @@ export function isInt(type: ScalarType): boolean {
     type.type === 'i16' ||
     type.type === 'i32' ||
     type.type === 'i64' ||
-    type.type === 'u8' ||
-    type.type === 'u16' ||
-    type.type === 'u32' ||
-    type.type === 'u64' ||
     type.type === 'dynamic' ||
     type.type === 'null'
   );

@@ -24,7 +24,7 @@ features:
   - array support
   - allow nested wildcards because they sometimes can be optimized out later
   - support decimal type
-  - support Date type
+  - support Date types (date, time, timetz, timestamp, timestamptz)
   - now that we know about all properties in a query, we can throw an error when accessing an unknown prop
 
 tech:

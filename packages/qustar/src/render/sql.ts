@@ -3,7 +3,6 @@ import {SqlCommand, cmd} from '../connector.js';
 import {isNumeric} from '../expr/expr.js';
 import {
   ArrayLiteral,
-  DateLiteral,
   Literal,
   LiteralValue,
   SingleLiteral,
@@ -27,11 +26,12 @@ import {
   SqlOrderBy,
   UnarySql,
 } from '../sql/sql.js';
-import {formatDate, formatDateTime, indent} from '../utils.js';
+import {formatDate, indent} from '../utils.js';
 
 export function convertToArgument(literal: Literal): LiteralValue {
-  if (literal.type.type === 'date') {
-    return formatDate((literal as DateLiteral).value);
+  // todo: add date, time, timetz, timestamptz, timestamp support
+  if ((literal.type.type as string) === 'date') {
+    return formatDate((literal as any).value);
   } else {
     return literal.value;
   }
@@ -302,26 +302,7 @@ function renderSingleLiteralInline(
     .with({type: {type: 'i16'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'i32'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'i64'}}, ({value}) => cmd`${value}`)
-    .with({type: {type: 'u8'}}, ({value}) => cmd`${value}`)
-    .with({type: {type: 'u16'}}, ({value}) => cmd`${value}`)
-    .with({type: {type: 'u32'}}, ({value}) => cmd`${value}`)
-    .with({type: {type: 'u64'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'null'}}, () => cmd`NULL`)
-    .with({type: {type: 'date'}}, ({value}) => cmd`'${formatDate(value)}'`)
-    .with({type: {type: 'time'}}, () => {
-      throw new Error('SQLite does not support time literals');
-    })
-    .with({type: {type: 'timetz'}}, () => {
-      throw new Error('SQLite does not support timetz literals');
-    })
-    .with(
-      {type: {type: 'timestamp'}},
-      ({value}) => cmd`'${formatDateTime(value)}'`
-    )
-    .with({type: {type: 'timestamptz'}}, () => {
-      throw new Error('SQLite does not support timestamptz literals');
-    })
-    .with({type: {type: 'uuid'}}, ({value}) => cmd`'${value}'`)
     .with({type: {type: 'text'}}, ({value}) => cmd`'${value}'`)
     .with({type: {type: 'char'}}, ({value}) => cmd`'${value}'`)
     .with({type: {type: 'dynamic'}}, () => {

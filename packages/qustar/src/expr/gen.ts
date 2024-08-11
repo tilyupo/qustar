@@ -578,9 +578,9 @@ function matchProp(proj: PropProjection, shape: PropShape): boolean {
   );
 }
 
-const INT_SHAPES: ScalarShape[] = (
-  ['i8', 'i16', 'i32', 'i64', 'u8', 'u16', 'u32', 'u64'] as const
-).map(type => ({type: 'scalar', scalarType: {type, nullable: true}}));
+const INT_SHAPES: ScalarShape[] = (['i8', 'i16', 'i32', 'i64'] as const).map(
+  type => ({type: 'scalar', scalarType: {type, nullable: true}})
+);
 
 const NUMERIC_SHAPES: ScalarShape[] = INT_SHAPES.concat(
   (['f32', 'f64'] as const).map(type => ({
@@ -742,9 +742,8 @@ function genSingleLiteralExpr(
         })
     );
   }
-  if (scalarType.type === 'date' || dynamic) {
-    push(() => Expr.from(new Date(1720125454861 + ctx.int(-10, +10))));
-  }
+  // todo: add date, time, timetz, timestamp, timestamptz support
+  // todo: add uuid
   if (scalarType.type === 'f32' || dynamic) {
     push(
       () =>
@@ -805,66 +804,6 @@ function genSingleLiteralExpr(
         new LiteralExpr({
           type: {type: 'null', nullable: true},
           value: null,
-        })
-    );
-  }
-  if (scalarType.type === 'time' || dynamic) {
-    //
-  }
-  if (scalarType.type === 'timestamp' || dynamic) {
-    //
-  }
-  if (scalarType.type === 'timestamptz' || dynamic) {
-    //
-  }
-  if (scalarType.type === 'timetz' || dynamic) {
-    //
-  }
-  if (scalarType.type === 'u16' || dynamic) {
-    push(
-      () =>
-        new LiteralExpr({
-          type: {type: 'u16', nullable: false},
-          value: ctx.int(0, 5),
-        })
-    );
-  }
-  if (scalarType.type === 'u32' || dynamic) {
-    push(
-      () =>
-        new LiteralExpr({
-          type: {type: 'u32', nullable: false},
-          value: ctx.int(0, 5),
-        })
-    );
-  }
-  if (scalarType.type === 'u64' || dynamic) {
-    push(
-      () =>
-        new LiteralExpr({
-          type: {type: 'u64', nullable: false},
-          value: ctx.int(0, 5),
-        })
-    );
-  }
-  if (scalarType.type === 'u8' || dynamic) {
-    push(
-      () =>
-        new LiteralExpr({
-          type: {type: 'u8', nullable: false},
-          value: ctx.int(0, 5),
-        })
-    );
-  }
-  if (scalarType.type === 'uuid' || dynamic) {
-    push(
-      () =>
-        new LiteralExpr({
-          type: {type: 'uuid', nullable: false},
-          value: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
-            .split('')
-            .map(x => (x === 'X' ? ctx.int(0, 10) : x))
-            .join(''),
         })
     );
   }

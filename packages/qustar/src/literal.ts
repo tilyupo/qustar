@@ -37,8 +37,6 @@ export interface BooleanLiteral
   extends GenericLiteral<GenericScalarType<'boolean'>, boolean> {}
 export interface NullLiteral
   extends GenericLiteral<GenericScalarType<'null'>, null> {}
-export interface UuidLiteral
-  extends GenericLiteral<GenericScalarType<'uuid'>, string> {}
 export interface I8Literal
   extends GenericLiteral<GenericScalarType<'i8'>, number> {}
 export interface I16Literal
@@ -47,28 +45,10 @@ export interface I32Literal
   extends GenericLiteral<GenericScalarType<'i32'>, number> {}
 export interface I64Literal
   extends GenericLiteral<GenericScalarType<'i64'>, number> {}
-export interface U8Literal
-  extends GenericLiteral<GenericScalarType<'u8'>, number> {}
-export interface U16Literal
-  extends GenericLiteral<GenericScalarType<'u16'>, number> {}
-export interface U32Literal
-  extends GenericLiteral<GenericScalarType<'u32'>, number> {}
-export interface U64Literal
-  extends GenericLiteral<GenericScalarType<'u64'>, number> {}
 export interface F32Literal
   extends GenericLiteral<GenericScalarType<'f32'>, number> {}
 export interface F64Literal
   extends GenericLiteral<GenericScalarType<'f64'>, number> {}
-export interface DateLiteral
-  extends GenericLiteral<GenericScalarType<'date'>, Date> {}
-export interface TimeLiteral
-  extends GenericLiteral<GenericScalarType<'time'>, number> {}
-export interface TimetzLiteral
-  extends GenericLiteral<GenericScalarType<'timetz'>, number> {}
-export interface TimestampLiteral
-  extends GenericLiteral<GenericScalarType<'timestamp'>, Date> {}
-export interface TimestamptzLiteral
-  extends GenericLiteral<GenericScalarType<'timestamptz'>, Date> {}
 export interface DynamicLiteral
   extends GenericLiteral<GenericScalarType<'dynamic'>, SingleLiteralValue> {}
 export interface TextLiteral
@@ -78,22 +58,12 @@ export interface CharLiteral extends GenericLiteral<Char, string> {}
 export type StaticSingleLiteral =
   | BooleanLiteral
   | NullLiteral
-  | UuidLiteral
   | I8Literal
   | I16Literal
   | I32Literal
   | I64Literal
-  | U8Literal
-  | U16Literal
-  | U32Literal
-  | U64Literal
   | F32Literal
   | F64Literal
-  | DateLiteral
-  | TimeLiteral
-  | TimetzLiteral
-  | TimestampLiteral
-  | TimestamptzLiteral
   | TextLiteral
   | CharLiteral;
 
@@ -132,12 +102,7 @@ export function assertSingleLiteral(
 }
 
 export function inferLiteral(value: LiteralValue): Literal {
-  if (value instanceof Date) {
-    return {
-      type: {type: 'date', nullable: false},
-      value,
-    };
-  }
+  // todo: add date support
 
   if (typeof value === 'string') {
     return {

@@ -324,10 +324,9 @@ const postsWithAuthor = users.flatMap(user =>
 
 #### Schema
 
-Qustar allows you to define schema statically:
+Qustar requires you to define the schema statically:
 
 ```ts
-// we defined users table schema statically
 const users = Query.table({
   name: 'users',
   schema: {
@@ -362,15 +361,10 @@ The list of supported column types:
 
 - **boolean**: true or false
 - **null**: NULL
-- **uuid**: any valid uuid
 - **i8**: 8 bit integer
 - **i16**: 16 bit integer
 - **i32**: 32 bit integer
 - **i64**: 64 bit integer
-- **u8**: 8 bit unsigned integer
-- **u16**: 16 bit unsigned integer
-- **u32**: 32 bit unsigned integer
-- **u64**: 64 bit unsigned integer
 - **f32**: 32 bit floating point number
 - **f64**: 64 bit floating point number
 - **dynamic**: any type
