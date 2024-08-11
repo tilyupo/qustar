@@ -24,7 +24,7 @@ function init() {
     options?: ExecOptions
   ) {
     try {
-      const compiledQuery = compileQuery(query, {parameters: false});
+      const compiledQuery = compileQuery(query, {parameters: true});
       writeFileSync(
         './debug/sql-raw.json',
         JSON.stringify(compiledQuery, undefined, 2)
@@ -99,7 +99,16 @@ function init() {
       .orderByAsc(x => x.id)
       .drop(1)
       .limit(1)
-      .map(() => Expr.toUpperCase(Expr.from(null)));
+      .map(() =>
+        Expr.case(
+          3,
+          [
+            {condition: 1, result: 'one'},
+            {condition: 2, result: 'two'},
+          ],
+          'none'
+        )
+      );
     await execute(query, {noOpt: false});
   } finally {
     await close();

@@ -876,7 +876,7 @@ function compileBinaryExpr(
         op: expr.op,
         lhs: {
           type: 'func',
-          func: 'to_float',
+          func: 'to_float32',
           args: [lhs.sql],
         },
         rhs: rhs.sql,
@@ -1177,6 +1177,20 @@ function compileFuncExpr(
         joins: args.flatMap(x => x.joins),
       };
     }
+  }
+
+  if (expr.func === 'substring') {
+    return {
+      sql: {
+        type: 'func',
+        func: expr.func,
+        // PostgreSQL doesn't accept bigint as an index for substr
+        args: args.map((x, idx) =>
+          idx === 0 ? x.sql : {type: 'func', func: 'to_int32', args: [x.sql]}
+        ),
+      },
+      joins: args.flatMap(x => x.joins),
+    };
   }
 
   return {

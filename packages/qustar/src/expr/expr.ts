@@ -659,11 +659,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   }
 
   toFloat(): Expr<NullPropagate<T, number>> {
-    return new FuncExpr<NullPropagate<T, number>>('to_float', [this]);
+    return new FuncExpr<NullPropagate<T, number>>('to_float32', [this]);
   }
 
   toInt(): Expr<NullPropagate<T, number>> {
-    return new FuncExpr<NullPropagate<T, number>>('to_int', [this]);
+    return new FuncExpr<NullPropagate<T, number>>('to_int32', [this]);
   }
 
   concat<R extends Nullable<string>>(
@@ -714,8 +714,8 @@ export type Func =
   | 'substring'
   | 'concat'
   | 'to_string'
-  | 'to_float'
-  | 'to_int'
+  | 'to_float32'
+  | 'to_int32'
   | 'avg'
   | 'count'
   | 'sum'
@@ -775,7 +775,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
         },
         expr: this,
       };
-    } else if (this.func === 'to_float') {
+    } else if (this.func === 'to_float32') {
       return {
         type: 'scalar',
         scalarType: {
@@ -784,7 +784,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
         },
         expr: this,
       };
-    } else if (this.func === 'to_int') {
+    } else if (this.func === 'to_int32') {
       return {
         type: 'scalar',
         scalarType: {

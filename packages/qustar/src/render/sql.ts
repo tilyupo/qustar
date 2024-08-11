@@ -87,9 +87,9 @@ function render(sql: Sql, ctx: RenderingContext): SqlCommand {
 }
 
 function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
-  if (sql.func === 'to_int') {
+  if (sql.func === 'to_int32') {
     return cmd`CAST(${render(sql.args[0], ctx)} as INT)`;
-  } else if (sql.func === 'to_float') {
+  } else if (sql.func === 'to_float32') {
     return cmd`CAST(${render(sql.args[0], ctx)} as REAL)`;
   } else if (sql.func === 'to_string') {
     return cmd`CAST(${render(sql.args[0], ctx)} as TEXT)`;
@@ -259,7 +259,6 @@ function renderRowNumber(sql: RowNumberSql, ctx: RenderingContext): SqlCommand {
 
 function renderCase(sql: CaseSql, ctx: RenderingContext): SqlCommand {
   const subject = renderWrap(sql.subject, ctx);
-  const fallback = renderWrap(sql.fallback, ctx);
 
   const whens: SqlCommand[] = [];
   for (const when of sql.whens) {
@@ -268,6 +267,10 @@ function renderCase(sql: CaseSql, ctx: RenderingContext): SqlCommand {
 
     whens.push(cmd`WHEN ${condition} THEN ${result}`);
   }
+
+  // we must render fallback after everything above, because we use positional
+  // arguments for PostgreSQL
+  const fallback = renderWrap(sql.fallback, ctx);
 
   return cmd`CASE ${subject} ${SqlCommand.join(whens, ' ')} ELSE ${fallback} END`;
 }
