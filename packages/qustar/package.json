@@ -34,6 +34,7 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
-    "ts-pattern": "^5.2.0"
+    "ts-pattern": "^5.2.0",
+    "ts-toolbelt": "^9.6.0"
   }
 }

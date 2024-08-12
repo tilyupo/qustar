@@ -29,24 +29,34 @@ export type SingleLiteralValue = InferLiteralValue<SingleLiteral>;
 export type ArrayLiteralValue = InferLiteralValue<ArrayLiteral>;
 export type LiteralValue = SingleLiteralValue | ArrayLiteralValue;
 
+export interface BooleanScalarType extends GenericScalarType<'boolean'> {}
+export interface NullScalarType extends GenericScalarType<'null'> {}
+export interface TextScalarType extends GenericScalarType<'text'> {}
+export interface Int8ScalarType extends GenericScalarType<'i8'> {}
+export interface Int16ScalarType extends GenericScalarType<'i16'> {}
+export interface Int32ScalarType extends GenericScalarType<'i32'> {}
+export interface Int64ScalarType extends GenericScalarType<'i64'> {}
+export interface Float32ScalarType extends GenericScalarType<'f32'> {}
+export interface Float64ScalarType extends GenericScalarType<'f64'> {}
+
+export type NumericScalarType =
+  | Int8ScalarType
+  | Int16ScalarType
+  | Int32ScalarType
+  | Int64ScalarType
+  | Float32ScalarType
+  | Float64ScalarType;
+
 export interface BooleanLiteral
-  extends GenericLiteral<GenericScalarType<'boolean'>, boolean> {}
-export interface NullLiteral
-  extends GenericLiteral<GenericScalarType<'null'>, null> {}
-export interface I8Literal
-  extends GenericLiteral<GenericScalarType<'i8'>, number> {}
-export interface I16Literal
-  extends GenericLiteral<GenericScalarType<'i16'>, number> {}
-export interface I32Literal
-  extends GenericLiteral<GenericScalarType<'i32'>, number> {}
-export interface I64Literal
-  extends GenericLiteral<GenericScalarType<'i64'>, number> {}
-export interface F32Literal
-  extends GenericLiteral<GenericScalarType<'f32'>, number> {}
-export interface F64Literal
-  extends GenericLiteral<GenericScalarType<'f64'>, number> {}
-export interface TextLiteral
-  extends GenericLiteral<GenericScalarType<'text'>, string> {}
+  extends GenericLiteral<BooleanScalarType, boolean> {}
+export interface NullLiteral extends GenericLiteral<NullScalarType, null> {}
+export interface I8Literal extends GenericLiteral<Int8ScalarType, number> {}
+export interface I16Literal extends GenericLiteral<Int16ScalarType, number> {}
+export interface I32Literal extends GenericLiteral<Int32ScalarType, number> {}
+export interface I64Literal extends GenericLiteral<Int64ScalarType, number> {}
+export interface F32Literal extends GenericLiteral<Float32ScalarType, number> {}
+export interface F64Literal extends GenericLiteral<Float64ScalarType, number> {}
+export interface TextLiteral extends GenericLiteral<TextScalarType, string> {}
 
 export type SingleLiteral =
   | BooleanLiteral

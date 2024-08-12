@@ -9,29 +9,7 @@ export interface User {
   comments: Comment[];
 }
 
-export interface Post {
-  id: number;
-  title: string;
-  author_id: number;
-  author: User;
-
-  comments: Comment[];
-}
-
-export interface Comment {
-  id: number;
-  text: string;
-  post_id: number;
-  commenter_id: number;
-  deleted: boolean;
-  parent_id: number | null;
-
-  post: Post;
-  author: User;
-  parent: Comment;
-}
-
-export const users: Query<User> = Query.table({
+export const users: Query<User> = Query.table<Query.schema<User>>({
   name: 'users',
   schema: {
     id: {type: 'i32', nullable: false},
@@ -49,7 +27,16 @@ export const users: Query<User> = Query.table({
   },
 });
 
-export const posts: Query<Post> = Query.table({
+export interface Post {
+  id: number;
+  title: string;
+  author_id: number;
+
+  author: User;
+  comments: Comment[];
+}
+
+export const posts: Query<Post> = Query.table<Query.schema<Post>>({
   name: 'posts',
   schema: {
     id: {type: 'i32', nullable: false},
@@ -69,7 +56,20 @@ export const posts: Query<Post> = Query.table({
   },
 });
 
-export const comments: Query<Comment> = Query.table({
+export interface Comment {
+  id: number;
+  text: string;
+  post_id: number;
+  commenter_id: number;
+  parent_id: number | null;
+  deleted: boolean;
+
+  post: Post;
+  author: User;
+  parent: Comment | null;
+}
+
+export const comments: Query<Comment> = Query.table<Query.schema<Comment>>({
   name: 'comments',
   schema: {
     id: {type: 'i32', nullable: false},
@@ -77,6 +77,9 @@ export const comments: Query<Comment> = Query.table({
     post_id: {type: 'i32', nullable: false},
     commenter_id: {type: 'i32', nullable: false},
     parent_id: {type: 'i32', nullable: true},
+    deleted: {
+      type: 'boolean',
+    },
     post: {
       type: 'ref',
       required: true,
@@ -93,9 +96,6 @@ export const comments: Query<Comment> = Query.table({
       type: 'ref',
       references: () => comments,
       condition: (comment, parent) => parent.id.eq(comment.parent_id),
-    },
-    deleted: {
-      type: 'boolean',
     },
   },
 });

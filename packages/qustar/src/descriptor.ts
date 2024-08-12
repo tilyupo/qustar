@@ -1,40 +1,63 @@
 import {match} from 'ts-pattern';
-import {ScalarType, SingleScalarType} from './literal.js';
+import {GenericScalarType, ScalarType, SingleScalarType} from './literal.js';
 import {Query} from './query/query.js';
 import {ChildrenRef, Field, ParentRef, Schema} from './query/schema.js';
 import {JoinFilterFn} from './types/query.js';
+import {ValidateEntity} from './types/schema.js';
 
 export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;
 }
 
-export interface ForwardRefDescriptor extends GenericPropertyDescriptor<'ref'> {
-  readonly required?: boolean;
-  readonly references: () => Query<any>;
+export type ForwardRefDescriptor<
+  T extends ValidateEntity<T> = any,
+  TRequired extends boolean = boolean,
+> = (TRequired extends true
+  ? {readonly required: true}
+  : {readonly required?: false}) & {
+  readonly type: 'ref';
+  readonly references: () => Query<T>;
   readonly condition: JoinFilterFn<any, any>;
-}
+};
 
-export interface BackRefDescriptor
+export interface BackRefDescriptor<T extends ValidateEntity<T> = any>
   extends GenericPropertyDescriptor<'back_ref'> {
-  readonly references: () => Query<any>;
+  readonly references: () => Query<T>;
   readonly condition: JoinFilterFn<any, any>;
 }
 
-type RefDescriptor = ForwardRefDescriptor | BackRefDescriptor;
+export type RefDescriptor = ForwardRefDescriptor | BackRefDescriptor;
 
-export type ScalarDescriptor =
-  | (Omit<SingleScalarType, 'nullable'> & {
-      nullable?: boolean;
-    })
-  | SingleScalarType['type'];
+export type ScalarShortDescriptor<
+  T extends GenericScalarType<string> = SingleScalarType,
+  TNullable extends boolean = boolean,
+> = TNullable extends true ? never : T['type'];
 
-export type SchemaDescriptor = Readonly<
-  Record<string, RefDescriptor | ScalarDescriptor>
+export type ScalarLongDescriptor<
+  T extends GenericScalarType<string> = SingleScalarType,
+  TNullable extends boolean = boolean,
+> = TNullable extends true
+  ? Omit<T, 'nullable'> & {
+      nullable: true;
+    }
+  : Omit<T, 'nullable'> & {
+      nullable?: false;
+    };
+
+export type ScalarDescriptor<
+  T extends GenericScalarType<string> = SingleScalarType,
+  TNullable extends boolean = boolean,
+> = ScalarShortDescriptor<T, TNullable> | ScalarLongDescriptor<T, TNullable>;
+
+export type PropertyValueDescriptor = RefDescriptor | ScalarDescriptor;
+
+export type EntityDescriptor = Readonly<
+  Record<string, PropertyValueDescriptor>
 >;
 
-export interface TableOptions {
+export interface TableOptions<TSchema extends EntityDescriptor> {
   readonly name: string;
-  readonly schema: SchemaDescriptor;
+  readonly schema: TSchema;
 }
 
 export function scalarDescriptorToScalarType(
@@ -47,14 +70,14 @@ export function scalarDescriptorToScalarType(
   }
 }
 
-export function publicSchemaToInternalSchema(
+export function toInternalSchema(
   table: () => Query<any>,
-  columns: SchemaDescriptor
+  columns: EntityDescriptor
 ): Schema {
   const descriptors = Object.entries(columns ?? {});
   const nonRefDescriptors = descriptors
     .filter(
-      (entry): entry is [string, ScalarDescriptor | SingleScalarType['type']] =>
+      (entry): entry is [string, ScalarDescriptor] =>
         typeof entry[1] === 'string' ||
         (entry[1].type !== 'ref' && entry[1].type !== 'back_ref')
     )

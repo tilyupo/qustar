@@ -223,7 +223,8 @@ export type Expand<T> =
 //   >,
 // ];
 
-type QueryValue<T extends Query<any>> = T extends Query<infer R> ? R : never;
+export type QueryValue<T extends Query<any>> =
+  T extends Query<infer R> ? R : never;
 
 /////////////////////////////////////////////////////////
 

@@ -1,9 +1,9 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
 import {
-  publicSchemaToInternalSchema,
-  SchemaDescriptor,
+  EntityDescriptor,
   TableOptions,
+  toInternalSchema,
 } from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
@@ -21,9 +21,15 @@ import {
   MapScalarArrayFn,
   MapScalarFn,
   MapValueFn,
+  QueryValue,
   ScalarMapping,
   Value,
 } from '../types/query.js';
+import {
+  DeriveEntity,
+  DeriveEntityDescriptor,
+  ValidateEntity,
+} from '../types/schema.js';
 import {
   arrayEqual,
   assert,
@@ -147,12 +153,18 @@ interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
 
 export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
+export namespace Query {
+  export type infer<T extends Query<any>> = QueryValue<T>;
+  export type schema<T extends ValidateEntity<T>> = DeriveEntityDescriptor<T>;
+}
+
 export abstract class Query<T extends Value<T>> {
-  static table<T extends Value<T> = any>(descriptor: TableOptions): Query<T>;
-  static table<T extends Value<T> = any>(descriptor: TableOptions): Query<T> {
+  static table<const TSchema extends EntityDescriptor>(
+    descriptor: TableOptions<TSchema>
+  ): Query<DeriveEntity<TSchema>> {
     const schema: (table: () => Query<any>) => Schema = table =>
-      publicSchemaToInternalSchema(table, descriptor.schema);
-    const table: Query<T> = new ProxyQuery<T>(
+      toInternalSchema(table, descriptor.schema);
+    const table = new ProxyQuery<DeriveEntity<TSchema>>(
       new QuerySource({
         type: 'table',
         name: descriptor.name,
@@ -164,13 +176,13 @@ export abstract class Query<T extends Value<T>> {
 
   static raw<T extends Value<T> = any>(options: {
     sql: SqlTemplate;
-    schema: SchemaDescriptor;
+    schema: EntityDescriptor;
   }): Query<T> {
     const query = new ProxyQuery(
       new QuerySource({
         type: 'sql',
         sql: options.sql,
-        schema: publicSchemaToInternalSchema(() => query, options.schema),
+        schema: toInternalSchema(() => query, options.schema),
       })
     );
     return query;
