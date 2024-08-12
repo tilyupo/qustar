@@ -182,7 +182,7 @@ const users = Query.table('users')
   .slice(10, 15);
 ```
 
-#### .{inner,left,right,full}Join(options)
+#### .{inner,left,right}Join(options)
 
 Qustar supports `.innerJoin`, `.leftJoin`, `.rightJoin` and `.fullJoin`:
 
