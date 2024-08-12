@@ -55,7 +55,7 @@ export type EntityDescriptor = Readonly<
   Record<string, PropertyValueDescriptor>
 >;
 
-export interface TableOptions<TSchema extends EntityDescriptor> {
+export interface Table<TSchema extends EntityDescriptor> {
   readonly name: string;
   readonly schema: TSchema;
 }

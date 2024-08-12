@@ -1,10 +1,6 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
-import {
-  EntityDescriptor,
-  TableOptions,
-  toInternalSchema,
-} from '../descriptor.js';
+import {EntityDescriptor, Table, toInternalSchema} from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
@@ -160,7 +156,7 @@ export namespace Query {
 
 export abstract class Query<T extends Value<T>> {
   static table<const TSchema extends EntityDescriptor>(
-    descriptor: TableOptions<TSchema>
+    descriptor: Table<TSchema>
   ): Query<DeriveEntity<TSchema>> {
     const schema: (table: () => Query<any>) => Schema = table =>
       toInternalSchema(table, descriptor.schema);
