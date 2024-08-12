@@ -3,7 +3,7 @@ import {
   SingleLiteralValue,
   SingleScalarType,
 } from '../literal.js';
-import {JoinFilterFn} from '../types.js';
+import {JoinFilterFn} from '../types/query.js';
 import {ScalarOperand} from './expr.js';
 import {PropPath} from './projection.js';
 import {Query} from './query.js';

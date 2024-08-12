@@ -1,12 +1,12 @@
 import {match} from 'ts-pattern';
+import {Literal, ScalarType} from './literal.js';
 import {
   SCALAR_COLUMN_ALIAS,
   SYSTEM_COLUMN_PREFIX,
   deserializePropPath,
-} from './expr/compiler.js';
-import {isNumeric} from './expr/expr.js';
-import {Projection, PropPath} from './expr/projection.js';
-import {Literal, ScalarType} from './literal.js';
+} from './query/compiler.js';
+import {isNumeric} from './query/expr.js';
+import {Projection, PropPath} from './query/projection.js';
 import {QuerySql} from './sql/sql.js';
 import {
   arrayEqual,

@@ -1,9 +1,9 @@
 export {Connector, SqlCommand, cmd, materialize} from './connector.js';
-export {compileQuery} from './expr/compiler.js';
-export {Expr, QueryTerminatorExpr} from './expr/expr.js';
-export {Query} from './expr/query.js';
-export {sql} from './expr/sql.js';
 export {SingleLiteralValue} from './literal.js';
+export {compileQuery} from './query/compiler.js';
+export {Expr, QueryTerminatorExpr} from './query/expr.js';
+export {Query} from './query/query.js';
+export {sql} from './query/sql.js';
 export {renderMySql} from './render/mysql.js';
 export {renderPostgreSql} from './render/postgresql.js';
 export {convertToArgument} from './render/sql.js';
@@ -49,7 +49,7 @@ export {
   MapValueFn,
   Mapping,
   ScalarMapping,
-} from './types.js';
+} from './types/query.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function interpretQuery(...args: any[]): any {

@@ -6,7 +6,7 @@ import {
   SingleLiteralValue,
   inferLiteral,
 } from '../literal.js';
-import {Assert, Equal} from '../types.js';
+import {Assert, Equal} from '../types/query.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
 import {Query, QuerySource} from './query.js';

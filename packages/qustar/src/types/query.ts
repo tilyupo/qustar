@@ -1,6 +1,6 @@
-import {Expr} from './expr/expr.js';
-import {Query} from './expr/query.js';
-import {SingleLiteralValue} from './literal.js';
+import {SingleLiteralValue} from '../literal.js';
+import {Expr} from '../query/expr.js';
+import {Query} from '../query/query.js';
 
 export type IsAny<a> = 0 extends 1 & a ? true : false;
 

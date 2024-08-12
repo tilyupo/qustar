@@ -1,8 +1,8 @@
 import {match} from 'ts-pattern';
-import {Query} from './expr/query.js';
-import {ChildrenRef, Field, ParentRef, Schema} from './expr/schema.js';
 import {ScalarType, SingleScalarType} from './literal.js';
-import {JoinFilterFn} from './types.js';
+import {Query} from './query/query.js';
+import {ChildrenRef, Field, ParentRef, Schema} from './query/schema.js';
+import {JoinFilterFn} from './types/query.js';
 
 export interface GenericPropertyDescriptor<TType extends string> {
   readonly type: TType;

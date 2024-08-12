@@ -1,6 +1,5 @@
 import {match} from 'ts-pattern';
 import {SqlCommand, cmd} from '../connector.js';
-import {isNumeric} from '../expr/expr.js';
 import {
   ArrayLiteral,
   Literal,
@@ -10,6 +9,7 @@ import {
   assertSingleLiteral,
   inferLiteral,
 } from '../literal.js';
+import {isNumeric} from '../query/expr.js';
 import {
   AliasSql,
   BinarySql,

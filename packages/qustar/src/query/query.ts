@@ -23,7 +23,7 @@ import {
   MapValueFn,
   ScalarMapping,
   Value,
-} from '../types.js';
+} from '../types/query.js';
 import {
   arrayEqual,
   assert,

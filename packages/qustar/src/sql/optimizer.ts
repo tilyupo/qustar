@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {aggregationFuncs, SYSTEM_COLUMN_PREFIX} from '../expr/compiler.js';
+import {aggregationFuncs, SYSTEM_COLUMN_PREFIX} from '../query/compiler.js';
 import {assert, compose} from '../utils.js';
 import {ID_SQL_MAPPER, mapQuery, mapSelect, mapSql} from './mapper.js';
 import {

@@ -1,5 +1,5 @@
-import {JoinType, OrderByType} from '../expr/query.js';
 import {Literal} from '../literal.js';
+import {JoinType, OrderByType} from '../query/query.js';
 
 export type Sql =
   | AliasSql
