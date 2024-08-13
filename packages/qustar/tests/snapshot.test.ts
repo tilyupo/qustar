@@ -10,12 +10,12 @@ expect.addSnapshotSerializer({
   },
 });
 
-describe('expr', () => {
+describe('snapshot', () => {
   test('eq', () => {
     expect(
       Query.table({name: 'users', schema: {id: 'i32'}})
         .filter(x => x.id.eq(1))
-        .renderInline('sqlite')
+        .renderInline('postgresql')
     ).toMatchInlineSnapshot(/* sql */ `
       SELECT
         "s1"."id"
@@ -26,8 +26,7 @@ describe('expr', () => {
     `);
   });
 
-  test('fullJoin', () => {
-    // todo: improve optimizer
+  test('innerJoin', () => {
     const comments = Query.table({
       name: 'comments',
       schema: {parent_id: {type: 'i32', nullable: true}, id: 'i32'},
@@ -43,7 +42,7 @@ describe('expr', () => {
           }),
           condition: (child, parent) => child.parent_id.eq(parent.id),
         })
-        .renderInline('sqlite')
+        .renderInline('postgresql')
     ).toMatchInlineSnapshot(/* sql */ `
       SELECT
         "s1_1"."id" AS "p",

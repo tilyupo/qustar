@@ -18,7 +18,7 @@ declare const users: Query<User>;
 
 describe('typescript', () => {
   describe('schema', () => {
-    test('primitives', () => {
+    test('i8', () => {
       check<{x: number}>(derive({x: 'i8'}));
       check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'i8'}));
       check<{x: number}>(derive({x: {type: 'i8'}}));
@@ -33,7 +33,9 @@ describe('typescript', () => {
           x: {type: 'i8', nullable: true},
         })
       );
+    });
 
+    test('i16', () => {
       check<{x: number}>(derive({x: 'i16'}));
       check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'i16'}));
       check<{x: number}>(derive({x: {type: 'i16'}}));
@@ -49,106 +51,128 @@ describe('typescript', () => {
         })
       );
 
-      check<{x: number}>(derive({x: 'i32'}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'i32'}));
-      check<{x: number}>(derive({x: {type: 'i32'}}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: {type: 'i32'}}));
-      check<{x: number}>(derive({x: {type: 'i32', nullable: false}}));
-      check<{x: number}>(
-        derive<Query.schema<{x: number}>>({x: {type: 'i32', nullable: false}})
-      );
-      check<{x: number | null}>(derive({x: {type: 'i32', nullable: true}}));
-      check<{x: number | null}>(
-        derive<Query.schema<{x: number | null}>>({
-          x: {type: 'i32', nullable: true},
-        })
-      );
+      test('i32', () => {
+        check<{x: number}>(derive({x: 'i32'}));
+        check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'i32'}));
+        check<{x: number}>(derive({x: {type: 'i32'}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'i32'}})
+        );
+        check<{x: number}>(derive({x: {type: 'i32', nullable: false}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'i32', nullable: false}})
+        );
+        check<{x: number | null}>(derive({x: {type: 'i32', nullable: true}}));
+        check<{x: number | null}>(
+          derive<Query.schema<{x: number | null}>>({
+            x: {type: 'i32', nullable: true},
+          })
+        );
+      });
 
-      check<{x: number}>(derive({x: 'i64'}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'i64'}));
-      check<{x: number}>(derive({x: {type: 'i64'}}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: {type: 'i64'}}));
-      check<{x: number}>(derive({x: {type: 'i64', nullable: false}}));
-      check<{x: number}>(
-        derive<Query.schema<{x: number}>>({x: {type: 'i64', nullable: false}})
-      );
-      check<{x: number | null}>(derive({x: {type: 'i64', nullable: true}}));
-      check<{x: number | null}>(
-        derive<Query.schema<{x: number | null}>>({
-          x: {type: 'i64', nullable: true},
-        })
-      );
+      test('i64', () => {
+        check<{x: number}>(derive({x: 'i64'}));
+        check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'i64'}));
+        check<{x: number}>(derive({x: {type: 'i64'}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'i64'}})
+        );
+        check<{x: number}>(derive({x: {type: 'i64', nullable: false}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'i64', nullable: false}})
+        );
+        check<{x: number | null}>(derive({x: {type: 'i64', nullable: true}}));
+        check<{x: number | null}>(
+          derive<Query.schema<{x: number | null}>>({
+            x: {type: 'i64', nullable: true},
+          })
+        );
+      });
 
-      check<{x: number}>(derive({x: 'f32'}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'f32'}));
-      check<{x: number}>(derive({x: {type: 'f32'}}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: {type: 'f32'}}));
-      check<{x: number}>(derive({x: {type: 'f32', nullable: false}}));
-      check<{x: number}>(
-        derive<Query.schema<{x: number}>>({x: {type: 'f32', nullable: false}})
-      );
-      check<{x: number | null}>(derive({x: {type: 'f32', nullable: true}}));
-      check<{x: number | null}>(
-        derive<Query.schema<{x: number | null}>>({
-          x: {type: 'f32', nullable: true},
-        })
-      );
+      test('f32', () => {
+        check<{x: number}>(derive({x: 'f32'}));
+        check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'f32'}));
+        check<{x: number}>(derive({x: {type: 'f32'}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'f32'}})
+        );
+        check<{x: number}>(derive({x: {type: 'f32', nullable: false}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'f32', nullable: false}})
+        );
+        check<{x: number | null}>(derive({x: {type: 'f32', nullable: true}}));
+        check<{x: number | null}>(
+          derive<Query.schema<{x: number | null}>>({
+            x: {type: 'f32', nullable: true},
+          })
+        );
+      });
 
-      check<{x: number}>(derive({x: 'f64'}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'f64'}));
-      check<{x: number}>(derive({x: {type: 'f64'}}));
-      check<{x: number}>(derive<Query.schema<{x: number}>>({x: {type: 'f64'}}));
-      check<{x: number}>(derive({x: {type: 'f64', nullable: false}}));
-      check<{x: number}>(
-        derive<Query.schema<{x: number}>>({x: {type: 'f64', nullable: false}})
-      );
-      check<{x: number | null}>(derive({x: {type: 'f64', nullable: true}}));
-      check<{x: number | null}>(
-        derive<Query.schema<{x: number | null}>>({
-          x: {type: 'f64', nullable: true},
-        })
-      );
+      test('f64', () => {
+        check<{x: number}>(derive({x: 'f64'}));
+        check<{x: number}>(derive<Query.schema<{x: number}>>({x: 'f64'}));
+        check<{x: number}>(derive({x: {type: 'f64'}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'f64'}})
+        );
+        check<{x: number}>(derive({x: {type: 'f64', nullable: false}}));
+        check<{x: number}>(
+          derive<Query.schema<{x: number}>>({x: {type: 'f64', nullable: false}})
+        );
+        check<{x: number | null}>(derive({x: {type: 'f64', nullable: true}}));
+        check<{x: number | null}>(
+          derive<Query.schema<{x: number | null}>>({
+            x: {type: 'f64', nullable: true},
+          })
+        );
+      });
 
-      check<{x: boolean}>(derive({x: 'boolean'}));
-      check<{x: boolean}>(derive<Query.schema<{x: boolean}>>({x: 'boolean'}));
-      check<{x: boolean}>(derive({x: {type: 'boolean'}}));
-      check<{x: boolean}>(
-        derive<Query.schema<{x: boolean}>>({x: {type: 'boolean'}})
-      );
-      check<{x: boolean}>(derive({x: {type: 'boolean', nullable: false}}));
-      check<{x: boolean}>(
-        derive<Query.schema<{x: boolean}>>({
-          x: {type: 'boolean', nullable: false},
-        })
-      );
-      check<{x: boolean | null}>(
-        derive({x: {type: 'boolean', nullable: true}})
-      );
-      check<{x: boolean | null}>(
-        derive<Query.schema<{x: boolean | null}>>({
-          x: {type: 'boolean', nullable: true},
-        })
-      );
+      test('boolean', () => {
+        check<{x: boolean}>(derive({x: 'boolean'}));
+        check<{x: boolean}>(derive<Query.schema<{x: boolean}>>({x: 'boolean'}));
+        check<{x: boolean}>(derive({x: {type: 'boolean'}}));
+        check<{x: boolean}>(
+          derive<Query.schema<{x: boolean}>>({x: {type: 'boolean'}})
+        );
+        check<{x: boolean}>(derive({x: {type: 'boolean', nullable: false}}));
+        check<{x: boolean}>(
+          derive<Query.schema<{x: boolean}>>({
+            x: {type: 'boolean', nullable: false},
+          })
+        );
+        check<{x: boolean | null}>(
+          derive({x: {type: 'boolean', nullable: true}})
+        );
+        check<{x: boolean | null}>(
+          derive<Query.schema<{x: boolean | null}>>({
+            x: {type: 'boolean', nullable: true},
+          })
+        );
+      });
 
-      check<{x: string}>(derive({x: 'text'}));
-      check<{x: string}>(derive<Query.schema<{x: string}>>({x: 'text'}));
-      check<{x: string}>(derive({x: {type: 'text'}}));
-      check<{x: string}>(
-        derive<Query.schema<{x: string}>>({x: {type: 'text'}})
-      );
-      check<{x: string}>(derive({x: {type: 'text', nullable: false}}));
-      check<{x: string}>(
-        derive<Query.schema<{x: string}>>({x: {type: 'text', nullable: false}})
-      );
-      check<{x: string | null}>(derive({x: {type: 'text', nullable: true}}));
-      check<{x: string | null}>(
-        derive<Query.schema<{x: string | null}>>({
-          x: {type: 'text', nullable: true},
-        })
-      );
+      test('text', () => {
+        check<{x: string}>(derive({x: 'text'}));
+        check<{x: string}>(derive<Query.schema<{x: string}>>({x: 'text'}));
+        check<{x: string}>(derive({x: {type: 'text'}}));
+        check<{x: string}>(
+          derive<Query.schema<{x: string}>>({x: {type: 'text'}})
+        );
+        check<{x: string}>(derive({x: {type: 'text', nullable: false}}));
+        check<{x: string}>(
+          derive<Query.schema<{x: string}>>({
+            x: {type: 'text', nullable: false},
+          })
+        );
+        check<{x: string | null}>(derive({x: {type: 'text', nullable: true}}));
+        check<{x: string | null}>(
+          derive<Query.schema<{x: string | null}>>({
+            x: {type: 'text', nullable: true},
+          })
+        );
+      });
     });
 
-    test('refs', () => {
+    test('forward ref', () => {
       check<{x: User}>(
         derive({
           x: {
@@ -209,7 +233,9 @@ describe('typescript', () => {
           },
         })
       );
+    });
 
+    test('back ref', () => {
       check<{x: User[]}>(
         derive({
           x: {
