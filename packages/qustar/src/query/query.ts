@@ -170,10 +170,10 @@ export abstract class Query<T extends Value<T>> {
     return table;
   }
 
-  static raw<T extends Value<T> = any>(options: {
+  static raw<const TSchema extends EntityDescriptor>(options: {
     sql: SqlTemplate;
-    schema: EntityDescriptor;
-  }): Query<T> {
+    schema: TSchema;
+  }): Query<DeriveEntity<TSchema>> {
     const query = new ProxyQuery(
       new QuerySource({
         type: 'sql',

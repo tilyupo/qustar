@@ -22,13 +22,11 @@ export type DeriveEntity<T extends EntityDescriptor> = {
 };
 
 type DerivePropertyValue<T extends PropertyValueDescriptor> =
-  T extends ScalarShortDescriptor
+  T extends ScalarDescriptor
     ? DeriveScalar<T>
-    : T extends ScalarLongDescriptor
-      ? DeriveNullableScalar<T>
-      : T extends RefDescriptor
-        ? DeriveRef<T>
-        : never;
+    : T extends RefDescriptor
+      ? DeriveRef<T>
+      : never;
 
 type DeriveRef<T extends RefDescriptor> = T extends ForwardRefDescriptor
   ? DeriveForwardRef<T>
@@ -45,12 +43,19 @@ type DeriveBackRef<T extends BackRefDescriptor> = Query.infer<
   ReturnType<T['references']>
 >[];
 
+export type DeriveScalar<T extends ScalarDescriptor> =
+  T extends ScalarShortDescriptor
+    ? DeriveNonNullableScalar<T>
+    : T extends ScalarLongDescriptor
+      ? DeriveNullableScalar<T>
+      : never;
+
 type DeriveNullableScalar<T extends ScalarLongDescriptor> =
   T['nullable'] extends true
-    ? DeriveScalar<T['type']> | null
-    : DeriveScalar<T['type']>;
+    ? DeriveNonNullableScalar<T['type']> | null
+    : DeriveNonNullableScalar<T['type']>;
 
-type DeriveScalar<T extends ScalarShortDescriptor> = {
+type DeriveNonNullableScalar<T extends ScalarShortDescriptor> = {
   boolean: boolean;
   i8: number;
   i16: number;

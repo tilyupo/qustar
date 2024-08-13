@@ -7,6 +7,7 @@ import {
   inferLiteral,
 } from '../literal.js';
 import {Assert, Equal} from '../types/query.js';
+import {DeriveScalar} from '../types/schema.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
 import {Query, QuerySource} from './query.js';
@@ -62,11 +63,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // sql
 
-  static raw<T extends SingleLiteralValue>(options: {
+  static raw<const TSchema extends ScalarDescriptor>(options: {
     sql: SqlTemplate;
-    schema: ScalarDescriptor;
-  }): Expr<T> {
-    return new SqlExpr<T>(
+    schema: TSchema;
+  }): Expr<DeriveScalar<TSchema>> {
+    return new SqlExpr<DeriveScalar<TSchema>>(
       options.sql,
       scalarDescriptorToScalarType(options.schema)
     );
