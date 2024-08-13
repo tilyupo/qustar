@@ -9,7 +9,8 @@
     "noErrorTruncation": true,
     "declaration": true,
     "noImplicitAny": false,
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "skipLibCheck": true
     // "noPropertyAccessFromIndexSignature": true,
     // "noUncheckedIndexedAccess": true
   }

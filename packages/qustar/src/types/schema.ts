@@ -52,7 +52,6 @@ type DeriveNullableScalar<T extends ScalarLongDescriptor> =
 
 type DeriveScalar<T extends ScalarShortDescriptor> = {
   boolean: boolean;
-  null: null;
   i8: number;
   i16: number;
   i32: number;

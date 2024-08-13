@@ -30,9 +30,8 @@
   },
   "dependencies": {
     "qustar": "^0.0.1",
-    "vitest": "^2.0.3"
-  },
-  "devDependencies": {
+    "vitest": "^2.0.3",
     "ts-pattern": "^5.2.0"
-  }
+  },
+  "devDependencies": {}
 }

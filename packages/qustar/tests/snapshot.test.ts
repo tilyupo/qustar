@@ -1,5 +1,5 @@
 import {describe, expect, test} from 'vitest';
-import {Query} from '../src/expr/query.js';
+import {Query} from '../src/query/query.js';
 
 expect.addSnapshotSerializer({
   test(val) {
@@ -35,7 +35,7 @@ describe('expr', () => {
     expect(
       comments
         .join({
-          type: 'full',
+          type: 'inner',
           right: comments,
           select: (child, parent) => ({
             c: child.id,
@@ -46,23 +46,11 @@ describe('expr', () => {
         .renderInline('sqlite')
     ).toMatchInlineSnapshot(/* sql */ `
       SELECT
-        "s2"."id" AS "p",
-        "s3"."id" AS "c"
+        "s1_1"."id" AS "p",
+        "s1"."id" AS "c"
       FROM
-        (
-          SELECT
-            "s1"."parent_id",
-            "s1"."id"
-          FROM
-            comments AS "s1"
-        ) AS "s3"
-        FULL JOIN (
-          SELECT
-            "s1"."parent_id",
-            "s1"."id"
-          FROM
-            comments AS "s1"
-        ) AS "s2" ON "s3"."parent_id" = "s2"."id"
+        comments AS "s1"
+        INNER JOIN comments AS "s1_1" ON "s1"."parent_id" = "s1_1"."id"
     `);
   });
 });

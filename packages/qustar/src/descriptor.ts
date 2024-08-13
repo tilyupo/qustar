@@ -1,5 +1,10 @@
 import {match} from 'ts-pattern';
-import {GenericScalarType, ScalarType, SingleScalarType} from './literal.js';
+import {
+  GenericScalarType,
+  NullScalarType,
+  ScalarType,
+  SingleScalarType,
+} from './literal.js';
 import {Query} from './query/query.js';
 import {ChildrenRef, Field, ParentRef, Schema} from './query/schema.js';
 import {JoinFilterFn} from './types/query.js';
@@ -28,13 +33,15 @@ export interface BackRefDescriptor<T extends ValidateEntity<T> = any>
 
 export type RefDescriptor = ForwardRefDescriptor | BackRefDescriptor;
 
+export type NonNullSingleScalarType = Exclude<SingleScalarType, NullScalarType>;
+
 export type ScalarShortDescriptor<
-  T extends GenericScalarType<string> = SingleScalarType,
+  T extends GenericScalarType<string> = NonNullSingleScalarType,
   TNullable extends boolean = boolean,
 > = TNullable extends true ? never : T['type'];
 
 export type ScalarLongDescriptor<
-  T extends GenericScalarType<string> = SingleScalarType,
+  T extends GenericScalarType<string> = NonNullSingleScalarType,
   TNullable extends boolean = boolean,
 > = TNullable extends true
   ? Omit<T, 'nullable'> & {
@@ -45,7 +52,7 @@ export type ScalarLongDescriptor<
     };
 
 export type ScalarDescriptor<
-  T extends GenericScalarType<string> = SingleScalarType,
+  T extends GenericScalarType<string> = NonNullSingleScalarType,
   TNullable extends boolean = boolean,
 > = ScalarShortDescriptor<T, TNullable> | ScalarLongDescriptor<T, TNullable>;
 
