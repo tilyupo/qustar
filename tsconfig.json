@@ -4,7 +4,9 @@
     "outDir": "build",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
+    // it was often suggested that libraries compile without esModuleInterop,
+    // since its use in libraries could force users to adopt it too
+    "esModuleInterop": false,
     "noErrorTruncation": true,
     "declaration": true,
     "noImplicitAny": false,
