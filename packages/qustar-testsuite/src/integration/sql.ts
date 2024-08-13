@@ -61,6 +61,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
             id: 'i32',
             author: {
               type: 'ref',
+              required: true,
               references: () => users,
               condition: (post, user) => post.author_id.eq(user.id),
             },

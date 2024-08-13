@@ -1,10 +1,10 @@
 import Database from 'better-sqlite3';
 import {createInitSqlScript, describeConnector} from 'qustar-testsuite';
-import {describe, test} from 'vitest';
+import {describe, expect, test} from 'vitest';
 import {BetterSqlite3Connector} from '../src/better-sqlite3.js';
 
 describeConnector(
-  {test, describe},
+  {test, describe, expectDeepEqual: (a, b, m) => expect(a).to.deep.equal(b, m)},
   {
     connector: new BetterSqlite3Connector(new Database(':memory:')),
     initSql: createInitSqlScript('sqlite'),

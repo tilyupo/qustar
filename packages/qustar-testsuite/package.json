@@ -25,13 +25,16 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "deploy": "npm run build && node ../../deploy.js",
+    "deploy": "npm run build && node ../../scripts/deploy.js",
     "test": "vitest run"
   },
+  "peerDependencies": {
+    "qustar": "^0.0.1"
+  },
   "dependencies": {
-    "qustar": "^0.0.1",
-    "vitest": "^2.0.3",
     "ts-pattern": "^5.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vitest": "^2.0.3"
+  }
 }

@@ -27,12 +27,12 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "deploy": "npm run build && node ../../deploy.js",
+    "deploy": "npm run build && node ../../scripts/deploy.js",
     "test": "vitest run"
   },
-  "dependencies": {
-    "qustar": "^0.0.1",
-    "sqlite3": "^5.1.7"
+  "peerDependencies": {
+    "sqlite3": "*",
+    "qustar": "*"
   },
   "devDependencies": {
     "vitest": "^1.6.0",

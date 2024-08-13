@@ -15,6 +15,7 @@ import {buildUtils, DescribeOrmUtils} from './utils.js';
 export interface TestApi {
   test: (name: string, f: () => Promise<void> | void) => void;
   describe: (name: string, f: () => Promise<void> | void) => void;
+  expectDeepEqual?: <T>(a: T, b: T, message?: string) => void;
 }
 
 export interface TestSuiteOptions {

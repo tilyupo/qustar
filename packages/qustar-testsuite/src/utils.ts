@@ -10,9 +10,9 @@ import {
   optimize,
   renderSqlite,
 } from 'qustar';
-import {expect} from 'vitest';
 import {Comment, EXAMPLE_DB, Post, User, comments, posts, users} from './db.js';
 import {TestApi} from './describe.js';
+import {simpleExpectDeepEqual} from './expect.js';
 
 export {Comment, Post, User};
 
@@ -50,34 +50,6 @@ function canonSort<T>(arr: T[]) {
       return 1;
     }
   });
-}
-
-async function expectQuery<T>(
-  execute: (
-    query: Query<T> | QueryTerminatorExpr<T & SingleLiteralValue>,
-    options?: ExecuteOptions
-  ) => Promise<T[]>,
-  query: Query<T> | QueryTerminatorExpr<T & SingleLiteralValue>,
-  expected: any[],
-  options?: ExecuteOptions
-) {
-  const rows = await execute(query, options);
-
-  if (options?.debug) {
-    dump(query);
-  }
-
-  if (options?.ignoreOrder) {
-    canonSort(rows);
-    canonSort(expected);
-  }
-
-  try {
-    expect(rows).to.deep.equal(expected);
-  } catch (err: any) {
-    err.message += '\n\n' + queryToSql(query);
-    throw err;
-  }
 }
 
 export function dump(
@@ -148,10 +120,12 @@ export interface DescribeOrmUtils {
 }
 
 export function buildUtils(
-  {test}: TestApi,
+  testApi: TestApi,
   provider: Connector | undefined,
   migrationsApplied: Promise<void>
 ): DescribeOrmUtils {
+  const test = testApi.test;
+  const expectDeepEqual = testApi.expectDeepEqual ?? simpleExpectDeepEqual;
   async function checkProvider(
     query: Query<any> | QueryTerminatorExpr<any>,
     expectedRows: any[] | undefined,
@@ -184,7 +158,7 @@ export function buildUtils(
     }
 
     if (expectedRows !== undefined) {
-      expect(referenceRows).to.deep.equal(expectedRows);
+      expectDeepEqual(referenceRows, expectedRows);
     }
 
     for (const withOptimization of [true, false]) {
@@ -207,7 +181,7 @@ export function buildUtils(
         }
 
         try {
-          expect(rows).to.deep.equal(referenceRows);
+          expectDeepEqual(rows, referenceRows);
         } catch (err: any) {
           err.message += '\n\nROWS MISSMATCH!';
           err.message += '\n\ncmd:';
@@ -267,11 +241,29 @@ export function buildUtils(
     },
   ];
 
+  async function expectQuery(query, expected, options) {
+    const rows = await execute(query, options);
+
+    if (options?.debug) {
+      dump(query);
+    }
+
+    if (options?.ignoreOrder) {
+      canonSort(rows);
+      canonSort(expected);
+    }
+
+    try {
+      expectDeepEqual(rows, expected);
+    } catch (err: any) {
+      err.message += '\n\n' + queryToSql(query);
+      throw err;
+    }
+  }
+
   return {
     execute,
-    expectQuery(query, expected, options) {
-      return expectQuery(execute, query, expected, options);
-    },
+    expectQuery,
     test(name, f) {
       test(name, async () => {
         for (const source of sources) {
@@ -290,7 +282,6 @@ export function buildUtils(
 
             for (const query of queries) {
               await expectQuery(
-                execute,
                 query,
                 Array.isArray(expected) ? expected : [expected],
                 options

@@ -30,12 +30,12 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "deploy": "npm run build && node ../../deploy.js",
+    "deploy": "npm run build && node ../../scripts/deploy.js",
     "test": "vitest run"
   },
-  "dependencies": {
-    "better-sqlite3": "^9.6.0",
-    "qustar": "^0.0.1"
+  "peerDependencies": {
+    "better-sqlite3": "*",
+    "qustar": "*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.7",
