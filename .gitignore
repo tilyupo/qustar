@@ -59,7 +59,7 @@ yarn-error.log
 .yarn-integrity
 
 # build
-/packages/*/build
+/packages/*/dist
 
 # debug
 /debug

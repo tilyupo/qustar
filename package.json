@@ -10,12 +10,12 @@
     "deploy": "npm run deploy --workspaces",
     "test": "npm test --workspaces",
     "build": "npm run build --workspaces",
-    "build:watch": "run-p build:watch:*",
-    "build:watch:qustar": "npm run build:watch --workspace=qustar",
-    "build:watch:qustar-testsuite": "npm run build:watch --workspace=qustar-testsuite",
-    "build:watch:qustar-pg": "npm run build:watch --workspace=qustar-pg",
-    "build:watch:qustar-sqlite3": "npm run build:watch --workspace=qustar-sqlite3",
-    "build:watch:qustar-better-sqlite3": "npm run build:watch --workspace=qustar-better-sqlite3"
+    "dev": "run-p dev:*",
+    "dev:qustar": "npm run dev --workspace=qustar",
+    "dev:qustar-testsuite": "npm run dev --workspace=qustar-testsuite",
+    "dev:qustar-pg": "npm run dev --workspace=qustar-pg",
+    "dev:qustar-sqlite3": "npm run dev --workspace=qustar-sqlite3",
+    "dev:qustar-better-sqlite3": "npm run dev --workspace=qustar-better-sqlite3"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
@@ -25,7 +25,8 @@
     "prettier": "^3.3.2",
     "prettier-plugin-organize-imports": "^3.2.3",
     "tsx": "^4.15.6",
-    "typescript": "~5.1.0"
+    "typescript": "~5.1.0",
+    "vitest": "^2.0.5"
   },
   "dependencies": {
     "axios": "^1.7.2",

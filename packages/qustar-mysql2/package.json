@@ -10,13 +10,13 @@
     "sql",
     "typescript"
   ],
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
-    "build/src"
+    "dist/src"
   ],
   "exports": {
-    ".": "./build/src/index.js"
+    ".": "./dist/src/index.js"
   },
   "repository": {
     "type": "git",
@@ -26,13 +26,10 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "build:watch": "tsc -w",
+    "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "db": "docker run -it --rm -e MYSQL_ROOT_PASSWORD=test -e MYSQL_USER=qustar -e MYSQL_PASSWORD=test -e MYSQL_DATABASE=qustar -p 22784:3306 mysql:9.0.1",
-    "test": "vitest run",
-    "test:watch": "run-p test:watch:*",
-    "test:watch:run": "vitest",
-    "test:watch:db": "npm run db"
+    "test": "vitest run"
   },
   "peerDependencies": {
     "mysql2": "*",
