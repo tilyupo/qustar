@@ -28,11 +28,10 @@
     "url": "git+https://github.com/tilyupo/qustar.git",
     "directory": "packages/qustar-testsuite"
   },
+  "type": "module",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && run-s build:*",
-    "build:mjs": "tsc",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.mjs",
     "test": "vitest run"
@@ -45,6 +44,7 @@
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
+    "tsx": "^4.17.0",
     "vitest": "^2.0.3"
   }
 }

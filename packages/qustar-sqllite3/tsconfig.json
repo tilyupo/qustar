@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "./dist/esm"
+    "outDir": "./dist/esm",
   },
   "include": [
     "src/**/*.ts",

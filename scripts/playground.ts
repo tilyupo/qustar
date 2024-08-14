@@ -1,3 +1,4 @@
+/* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
 import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
 import {BetterSqlite3Connector} from 'qustar-better-sqlite3';
@@ -109,7 +110,7 @@ async function init(variant: string) {
 }
 
 (async () => {
-  const {execute, close} = await init('better-sqlite3');
+  const {execute, close} = await init('pg');
 
   try {
     const query = Query.table({name: 'users', schema: {id: 'i32'}}).map(

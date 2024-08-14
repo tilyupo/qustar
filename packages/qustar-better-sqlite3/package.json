@@ -33,11 +33,10 @@
     "url": "git+https://github.com/tilyupo/qustar.git",
     "directory": "packages/qustar-better-sqlite3"
   },
+  "type": "module",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && run-s build:*",
-    "build:mjs": "tsc",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.mjs",
     "test": "vitest run"
@@ -48,8 +47,9 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.7",
+    "qustar-testsuite": "^0.0.1",
     "rimraf": "^6.0.1",
-    "vitest": "^1.6.0",
-    "qustar-testsuite": "^0.0.1"
+    "tsx": "^4.17.0",
+    "vitest": "^1.6.0"
   }
 }

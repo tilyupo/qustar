@@ -30,17 +30,18 @@
       "default": "./dist/cjs/src/index.js"
     }
   },
+  "type": "module",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && run-s build:*",
-    "build:mjs": "tsc",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
     "deploy": "cp ../../README.md ./ && npm run build && node ../../scripts/deploy.mjs && rm ./README.md",
     "test": "vitest run"
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
+    "tsup": "^8.2.4",
+    "tsx": "^4.17.0",
     "vitest": "^1.6.0"
   },
   "dependencies": {
