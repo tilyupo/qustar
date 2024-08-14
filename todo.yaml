@@ -1,11 +1,11 @@
 roadmap:
-  - update connectors to use peer-dependency
 
 docs:
   - move comparison out of why and far away
   - it's not obvious that map works at SQL level
   - Usage doc is too verbose, Andrei whats an high level overview like https://diesel.rs/ examples
   - list of features at the top
+  - examples dir
 
 bugs:
   - ref can become nullable after, for example, left join for the right entity,
@@ -15,12 +15,11 @@ features:
   - type check
   - unselection support
   - typescript support
-  - support schema aliases
+  - support schema aliases for columns (in db A, in js B)
   - migrations from schema
   - insert/delete/update
   - transactions
   - array support
-  - allow nested wildcards because they sometimes can be optimized out later
   - support decimal type
   - support Date types (date, time, timetz, timestamp, timestamptz)
   - support UUID
@@ -38,16 +37,6 @@ tech:
   - noPropertyAccessFromIndexSignature
   - noUncheckedIndexedAccess
   - no-explicit-any
-  - extract base vitest config
-
-interpreter:
-  - group by
-  - aggregation functions
-
-gen:
-  - aggregation functions
-  - all expressions
-  - gen bad queries and check that fails gracefully
 
 testing:
   - run tests on CI
@@ -55,7 +44,7 @@ testing:
   - expr interpreter
   - sql interpreter
   - optimizer canonical tests
-  - add except tests
+  - add exception tests
   - union tests
   - intersect tests
   - date tests
@@ -67,6 +56,8 @@ testing:
   - add tests for every data type
   - add a test that selects parameter that is a number (SELECT ?), pg seems to don't work
   - separate gen tests for optimizer and interpreter
+  - interpreter
+  - gen
 
 query compiler:
   - use one join for all props from the same ref
@@ -114,3 +105,5 @@ done:
   - fix bug users.orderByDesc(x => x.id).map(x => x.id).first(x => x)
   - mariadb
   - mysql
+  - update connectors to use peer-dependency
+  - extract base vitest config
