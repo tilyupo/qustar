@@ -15,7 +15,8 @@
     "dev:qustar-testsuite": "npm run dev --workspace=qustar-testsuite",
     "dev:qustar-pg": "npm run dev --workspace=qustar-pg",
     "dev:qustar-sqlite3": "npm run dev --workspace=qustar-sqlite3",
-    "dev:qustar-better-sqlite3": "npm run dev --workspace=qustar-better-sqlite3"
+    "dev:qustar-better-sqlite3": "npm run dev --workspace=qustar-better-sqlite3",
+    "dev:qustar-mysql2": "npm run dev --workspace=qustar-mysql2"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
