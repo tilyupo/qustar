@@ -11,7 +11,8 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
-    "dist/src"
+    "dist/src",
+    "src"
   ],
   "exports": {
     ".": "./dist/src/index.js"
@@ -24,7 +25,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w --declarationMap",
+    "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "test": "vitest run"
   },

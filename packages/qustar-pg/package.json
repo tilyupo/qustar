@@ -13,7 +13,8 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
-    "dist/src"
+    "dist/src",
+    "src"
   ],
   "exports": {
     ".": "./dist/src/index.js"
@@ -26,7 +27,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w --declarationMap",
+    "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "db": "docker run -it --rm -e POSTGRES_USER=qustar -e POSTGRES_PASSWORD=test -p 22783:5432 postgres:12.20-bullseye",
     "test": "vitest run",
