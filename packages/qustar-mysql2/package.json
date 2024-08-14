@@ -17,7 +17,11 @@
     "src"
   ],
   "exports": {
-    ".": "./dist/src/index.js"
+    ".": {
+      "import": "./dist/mjs/src/index.js",
+      "require": "./dist/cjs/src/index.js",
+      "default": "./dist/cjs/src/index.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -26,7 +30,10 @@
   },
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "clean": "rimraf dist",
+    "build": "npm run clean && run-s build:*",
+    "build:mjs": "tsc",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "db": "docker run -it --rm -e MYSQL_ROOT_PASSWORD=test -e MYSQL_USER=qustar -e MYSQL_PASSWORD=test -e MYSQL_DATABASE=qustar -p 22784:3306 mysql:9.0.1",
@@ -39,6 +46,7 @@
   "devDependencies": {
     "npm-run-all": "^4.1.5",
     "qustar-testsuite": "^0.0.1",
+    "rimraf": "^6.0.1",
     "vitest": "^1.6.0"
   }
 }

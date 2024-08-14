@@ -15,7 +15,11 @@
     "src"
   ],
   "exports": {
-    ".": "./dist/src/index.js"
+    ".": {
+      "import": "./dist/mjs/src/index.js",
+      "require": "./dist/cjs/src/index.js",
+      "default": "./dist/cjs/src/index.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -24,7 +28,10 @@
   },
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "clean": "rimraf dist",
+    "build": "npm run clean && run-s build:*",
+    "build:mjs": "tsc",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "test": "vitest run"
@@ -36,6 +43,7 @@
     "ts-pattern": "^5.2.0"
   },
   "devDependencies": {
+    "rimraf": "^6.0.1",
     "vitest": "^2.0.3"
   }
 }

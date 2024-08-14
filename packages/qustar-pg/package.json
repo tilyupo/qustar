@@ -17,7 +17,11 @@
     "src"
   ],
   "exports": {
-    ".": "./dist/src/index.js"
+    ".": {
+      "import": "./dist/mjs/src/index.js",
+      "require": "./dist/cjs/src/index.js",
+      "default": "./dist/cjs/src/index.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -26,7 +30,10 @@
   },
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "clean": "rimraf dist",
+    "build": "npm run clean && run-s build:*",
+    "build:mjs": "tsc",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "dev": "tsc -w",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "db": "docker run -it --rm -e POSTGRES_USER=qustar -e POSTGRES_PASSWORD=test -p 22783:5432 postgres:12.20-bullseye",
@@ -43,6 +50,7 @@
     "@types/pg": "^8.11.6",
     "npm-run-all": "^4.1.5",
     "qustar-testsuite": "^0.0.1",
+    "rimraf": "^6.0.1",
     "vitest": "^1.6.0"
   }
 }
