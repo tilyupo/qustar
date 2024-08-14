@@ -13,8 +13,8 @@
     "sql",
     "typescript"
   ],
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/cjs/src/index.js",
+  "module": "dist/mjs/src/index.js",
   "files": [
     "dist/src",
     "src"
