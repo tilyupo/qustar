@@ -1,4 +1,4 @@
-import mysql2, {RowDataPacket} from 'mysql2';
+import {Pool, RowDataPacket, createPool} from 'mysql2';
 import {
   Connector,
   QuerySql,
@@ -8,13 +8,13 @@ import {
 } from 'qustar';
 
 export class Mysql2Connector implements Connector {
-  private readonly db: mysql2.Pool;
+  private readonly db: Pool;
 
   constructor(connectionString: string);
-  constructor(pool: mysql2.Pool);
-  constructor(clientOrConnectionString: mysql2.Pool | string) {
+  constructor(pool: Pool);
+  constructor(clientOrConnectionString: Pool | string) {
     if (typeof clientOrConnectionString === 'string') {
-      this.db = mysql2.createPool(clientOrConnectionString);
+      this.db = createPool(clientOrConnectionString);
     } else {
       this.db = clientOrConnectionString;
     }

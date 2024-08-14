@@ -5,17 +5,17 @@ import {
   convertToArgument,
   renderSqlite,
 } from 'qustar';
-import sqlite3 from 'sqlite3';
+import {Database} from 'sqlite3';
 import {indent} from './utils.js';
 
 export class Sqlite3Connector implements Connector {
-  private readonly db: sqlite3.Database;
+  private readonly db: Database;
 
   constructor(filename: string);
-  constructor(db: sqlite3.Database);
-  constructor(dbOrFilename: sqlite3.Database | string) {
+  constructor(db: Database);
+  constructor(dbOrFilename: Database | string) {
     if (typeof dbOrFilename === 'string') {
-      this.db = new sqlite3.Database(dbOrFilename);
+      this.db = new Database(dbOrFilename);
     } else {
       this.db = dbOrFilename;
     }

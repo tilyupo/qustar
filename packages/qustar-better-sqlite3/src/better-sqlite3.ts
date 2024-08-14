@@ -1,7 +1,4 @@
-import BetterSqlite3, {
-  Database as BetterSqliteDb,
-  Options,
-} from 'better-sqlite3';
+import * as BetterSqlite3 from 'better-sqlite3';
 import {
   Connector,
   QuerySql,
@@ -12,11 +9,11 @@ import {
 import {indent} from './utils.js';
 
 export class BetterSqlite3Connector implements Connector {
-  private readonly db: BetterSqliteDb;
+  private readonly db: BetterSqlite3.Database;
 
-  constructor(filename?: string | Buffer, options?: Options);
-  constructor(db: BetterSqliteDb);
-  constructor(dbOrFilename: any, options?: Options) {
+  constructor(filename?: string | Buffer, options?: BetterSqlite3.Options);
+  constructor(db: BetterSqlite3.Database);
+  constructor(dbOrFilename: any, options?: BetterSqlite3.Options) {
     if (typeof dbOrFilename === 'string' || dbOrFilename instanceof Buffer) {
       this.db = new BetterSqlite3(dbOrFilename, options);
     } else {

@@ -3,9 +3,8 @@
   "workspaces": [
     "packages/*"
   ],
-  "type": "module",
   "scripts": {
-    "start": "tsx ./scripts/playground.ts",
+    "start": "tsx ./scripts/playground.mts",
     "bootstrap": "npm install && npm install --workspaces && npm run build",
     "deploy": "npm run deploy --workspaces",
     "test": "npm test --workspaces",

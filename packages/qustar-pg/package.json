@@ -30,14 +30,13 @@
     "url": "git+https://github.com/tilyupo/qustar.git",
     "directory": "packages/qustar-pg"
   },
-  "type": "module",
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && run-s build:*",
     "build:mjs": "tsc",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "dev": "tsc -w",
-    "deploy": "npm run build && node ../../scripts/deploy.js",
+    "deploy": "npm run build && node ../../scripts/deploy.mjs",
     "db": "docker run -it --rm -e POSTGRES_USER=qustar -e POSTGRES_PASSWORD=test -p 22783:5432 postgres:12.20-bullseye",
     "test": "vitest run",
     "test:watch": "run-p test:watch:*",

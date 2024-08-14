@@ -1,4 +1,4 @@
-import pg from 'pg';
+import {Pool} from 'pg';
 import {
   Connector,
   QuerySql,
@@ -8,13 +8,13 @@ import {
 } from 'qustar';
 
 export class PgConnector implements Connector {
-  private readonly db: pg.Pool;
+  private readonly db: Pool;
 
   constructor(connectionString: string);
-  constructor(pool: pg.Pool);
-  constructor(clientOrConnectionString: pg.Pool | string) {
+  constructor(pool: Pool);
+  constructor(clientOrConnectionString: Pool | string) {
     if (typeof clientOrConnectionString === 'string') {
-      this.db = new pg.Pool({
+      this.db = new Pool({
         connectionString: clientOrConnectionString,
       });
     } else {

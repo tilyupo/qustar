@@ -1,15 +1,10 @@
-/* eslint-disable n/no-unpublished-import */
-/* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
 import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
+import {BetterSqlite3Connector} from 'qustar-better-sqlite3';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
-import {BetterSqlite3Connector} from '../packages/qustar-better-sqllite3/src/better-sqlite3.js';
+import {createInitSqlScript} from 'qustar-testsuite';
 import {Mysql2Connector} from '../packages/qustar-mysql2/src/mysql2.js';
-import {
-  createInitSqlScript,
-  users,
-} from '../packages/qustar-testsuite/src/db.js';
 
 interface ExecOptions {
   readonly silent?: boolean;
@@ -33,7 +28,7 @@ function connect(connector: string) {
 async function init(variant: string) {
   const connector = connect(variant);
 
-  const initScripts = createInitSqlScript('mysql');
+  const initScripts = createInitSqlScript('sqlite');
 
   console.log(initScripts.join('\n'));
 
@@ -114,13 +109,12 @@ async function init(variant: string) {
 }
 
 (async () => {
-  const {execute, close} = await init('mysql2');
+  const {execute, close} = await init('better-sqlite3');
 
   try {
-    const query = users
-      .flatMap(x => x.comments.map(x => ({id: x.id, deleted: x.deleted})))
-      .orderByAsc(x => x.id)
-      .map(x => x.deleted);
+    const query = Query.table({name: 'users', schema: {id: 'i32'}}).map(
+      x => x.id
+    );
 
     await execute(query, {noOpt: false});
   } finally {

@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import * as Database from 'better-sqlite3';
 import {createInitSqlScript, describeConnector} from 'qustar-testsuite';
 import {describe, expect, test} from 'vitest';
 import {BetterSqlite3Connector} from '../src/better-sqlite3.js';
