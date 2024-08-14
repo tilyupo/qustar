@@ -20,7 +20,9 @@
   "types": "dist/esm/src/index.d.ts",
   "files": [
     "dist/esm/src",
+    "dist/esm/package.json",
     "dist/cjs/src",
+    "dist/cjs/package.json",
     "src"
   ],
   "exports": {
