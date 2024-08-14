@@ -30,7 +30,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "qustar": "^0.0.1"
+    "qustar": "*"
   },
   "dependencies": {
     "ts-pattern": "^5.2.0"

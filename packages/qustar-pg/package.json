@@ -35,9 +35,9 @@
     "test:watch:run": "vitest",
     "test:watch:db": "npm run db"
   },
-  "dependencies": {
-    "pg": "^8.12.0",
-    "qustar": "^0.0.1"
+  "peerDependencies": {
+    "pg": "*",
+    "qustar": "*"
   },
   "devDependencies": {
     "@types/pg": "^8.11.6",
