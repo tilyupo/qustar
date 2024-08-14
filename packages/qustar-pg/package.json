@@ -26,7 +26,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w",
+    "dev": "tsc -w --declarationMap",
     "deploy": "npm run build && node ../../scripts/deploy.js",
     "db": "docker run -it --rm -e POSTGRES_USER=qustar -e POSTGRES_PASSWORD=test -p 22783:5432 postgres:12.20-bullseye",
     "test": "vitest run",

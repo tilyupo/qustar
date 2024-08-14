@@ -9,7 +9,6 @@
     "esModuleInterop": false,
     "noErrorTruncation": true,
     "declaration": true,
-    "declarationMap": true,
     "noImplicitAny": false,
     "noEmitOnError": false,
     "skipLibCheck": true,
