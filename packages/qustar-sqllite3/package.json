@@ -11,16 +11,16 @@
     "typescript"
   ],
   "main": "dist/cjs/src/index.js",
-  "module": "dist/mjs/src/index.js",
-  "types": "dist/mjs/src/index.d.ts",
+  "module": "dist/esm/src/index.js",
+  "types": "dist/esm/src/index.d.ts",
   "files": [
-    "dist/mjs/src",
+    "dist/esm/src",
     "dist/cjs/src",
     "src"
   ],
   "exports": {
     ".": {
-      "import": "./dist/mjs/src/index.js",
+      "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js",
       "default": "./dist/cjs/src/index.js"
     }

@@ -2,8 +2,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     // it was often suggested that libraries compile without esModuleInterop,
     // since its use in libraries could force users to adopt it too
     "esModuleInterop": false,
