@@ -1,5 +1,5 @@
 import {SingleLiteralValue} from '../literal.js';
-import {Expr} from '../query/expr.js';
+import {Expr, SingleScalarOperand} from '../query/expr.js';
 import {Query} from '../query/query.js';
 
 export type IsAny<a> = 0 extends 1 & a ? true : false;
@@ -38,24 +38,31 @@ export type __TestScalarHandle = Assert<
   Equal<Expr<SingleLiteralValue>, ScalarHandle<SingleLiteralValue>>
 >;
 
-export type GenericScalar<T extends SingleLiteralValue> = T | Expr<T>;
-type Scalar = GenericScalar<SingleLiteralValue>;
-
-type ScalarEntityProperty = SingleLiteralValue;
-type NavigationEntityProperty<T> = EntityValue<T> | Array<EntityValue<T>>;
-type EntityValue<T> = {
-  [K in keyof T]: ScalarEntityProperty | NavigationEntityProperty<T[K]>;
+type ValidScalar<T> = Extract<T, SingleLiteralValue>;
+type ValidNavProperty<T> = ValidEntity<T> | Array<ValidEntity<T>>;
+type ValidEntity<T> = {
+  [K in keyof T]: ValidScalar<T> | ValidNavProperty<T[K]>;
 };
 
-type EntityHandle<T extends object> = {
-  [K in keyof T]: [T[K]] extends [SingleLiteralValue]
-    ? ScalarHandle<T[K]>
-    : [T[K]] extends [ReadonlyArray<any>]
-      ? Query<ArrayItemType<T[K]>>
-      : [T[K]] extends [EntityValue<T[K]>]
-        ? EntityHandle<T[K]>
-        : never;
+export type EntityHandle<
+  T extends object | null,
+  TEntity extends object = Exclude<T, null>,
+  TNull extends null = Extract<T, null>,
+> = {
+  [K in keyof TEntity]: EntityPropertyHandle<TEntity[K] | TNull>;
 };
+export type EntityPropertyHandle<
+  T,
+  TValue = Exclude<T, null>,
+  TNull extends null = Extract<T, null>,
+> = [TValue] extends [SingleLiteralValue]
+  ? ScalarHandle<TValue | TNull>
+  : [TValue] extends [ReadonlyArray<any>]
+    ? Query<ArrayItemType<TValue> | TNull>
+    : [TValue] extends [ValidEntity<TValue>]
+      ? EntityHandle<TValue | TNull>
+      : never;
+
 export type __TestEntityHandle = Assert<
   Equal<
     {a: ScalarHandle<number>; b: ScalarHandle<string>},
@@ -65,13 +72,13 @@ export type __TestEntityHandle = Assert<
 
 type Any<T> = 0 extends 1 & T ? true : false;
 
-export type Value<T> = SingleLiteralValue | EntityValue<T>;
-export type Handle<T extends Value<T>> =
+export type ValidValue<T> = SingleLiteralValue | ValidEntity<T>;
+export type Handle<T extends ValidValue<T>> =
   Any<T> extends true
     ? any
     : [T] extends [SingleLiteralValue]
       ? ScalarHandle<T>
-      : [T] extends [EntityValue<T>]
+      : [T] extends [ValidEntity<T>]
         ? EntityHandle<T>
         : never;
 export type __TestHandle = Assert<
@@ -81,42 +88,46 @@ export type __TestHandle = Assert<
   ]
 >;
 
-export type EntityMapping = Record<string, Scalar>;
-export type ScalarMapping = Scalar;
+export type EntityMapping = Record<string, SingleScalarOperand>;
+export type ScalarMapping = SingleScalarOperand;
 export type Mapping = ScalarMapping | EntityMapping | EntityHandle<object>;
 
-export type MapValueFn<Input extends Value<Input>, Result extends Mapping> = (
-  x: Handle<Input>
-) => Result;
+export type MapValueFn<
+  Input extends ValidValue<Input>,
+  Result extends Mapping,
+> = (x: Handle<Input>) => Result;
 export type MapScalarFn<
-  Input extends Value<Input>,
+  Input extends ValidValue<Input>,
   Result extends ScalarMapping,
 > = (x: Handle<Input>) => Result;
 export type MapScalarArrayFn<
-  Input extends Value<Input>,
+  Input extends ValidValue<Input>,
   Result extends readonly ScalarMapping[] | ScalarMapping,
 > = (x: Handle<Input>) => Result;
 export type MapQueryFn<
-  Input extends Value<Input>,
-  Result extends Value<Result>,
+  Input extends ValidValue<Input>,
+  Result extends ValidValue<Result>,
 > = (x: Handle<Input>) => Query<Result>;
 export type JoinMapFn<
-  Left extends Value<Left>,
-  Right extends Value<Right>,
+  Left extends ValidValue<Left>,
+  Right extends ValidValue<Right>,
   TMapping extends Mapping,
 > = (left: Handle<Left>, right: Handle<Right>) => TMapping;
 
-export type FilterFn<T extends Value<T>> = (
+export type FilterFn<T extends ValidValue<T>> = (
   x: Handle<T>
-) => GenericScalar<boolean | null>;
+) => SingleScalarOperand<boolean | null>;
 export type JoinFilterFn<
-  Left extends Value<Left>,
-  Right extends Value<Right>,
-> = (left: Handle<Left>, right: Handle<Right>) => GenericScalar<boolean | null>;
+  Left extends ValidValue<Left>,
+  Right extends ValidValue<Right>,
+> = (
+  left: Handle<Left>,
+  right: Handle<Right>
+) => SingleScalarOperand<boolean | null>;
 
 // todo: typed Expr
-type InferScalarValue<T extends GenericScalar<any>> = [T] extends [
-  GenericScalar<infer K>,
+type InferScalarValue<T extends SingleScalarOperand<any>> = [T] extends [
+  SingleScalarOperand<infer K>,
 ]
   ? K
   : never;
@@ -134,7 +145,7 @@ export type __TestInferScalarValue = Assert<
 //         : never;
 
 type CleanMappingEntityValue<T> = {
-  [K in keyof T]: [T[K]] extends [Scalar] ? T[K] : never;
+  [K in keyof T]: [T[K]] extends [SingleScalarOperand] ? T[K] : never;
 };
 // export type __TestToCleanObjectValue = Assert<
 //   [
@@ -149,7 +160,7 @@ type CleanMappingEntityValue<T> = {
 //   ]
 // >;
 
-type InferEntityProp<T> = [T] extends [Scalar]
+type InferEntityProp<T> = [T] extends [SingleScalarOperand]
   ? InferScalarValue<T>
   : [T] extends [Query<any>]
     ? QueryValue<T>[]
@@ -169,8 +180,9 @@ export type __TestConvertObjectMappingToObjectValue = Assert<
   ]
 >;
 
-export type ConvertScalarMappingToScalarValue<T extends GenericScalar<any>> =
-  T extends GenericScalar<infer S> ? S : never;
+export type ConvertScalarMappingToScalarValue<
+  T extends SingleScalarOperand<any>,
+> = T extends SingleScalarOperand<infer S> ? S : never;
 
 export type ConvertMappingToValue<T extends Mapping> = any;
 //   IsAny<T> extends true

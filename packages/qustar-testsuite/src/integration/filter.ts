@@ -35,8 +35,7 @@ export function describeFilter({
 
       test("comment parent text != 'never'", async ({comments}) => {
         const query = comments
-          // todo: remove ? ... ?? true when types are fixed
-          .filter(x => x.parent?.text.ne('never') ?? true)
+          .filter(x => x.parent.text.ne('never'))
           .map(x => x.id);
 
         await expectQuery(query, [5, 6, 7, 8]);

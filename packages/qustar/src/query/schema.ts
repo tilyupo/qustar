@@ -4,7 +4,7 @@ import {
   SingleScalarType,
 } from '../literal.js';
 import {JoinFilterFn} from '../types/query.js';
-import {ScalarOperand} from './expr.js';
+import {SingleScalarOperand} from './expr.js';
 import {PropPath} from './projection.js';
 import {Query} from './query.js';
 
@@ -20,7 +20,9 @@ export interface Schema {
 
 export interface SqlTemplate {
   readonly src: TemplateStringsArray;
-  readonly args: Array<ScalarOperand<SingleLiteralValue> | ArrayLiteralValue>;
+  readonly args: Array<
+    SingleScalarOperand<SingleLiteralValue> | ArrayLiteralValue
+  >;
 }
 
 export interface GenericRef<TType extends string> {

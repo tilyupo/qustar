@@ -19,7 +19,7 @@ import {
   MapValueFn,
   QueryValue,
   ScalarMapping,
-  Value,
+  ValidValue,
 } from '../types/query.js';
 import {
   DeriveEntity,
@@ -39,7 +39,7 @@ import {
   LocatorExpr,
   Nullable,
   QueryTerminatorExpr,
-  ScalarOperand,
+  SingleScalarOperand,
 } from './expr.js';
 import {
   ObjectProjection,
@@ -53,8 +53,8 @@ import {ChildrenRef, ParentRef, Ref, Schema, SqlTemplate} from './schema.js';
 export type JoinType = 'inner' | 'left' | 'right';
 
 export interface JoinOptionsPublic<
-  Left extends Value<Left>,
-  Right extends Value<Right>,
+  Left extends ValidValue<Left>,
+  Right extends ValidValue<Right>,
   Result extends Mapping,
 > {
   readonly type: JoinType;
@@ -141,7 +141,7 @@ export interface QueryVisitor<T> {
   flatMap(q: FlatMapQuery<any>): T;
 }
 
-interface GroupByOptions<T extends Value<T>, Result extends Mapping> {
+interface GroupByOptions<T extends ValidValue<T>, Result extends Mapping> {
   readonly by: MapScalarArrayFn<T, ScalarMapping[] | ScalarMapping>;
   readonly select: MapValueFn<T, Result>;
   readonly having?: FilterFn<T>;
@@ -154,7 +154,7 @@ export namespace Query {
   export type schema<T extends ValidateEntity<T>> = DeriveEntityDescriptor<T>;
 }
 
-export abstract class Query<T extends Value<T>> {
+export abstract class Query<T extends ValidValue<T>> {
   static table<const TSchema extends EntityDescriptor>(
     descriptor: Table<TSchema>
   ): Query<DeriveEntity<TSchema>> {
@@ -375,7 +375,7 @@ export abstract class Query<T extends Value<T>> {
     return this.orderByAsc(selector);
   }
 
-  join<Right extends Value<Right>, Result extends Mapping>(
+  join<Right extends ValidValue<Right>, Result extends Mapping>(
     options: JoinOptionsPublic<T, Right, Result>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     const left = new QuerySource({type: 'query', query: this});
@@ -400,7 +400,7 @@ export abstract class Query<T extends Value<T>> {
     });
   }
 
-  leftJoin<Right extends Value<Right>, Result extends Mapping>(
+  leftJoin<Right extends ValidValue<Right>, Result extends Mapping>(
     options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     return this.join({
@@ -409,7 +409,7 @@ export abstract class Query<T extends Value<T>> {
     });
   }
 
-  innerJoin<Right extends Value<Right>, Result extends Mapping>(
+  innerJoin<Right extends ValidValue<Right>, Result extends Mapping>(
     options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     return this.join({
@@ -418,7 +418,7 @@ export abstract class Query<T extends Value<T>> {
     });
   }
 
-  rightJoin<Right extends Value<Right>, Result extends Mapping>(
+  rightJoin<Right extends ValidValue<Right>, Result extends Mapping>(
     options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     return this.join({
@@ -586,7 +586,7 @@ export abstract class Query<T extends Value<T>> {
   }
 
   contains<R extends Nullable<T>>(
-    value: ScalarOperand<R & SingleLiteralValue>
+    value: SingleScalarOperand<R & SingleLiteralValue>
   ): QueryTerminatorExpr<boolean> {
     return new QueryTerminatorExpr(
       'some',
@@ -654,8 +654,8 @@ function proxyObjectProjection(
   };
 }
 
-export class FilterQuery<T extends Value<T>> extends Query<T> {
-  static create<T extends Value<T>>(
+export class FilterQuery<T extends ValidValue<T>> extends Query<T> {
+  static create<T extends ValidValue<T>>(
     query: Query<T>,
     filter: FilterFn<T>
   ): Query<T> {
@@ -874,7 +874,7 @@ function inferProjection(value: Mapping, depth = 0): Projection {
   return assertNever(value, 'unsupported selection');
 }
 
-export class MapQuery<T extends Value<T>> extends Query<T> {
+export class MapQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(source: QuerySource, projection: Projection) {
     super(source, projection);
   }
@@ -890,15 +890,15 @@ export interface OrderByTermPrivate {
 }
 
 export interface OrderByTermPublic<
-  T extends Value<T>,
+  T extends ValidValue<T>,
   Scalar extends ScalarMapping,
 > {
   readonly selector: MapScalarFn<T, Scalar>;
   readonly options: OrderByOptions;
 }
 
-export class OrderByQuery<T extends Value<T>> extends Query<T> {
-  static create<T extends Value<T>, Scalar extends ScalarMapping>(
+export class OrderByQuery<T extends ValidValue<T>> extends Query<T> {
+  static create<T extends ValidValue<T>, Scalar extends ScalarMapping>(
     source: QuerySource,
     initialTerms: readonly OrderByTermPrivate[],
     term: OrderByTermPublic<T, Scalar>
@@ -948,7 +948,7 @@ export class OrderByQuery<T extends Value<T>> extends Query<T> {
   }
 }
 
-export class JoinQuery<T extends Value<T>> extends Query<T> {
+export class JoinQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(
     source: QuerySource,
     public readonly options: JoinOptionsPrivate
@@ -961,7 +961,7 @@ export class JoinQuery<T extends Value<T>> extends Query<T> {
   }
 }
 
-export class FlatMapQuery<T extends Value<T>> extends JoinQuery<T> {
+export class FlatMapQuery<T extends ValidValue<T>> extends JoinQuery<T> {
   constructor(
     source: QuerySource,
     public readonly options: JoinOptionsPrivate
@@ -974,7 +974,7 @@ export class FlatMapQuery<T extends Value<T>> extends JoinQuery<T> {
   }
 }
 
-export class CombineQuery<T extends Value<T>> extends Query<T> {
+export class CombineQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(
     source: QuerySource,
     public readonly options: CombineOptions<T>
@@ -988,7 +988,7 @@ export class CombineQuery<T extends Value<T>> extends Query<T> {
 }
 
 // note: doesn't preserve ordering
-export class UniqueQuery<T extends Value<T>> extends Query<T> {
+export class UniqueQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(source: QuerySource) {
     super(source, proxyProjection(source));
   }
@@ -998,7 +998,7 @@ export class UniqueQuery<T extends Value<T>> extends Query<T> {
   }
 }
 
-export class PaginationQuery<T extends Value<T>> extends Query<T> {
+export class PaginationQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(
     source: QuerySource,
     public readonly limit_: number,
@@ -1012,7 +1012,7 @@ export class PaginationQuery<T extends Value<T>> extends Query<T> {
   }
 }
 
-export class ProxyQuery<T extends Value<T>> extends Query<T> {
+export class ProxyQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(source: QuerySource) {
     super(source, proxyProjection(source));
   }
@@ -1022,7 +1022,7 @@ export class ProxyQuery<T extends Value<T>> extends Query<T> {
   }
 }
 
-export class GroupByQuery<T extends Value<T>> extends Query<T> {
+export class GroupByQuery<T extends ValidValue<T>> extends Query<T> {
   constructor(
     source: QuerySource,
     projection: Projection,
