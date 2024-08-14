@@ -7,7 +7,9 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
       test('SELECT 1 as value', async () => {
         const query = Query.raw({
           sql: sql`SELECT 1 as value`,
-          schema: {value: 'i32'},
+          schema: {
+            value: 'i32',
+          },
         });
 
         await expectQuery(query, [{value: 1}]);
@@ -46,7 +48,9 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
           .map(x =>
             Query.raw({
               sql: sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`,
-              schema: {id: 'i32'},
+              schema: {
+                id: 'i32',
+              },
             }).sum(x => x.id)
           );
 

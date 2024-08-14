@@ -12,8 +12,8 @@ export interface User {
 export const users: Query<User> = Query.table<Query.schema<User>>({
   name: 'users',
   schema: {
-    id: {type: 'i32', nullable: false},
-    name: {type: 'text', nullable: false},
+    id: 'i32',
+    name: 'text',
     posts: {
       type: 'back_ref',
       references: () => posts,
@@ -39,9 +39,9 @@ export interface Post {
 export const posts: Query<Post> = Query.table<Query.schema<Post>>({
   name: 'posts',
   schema: {
-    id: {type: 'i32', nullable: false},
-    title: {type: 'text', nullable: false},
-    author_id: {type: 'i32', nullable: false},
+    id: 'i32',
+    title: 'text',
+    author_id: 'i32',
     author: {
       type: 'ref',
       required: true,
@@ -72,10 +72,10 @@ export interface Comment {
 export const comments: Query<Comment> = Query.table<Query.schema<Comment>>({
   name: 'comments',
   schema: {
-    id: {type: 'i32', nullable: false},
-    text: {type: 'text', nullable: false},
-    post_id: {type: 'i32', nullable: false},
-    commenter_id: {type: 'i32', nullable: false},
+    id: 'i32',
+    text: 'text',
+    post_id: 'i32',
+    commenter_id: 'i32',
     parent_id: {type: 'i32', nullable: true},
     deleted: {
       type: 'boolean',

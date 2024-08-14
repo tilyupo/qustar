@@ -9,13 +9,16 @@
     "esModuleInterop": false,
     "noErrorTruncation": true,
     "declaration": true,
+    "declarationMap": true,
     "noImplicitAny": false,
     "noEmitOnError": false,
     "skipLibCheck": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es2018"],
+    "lib": [
+      "es2018"
+    ],
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "pretty": true,
@@ -25,5 +28,7 @@
     // "noPropertyAccessFromIndexSignature": true,
     // "noUncheckedIndexedAccess": true
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
