@@ -298,7 +298,7 @@ export abstract class Query<T extends ValidValue<T>> {
       groupingExpr = [groupingExpr];
     }
 
-    return new GroupByQuery(
+    return new GroupByQuery<any>(
       nextSource,
       projection,
       groupingExpr.map(Expr.from),
@@ -322,7 +322,7 @@ export abstract class Query<T extends ValidValue<T>> {
     const result = selector(handle);
 
     const mapping = inferProjection(result);
-    return new MapQuery(nextSource, mapping);
+    return new MapQuery<any>(nextSource, mapping);
   }
 
   select<TMapping extends Mapping>(

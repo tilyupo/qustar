@@ -12,7 +12,7 @@ export type Equal<T1, T2> = [T1] extends [T2]
     : false
   : false;
 export type NotEqual<T1, T2> = Not<Equal<T1, T2>>;
-export type __TestEqual = Assert<
+type __TestEqual = Assert<
   [
     Equal<1, 1>,
     NotEqual<number, 1>,
@@ -23,9 +23,7 @@ export type __TestEqual = Assert<
 
 export type Never<T> = [T] extends [never] ? true : false;
 export type Ever<T> = Not<Never<T>>;
-export type __TestEver = Assert<
-  [Equal<Ever<1>, true>, Equal<Ever<never>, false>]
->;
+type __TestEver = Assert<[Equal<Ever<1>, true>, Equal<Ever<never>, false>]>;
 
 export type ArrayItemType<T extends readonly any[]> = [T] extends [
   ReadonlyArray<infer I>,
@@ -34,7 +32,7 @@ export type ArrayItemType<T extends readonly any[]> = [T] extends [
   : never;
 
 export type ScalarHandle<T extends SingleLiteralValue> = Expr<T>;
-export type __TestScalarHandle = Assert<
+type __TestScalarHandle = Assert<
   Equal<Expr<SingleLiteralValue>, ScalarHandle<SingleLiteralValue>>
 >;
 
@@ -63,7 +61,7 @@ export type EntityPropertyHandle<
       ? EntityHandle<TValue | TNull>
       : never;
 
-export type __TestEntityHandle = Assert<
+type __TestEntityHandle = Assert<
   Equal<
     {a: ScalarHandle<number>; b: ScalarHandle<string>},
     EntityHandle<{a: number; b: string}>
@@ -81,7 +79,7 @@ export type Handle<T extends ValidValue<T>> =
       : [T] extends [ValidEntity<T>]
         ? EntityHandle<T>
         : never;
-export type __TestHandle = Assert<
+type __TestHandle = Assert<
   [
     Equal<Expr<number>, Handle<number>>,
     Equal<{a: ScalarHandle<boolean>}, Handle<{a: boolean}>>,
@@ -131,34 +129,30 @@ type InferScalarValue<T extends SingleScalarOperand<any>> = [T] extends [
 ]
   ? K
   : never;
-export type __TestInferScalarValue = Assert<
-  Equal<InferScalarValue<number>, number>
->;
-
-// type CleanMappingEntityValue<T> = {
-//   [K in keyof T]: [T[K]] extends [Scalar]
-//     ? T[K]
-//     : [T[K]] extends [Query<any>]
-//       ? T[K]
-//       : [T[K]] extends [CleanMappingEntityValue<T[K]>]
-//         ? T[K]
-//         : never;
+type __TestInferScalarValue = Assert<Equal<InferScalarValue<number>, number>>;
 
 type CleanMappingEntityValue<T> = {
-  [K in keyof T]: [T[K]] extends [SingleScalarOperand] ? T[K] : never;
+  [K in keyof T]: [T[K]] extends [SingleScalarOperand]
+    ? T[K]
+    : [T[K]] extends [Query<any>]
+      ? T[K]
+      : [T[K]] extends [CleanMappingEntityValue<T[K]>]
+        ? T[K]
+        : never;
 };
-// export type __TestToCleanObjectValue = Assert<
-//   [
-//     Equal<
-//       CleanMappingEntityValue<{a: number; b: string}>,
-//       {a: number; b: string}
-//     >,
-//     Equal<
-//       CleanMappingEntityValue<{a: number; b: {c: number}}>,
-//       {a: number; b: {c: number}}
-//     >,
-//   ]
-// >;
+
+type __TestToCleanObjectValue = Assert<
+  [
+    Equal<
+      CleanMappingEntityValue<{a: number; b: string}>,
+      {a: number; b: string}
+    >,
+    Equal<
+      CleanMappingEntityValue<{a: number; b: {c: number}}>,
+      {a: number; b: {c: number}}
+    >,
+  ]
+>;
 
 type InferEntityProp<T> = [T] extends [SingleScalarOperand]
   ? InferScalarValue<T>
@@ -171,7 +165,7 @@ type InferEntityProp<T> = [T] extends [SingleScalarOperand]
 type ConvertEntityMappingToObjectValue<T extends CleanMappingEntityValue<T>> = {
   [K in keyof T]: InferEntityProp<T[K]>;
 };
-export type __TestConvertObjectMappingToObjectValue = Assert<
+type __TestConvertObjectMappingToObjectValue = Assert<
   [
     Equal<
       {a: 1; b: string},
@@ -184,19 +178,17 @@ export type ConvertScalarMappingToScalarValue<
   T extends SingleScalarOperand<any>,
 > = T extends SingleScalarOperand<infer S> ? S : never;
 
-export type ConvertMappingToValue<T extends Mapping> = any;
-//   IsAny<T> extends true
-//     ? any
-//     : [T] extends [GenericScalar<SingleLiteralValue>]
-//       ? ConvertScalarMappingToScalarValue<T>
-//       : [T] extends [EntityHandle<infer R>]
-//         ? R
-//         : [T] extends [CleanMappingEntityValue<T>]
-//           ? ConvertEntityMappingToObjectValue<T>
-//           : never;
-// export type __TestConvertMappingToValue = Assert<
-//   [Equal<{a: 1; b: string}, ConvertMappingToValue<{a: 1; b: string}>>]
-// >;
+export type ConvertMappingToValue<T extends Mapping> =
+  IsAny<T> extends true
+    ? any
+    : [T] extends [SingleScalarOperand]
+      ? ConvertScalarMappingToScalarValue<T>
+      : [T] extends [CleanMappingEntityValue<T>]
+        ? ConvertEntityMappingToObjectValue<T>
+        : never;
+type __TestConvertMappingToValue = Assert<
+  [Equal<{a: 1; b: string}, ConvertMappingToValue<{a: 1; b: string}>>]
+>;
 
 export type Expand<T> =
   IsAny<T> extends true
@@ -207,33 +199,33 @@ export type Expand<T> =
         ? {[K in keyof O]: O[K]}
         : never;
 
-// export type __TestQuery = [
-//   Query<number>,
-//   Query<string>,
-//   Query<boolean>,
-//   Query<User>,
-//   Assert<
-//     [
-//       Equal<QueryValue<typeof x1>, {b: number}>,
-//       Equal<QueryValue<typeof x2>, User>,
-//       Equal<QueryValue<typeof x3>, Post>,
-//       Equal<QueryValue<typeof x4>, Comment>,
-//       Equal<QueryValue<typeof x5>, {a: number; b: {c: number}}>,
-//       Equal<
-//         QueryValue<typeof x6>,
-//         {
-//           id: number;
-//           author_id: number;
-//           text: string;
-//           author: User;
-//           post: Post;
-//           title: string;
-//           comments: Comment[];
-//         }
-//       >,
-//     ]
-//   >,
-// ];
+type __TestQuery = [
+  Query<number>,
+  Query<string>,
+  Query<boolean>,
+  Query<User>,
+  Assert<
+    [
+      Equal<QueryValue<typeof x1>, {b: number}>,
+      Equal<QueryValue<typeof x2>, User>,
+      Equal<QueryValue<typeof x3>, Post>,
+      Equal<QueryValue<typeof x4>, Comment>,
+      Equal<QueryValue<typeof x5>, {a: number; b: {c: number}}>,
+      Equal<
+        QueryValue<typeof x6>,
+        {
+          id: number;
+          author_id: number;
+          text: string;
+          author: User;
+          post: Post;
+          title: string;
+          comments: Comment[];
+        }
+      >,
+    ]
+  >,
+];
 
 export type QueryValue<T extends Query<any>> =
   T extends Query<infer R> ? R : never;
@@ -264,11 +256,19 @@ interface Comment {
   post: Post;
 }
 
-const q: Query<Post> = 1 as any;
+interface SelfRef {
+  id: number;
 
-const x1 = q.map(x => ({b: x.author.posts.map(y => y.id).first(y => y)}));
-const x2 = q.map(x => x.author);
-const x3 = q.flatMap(x => x.author.posts);
-const x4 = q.flatMap(x => x.comments).map(x => ({...x}));
-const x5 = q.map(() => ({a: 1, b: {c: 2}}));
-const x6 = q.flatMap(x => x.comments).map(x => ({...x.post, ...x}));
+  ref: SelfRef;
+}
+
+const q1: Query<Post> = 1 as any;
+const q2: Query<SelfRef> = 1 as any;
+
+const x1 = q1.map(x => ({b: x.author.posts.map(y => y.id).first(y => y)}));
+const x2 = q1.map(x => x.author);
+const x3 = q1.flatMap(x => x.author.posts);
+const x4 = q1.flatMap(x => x.comments).map(x => ({...x}));
+const x5 = q1.map(() => ({a: 1, b: {c: 2}}));
+const x6 = q1.flatMap(x => x.comments).map(x => ({...x.post, ...x}));
+const x7 = q2.map(x => x);
