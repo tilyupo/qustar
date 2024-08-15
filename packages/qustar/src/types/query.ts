@@ -42,12 +42,10 @@ type ValidEntity<T> = {
   [K in keyof T]: ValidScalar<T> | ValidNavProperty<T[K]>;
 };
 
-export type EntityHandle<
-  T extends object | null,
-  TEntity extends object = Exclude<T, null>,
-  TNull extends null = Extract<T, null>,
-> = {
-  [K in keyof TEntity]: EntityPropertyHandle<TEntity[K] | TNull>;
+export type EntityHandle<T extends object | null> = {
+  [K in keyof Exclude<T, null>]: EntityPropertyHandle<
+    Exclude<T, null>[K] | Extract<T, null>
+  >;
 };
 export type EntityPropertyHandle<
   T,
@@ -131,38 +129,13 @@ type InferScalarValue<T extends SingleScalarOperand<any>> = [T] extends [
   : never;
 type __TestInferScalarValue = Assert<Equal<InferScalarValue<number>, number>>;
 
-type CleanMappingEntityValue<T> = {
-  [K in keyof T]: [T[K]] extends [SingleScalarOperand]
-    ? T[K]
-    : [T[K]] extends [Query<any>]
-      ? T[K]
-      : [T[K]] extends [CleanMappingEntityValue<T[K]>]
-        ? T[K]
-        : never;
-};
-
-type __TestToCleanObjectValue = Assert<
-  [
-    Equal<
-      CleanMappingEntityValue<{a: number; b: string}>,
-      {a: number; b: string}
-    >,
-    Equal<
-      CleanMappingEntityValue<{a: number; b: {c: number}}>,
-      {a: number; b: {c: number}}
-    >,
-  ]
->;
-
 type InferEntityProp<T> = [T] extends [SingleScalarOperand]
   ? InferScalarValue<T>
   : [T] extends [Query<any>]
     ? QueryValue<T>[]
-    : [T] extends [CleanMappingEntityValue<T>]
-      ? ConvertEntityMappingToObjectValue<T>
-      : never;
+    : ConvertEntityMappingToObjectValue<T>;
 
-type ConvertEntityMappingToObjectValue<T extends CleanMappingEntityValue<T>> = {
+type ConvertEntityMappingToObjectValue<T> = {
   [K in keyof T]: InferEntityProp<T[K]>;
 };
 type __TestConvertObjectMappingToObjectValue = Assert<
@@ -183,9 +156,7 @@ export type ConvertMappingToValue<T extends Mapping> =
     ? any
     : [T] extends [SingleScalarOperand]
       ? ConvertScalarMappingToScalarValue<T>
-      : [T] extends [CleanMappingEntityValue<T>]
-        ? ConvertEntityMappingToObjectValue<T>
-        : never;
+      : ConvertEntityMappingToObjectValue<T>;
 type __TestConvertMappingToValue = Assert<
   [Equal<{a: 1; b: string}, ConvertMappingToValue<{a: 1; b: string}>>]
 >;
@@ -223,6 +194,7 @@ type __TestQuery = [
           comments: Comment[];
         }
       >,
+      Equal<QueryValue<typeof x7>, SelfRef>,
     ]
   >,
 ];

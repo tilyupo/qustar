@@ -1,4 +1,4 @@
-import {Mapping, MapValueFn} from 'qustar';
+import {MapValueFn, ScalarMapping} from 'qustar';
 import {SuiteContext} from '../describe.js';
 import {Post, QuerySet} from '../utils.js';
 
@@ -6,7 +6,7 @@ export function describeUnique({describe, testFactory}: SuiteContext) {
   describe('query', () => {
     describe('unique', () => {
       const testUnique = testFactory(
-        <T extends Mapping>({posts}: QuerySet, mapper: MapValueFn<Post, T>) => {
+        ({posts}: QuerySet, mapper: MapValueFn<Post, ScalarMapping>) => {
           return posts
             .select(mapper)
             .unique()
