@@ -41,7 +41,7 @@ console.log(users);
 await connector.close();
 ```
 
-You can also create `Mysql2Connector` by passing an instance of `mysql2` pool:
+You can also create `Mysql2Connector` by passing an instance of a `mysql2` pool:
 
 ```ts
 import {createPool} from 'mysql2';
