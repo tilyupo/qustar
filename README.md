@@ -35,6 +35,7 @@ const users = await Query.table({
 // compose a query
 const query = users
   .orderByDesc(user => user.createdAt)
+  // map will be translated to 100% SQL, as every other operation
   .map(user => ({
     name: user.firstName.concat(' ', user.lastName),
     age: user.age,
