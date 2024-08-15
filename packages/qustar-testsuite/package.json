@@ -35,7 +35,7 @@
     "clean": "rimraf dist",
     "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
-    "deploy": "npm run build && node ../../scripts/deploy.mjs",
+    "deploy": "npm run build && tsx ../../scripts/deploy.ts",
     "test": "vitest run"
   },
   "peerDependencies": {

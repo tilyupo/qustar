@@ -37,7 +37,7 @@
     "clean": "rimraf dist",
     "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
-    "deploy": "npm run build && node ../../scripts/deploy.mjs",
+    "deploy": "npm run build && tsx ../../scripts/deploy.ts",
     "db": "docker run -it --rm -e MYSQL_ROOT_PASSWORD=test -e MYSQL_USER=qustar -e MYSQL_PASSWORD=test -e MYSQL_DATABASE=qustar -p 22784:3306 mysql:9.0.1",
     "test": "vitest run"
   },

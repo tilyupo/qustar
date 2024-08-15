@@ -27,7 +27,7 @@ async function getCurrentVersion() {
   }
 }
 function updatePackageVersion(newVersion) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     exec(`npm version ${newVersion}`, error => {
       if (error) {
         console.error(`Error updating the package version: ${error}`);
@@ -41,7 +41,7 @@ function updatePackageVersion(newVersion) {
 }
 
 function publishPackage() {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const publishProcess = spawn('npm', ['publish'], {stdio: 'inherit'});
 
     publishProcess.on('error', error => {
