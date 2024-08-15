@@ -5,19 +5,20 @@ import {
   convertToArgument,
   renderSqlite,
 } from 'qustar';
-import sqlite3 from 'sqlite3';
+import type {Database} from 'sqlite3';
+import {loadSqlite3} from './sqlite3-wrapper.js';
 import {indent} from './utils.js';
 
 export class Sqlite3Connector implements Connector {
-  private readonly db: sqlite3.Database;
+  private readonly dbPromise: Promise<Database>;
 
   constructor(filename: string);
-  constructor(db: sqlite3.Database);
-  constructor(dbOrFilename: sqlite3.Database | string) {
+  constructor(db: Database);
+  constructor(dbOrFilename: Database | string) {
     if (typeof dbOrFilename === 'string') {
-      this.db = new sqlite3.Database(dbOrFilename);
+      this.dbPromise = loadSqlite3().then(x => new x.Database(dbOrFilename));
     } else {
-      this.db = dbOrFilename;
+      this.dbPromise = Promise.resolve(dbOrFilename);
     }
   }
 
@@ -25,9 +26,10 @@ export class Sqlite3Connector implements Connector {
     return renderSqlite(query);
   }
 
-  execute(statement: string): Promise<void> {
+  async execute(statement: string): Promise<void> {
+    const db = await this.dbPromise;
     return new Promise((resolve, reject) => {
-      this.db.exec(statement, err => {
+      db.exec(statement, err => {
         if (err) {
           reject(err);
         } else {
@@ -37,9 +39,10 @@ export class Sqlite3Connector implements Connector {
     });
   }
 
-  select(command: SqlCommand): Promise<any[]> {
+  async select(command: SqlCommand): Promise<any[]> {
+    const db = await this.dbPromise;
     return new Promise((resolve, reject) => {
-      this.db.all(
+      db.all(
         // we need to add proxy select to force SQLite to rename duplicate columns
         // otherwise node-sqlite3 will take the last column with the same name, but we expect
         // the first column to be taken
@@ -67,8 +70,8 @@ export class Sqlite3Connector implements Connector {
     });
   }
 
-  close(): Promise<void> {
-    this.db.close();
-    return Promise.resolve();
+  async close(): Promise<void> {
+    const db = await this.dbPromise;
+    db.close();
   }
 }

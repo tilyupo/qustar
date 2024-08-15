@@ -2,6 +2,7 @@ import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
 import {EntityDescriptor, Table, toSchema} from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
+import {renderMySql} from '../render/mysql.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
@@ -50,6 +51,7 @@ import {
 } from './projection.js';
 import {ChildrenRef, ParentRef, Ref, Schema, SqlTemplate} from './schema.js';
 
+export type Dialect = 'sqlite' | 'postgresql' | 'mysql';
 export type JoinType = 'inner' | 'left' | 'right';
 
 export interface JoinOptionsPublic<
@@ -253,24 +255,19 @@ export abstract class Query<T extends ValidValue<T>> {
     )(this);
   }
 
-  render(
-    dialect: 'sqlite' | 'postgresql',
-    options?: RenderOptions
-  ): SqlCommand {
+  render(dialect: Dialect, options?: RenderOptions): SqlCommand {
     return this.pipe(
       x => compileQuery(x, options),
       x => ((options?.optimize ?? true) ? optimize(x) : x),
       match(dialect)
         .with('sqlite', () => renderSqlite)
         .with('postgresql', () => renderPostgreSql)
+        .with('mysql', () => renderMySql)
         .exhaustive()
     );
   }
 
-  renderInline(
-    dialect: 'sqlite' | 'postgresql',
-    options?: RenderOptions
-  ): string {
+  renderInline(dialect: Dialect, options?: RenderOptions): string {
     return this.render(dialect, {...options, parameters: false}).src;
   }
 
