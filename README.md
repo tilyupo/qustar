@@ -5,7 +5,15 @@
 
 Query SQL database through an array-like API.
 
-[//]: '#' 'todo: make it obvious that all operations translated to 100% SQL'
+## Features
+
+- High level query builder that doesn't limit you (seriously)
+- Full TypeScript support
+- Supports PostgreSQL, SQLite, MySQL and any other database through a custom connector
+- Navigation properties
+- No codegen, works with plain TypeScript/JavaScript
+- All queries are translated into 100% SQL
+- Raw SQL support
 
 ## Quick start
 
@@ -25,10 +33,10 @@ import {Query} from 'qustar';
 const users = await Query.table({
   name: 'users',
   schema: {
-    id: 'i32',
-    firstName: 'text',
+    id: 'i32', // 32 bit integer
+    firstName: 'text', // any text
     lastName: 'text',
-    age: {type: 'i32', nullable: true},
+    age: {type: 'i32', nullable: true}, // nullable integer
   },
 });
 
@@ -48,16 +56,6 @@ const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
 // run the query
 console.log('users:', await query.execute(connector));
 ```
-
-## Features
-
-- High level query builder that doesn't limit you (seriously)
-- Full TypeScript support
-- Supports PostgreSQL, SQLite, MySQL and any other database through a custom connector
-- Navigation properties
-- No codegen, works with plain TypeScript/JavaScript
-- All queries are translated into 100% SQL
-- Raw SQL support
 
 ## Supported database drivers
 
@@ -87,7 +85,9 @@ import {Query} from 'qustar';
 const users = Query.table({
   name: 'users',
   schema: {
-    /* users table schema */
+    id: 'i32',
+    age: {type: 'i32', nullable: true},
+    // ...
   },
 });
 ```

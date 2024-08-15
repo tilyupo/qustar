@@ -1,7 +1,6 @@
 roadmap:
 
 docs:
-  - it's not obvious that map works at SQL level
   - Usage doc is too verbose, Andrei whats an high level overview like https://diesel.rs/ examples
 
 bugs:
@@ -107,3 +106,4 @@ done:
   - examples dir
   - list of features at the top
   - move comparison out of why and far away
+  - it's not obvious that map works at SQL level
