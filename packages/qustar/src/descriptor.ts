@@ -77,7 +77,7 @@ export function scalarDescriptorToScalarType(
   }
 }
 
-export function toInternalSchema(
+export function toSchema(
   table: () => Query<any>,
   columns: EntityDescriptor
 ): Schema {

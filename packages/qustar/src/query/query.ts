@@ -1,6 +1,6 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
-import {EntityDescriptor, Table, toInternalSchema} from '../descriptor.js';
+import {EntityDescriptor, Table, toSchema} from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderPostgreSql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
@@ -159,7 +159,7 @@ export abstract class Query<T extends ValidValue<T>> {
     descriptor: Table<TSchema>
   ): Query<DeriveEntity<TSchema>> {
     const schema: (table: () => Query<any>) => Schema = table =>
-      toInternalSchema(table, descriptor.schema);
+      toSchema(table, descriptor.schema);
     const table = new ProxyQuery<DeriveEntity<TSchema>>(
       new QuerySource({
         type: 'table',
@@ -178,7 +178,7 @@ export abstract class Query<T extends ValidValue<T>> {
       new QuerySource({
         type: 'sql',
         sql: options.sql,
-        schema: toInternalSchema(() => query, options.schema),
+        schema: toSchema(() => query, options.schema),
       })
     );
     return query;
@@ -328,7 +328,7 @@ export abstract class Query<T extends ValidValue<T>> {
   select<TMapping extends Mapping>(
     selector: MapValueFn<T, TMapping>
   ): Query<Expand<ConvertMappingToValue<TMapping>>> {
-    return this.map(selector);
+    return this.map<any>(selector);
   }
 
   orderByAsc<Scalar extends ScalarMapping>(
@@ -387,7 +387,7 @@ export abstract class Query<T extends ValidValue<T>> {
     const leftProjHandle = createHandle(left, options.type === 'right');
     const rightProjHandle = createHandle(right, options.type === 'left');
 
-    return new JoinQuery(left, {
+    return new JoinQuery<any>(left, {
       projection: inferProjection(
         options.select(leftProjHandle, rightProjHandle)
       ),
