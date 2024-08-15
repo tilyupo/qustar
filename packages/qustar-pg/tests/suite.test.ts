@@ -1,6 +1,6 @@
 import {createInitSqlScript, describeConnector} from 'qustar-testsuite';
 import {describe, expect, test} from 'vitest';
-import {PgConnector} from '../src/pg.js';
+import {PgConnector} from '../src/pg-connector.js';
 
 describeConnector(
   {test, describe, expectDeepEqual: (a, b, m) => expect(a).to.deep.equal(b, m)},

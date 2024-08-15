@@ -1,4 +1,4 @@
-import BetterSqlite3 from 'better-sqlite3';
+import {Database, Options} from 'better-sqlite3';
 import {
   Connector,
   QuerySql,
@@ -6,16 +6,17 @@ import {
   convertToArgument,
   renderSqlite,
 } from 'qustar';
+import {loadBetterSqlite3} from './load-better-sqlite3.js';
 import {indent} from './utils.js';
 
 export class BetterSqlite3Connector implements Connector {
-  private readonly db: BetterSqlite3.Database;
+  private readonly db: Promise<Database>;
 
-  constructor(filename?: string | Buffer, options?: BetterSqlite3.Options);
-  constructor(db: BetterSqlite3.Database);
-  constructor(dbOrFilename: any, options?: BetterSqlite3.Options) {
-    if (typeof dbOrFilename === 'string' || dbOrFilename instanceof Buffer) {
-      this.db = new BetterSqlite3(dbOrFilename, options);
+  constructor(filename?: string, options?: Options);
+  constructor(db: Database);
+  constructor(dbOrFilename: any, options?: Options) {
+    if (typeof dbOrFilename === 'string') {
+      this.db = loadBetterSqlite3().then(x => x(dbOrFilename, options));
     } else {
       this.db = dbOrFilename;
     }
@@ -25,14 +26,14 @@ export class BetterSqlite3Connector implements Connector {
     return renderSqlite(query);
   }
 
-  execute(statement: string): Promise<void> {
-    this.db.exec(statement);
+  async execute(statement: string): Promise<void> {
+    (await this.db).exec(statement);
 
     return Promise.resolve();
   }
 
-  select({src: sql, args}: SqlCommand): Promise<any[]> {
-    const preparedQuery = this.db.prepare(
+  async select({src: sql, args}: SqlCommand): Promise<any[]> {
+    const preparedQuery = (await this.db).prepare(
       // we need to add proxy select to force SQLite to rename duplicate columns
       // otherwise node-sqlite3 will take the last column with the same name, but we expect
       // the first column to be taken
@@ -69,8 +70,8 @@ export class BetterSqlite3Connector implements Connector {
     return Promise.resolve(result);
   }
 
-  close(): Promise<void> {
-    this.db.close();
+  async close(): Promise<void> {
+    (await this.db).close();
     return Promise.resolve();
   }
 }

@@ -1,1 +1,1 @@
-export {PgConnector} from './pg.js';
+export {PgConnector} from './pg-connector.js';

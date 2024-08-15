@@ -6,19 +6,19 @@ import {
   renderSqlite,
 } from 'qustar';
 import type {Database} from 'sqlite3';
-import {loadSqlite3} from './sqlite3-wrapper.js';
+import {loadSqlite3} from './load-sqlite3.js';
 import {indent} from './utils.js';
 
 export class Sqlite3Connector implements Connector {
-  private readonly dbPromise: Promise<Database>;
+  private readonly db: Promise<Database>;
 
   constructor(filename: string);
   constructor(db: Database);
   constructor(dbOrFilename: Database | string) {
     if (typeof dbOrFilename === 'string') {
-      this.dbPromise = loadSqlite3().then(x => new x.Database(dbOrFilename));
+      this.db = loadSqlite3().then(x => new x.Database(dbOrFilename));
     } else {
-      this.dbPromise = Promise.resolve(dbOrFilename);
+      this.db = Promise.resolve(dbOrFilename);
     }
   }
 
@@ -27,7 +27,7 @@ export class Sqlite3Connector implements Connector {
   }
 
   async execute(statement: string): Promise<void> {
-    const db = await this.dbPromise;
+    const db = await this.db;
     return new Promise((resolve, reject) => {
       db.exec(statement, err => {
         if (err) {
@@ -40,7 +40,7 @@ export class Sqlite3Connector implements Connector {
   }
 
   async select(command: SqlCommand): Promise<any[]> {
-    const db = await this.dbPromise;
+    const db = await this.db;
     return new Promise((resolve, reject) => {
       db.all(
         // we need to add proxy select to force SQLite to rename duplicate columns
@@ -71,7 +71,14 @@ export class Sqlite3Connector implements Connector {
   }
 
   async close(): Promise<void> {
-    const db = await this.dbPromise;
-    db.close();
+    const db = await this.db;
+    return new Promise((resolve, reject) =>
+      db.close(err => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      })
+    );
   }
 }

@@ -1,4 +1,4 @@
-import pg from 'pg';
+import {Pool} from 'pg';
 import {
   Connector,
   QuerySql,
@@ -6,19 +6,23 @@ import {
   convertToArgument,
   renderPostgreSql,
 } from 'qustar';
+import {loadPg} from './load-pg.js';
 
 export class PgConnector implements Connector {
-  private readonly db: pg.Pool;
+  private readonly db: Promise<Pool>;
 
   constructor(connectionString: string);
-  constructor(pool: pg.Pool);
-  constructor(clientOrConnectionString: pg.Pool | string) {
+  constructor(pool: Pool);
+  constructor(clientOrConnectionString: Pool | string) {
     if (typeof clientOrConnectionString === 'string') {
-      this.db = new pg.Pool({
-        connectionString: clientOrConnectionString,
-      });
+      this.db = loadPg().then(
+        x =>
+          new x.Pool({
+            connectionString: clientOrConnectionString,
+          })
+      );
     } else {
-      this.db = clientOrConnectionString;
+      this.db = Promise.resolve(clientOrConnectionString);
     }
   }
 
@@ -27,14 +31,13 @@ export class PgConnector implements Connector {
   }
 
   async execute(statement: string): Promise<void> {
-    await this.db.query(statement);
+    await (await this.db).query(statement);
   }
 
   async select(command: SqlCommand): Promise<any[]> {
-    const {rows, fields} = await this.db.query(
-      command.src,
-      command.args.map(convertToArgument)
-    );
+    const {rows, fields} = await (
+      await this.db
+    ).query(command.src, command.args.map(convertToArgument));
 
     return rows.map((row: any) => {
       const result: any = {};
@@ -64,6 +67,6 @@ export class PgConnector implements Connector {
   }
 
   async close(): Promise<void> {
-    await this.db.end();
+    await (await this.db).end();
   }
 }
