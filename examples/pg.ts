@@ -2,7 +2,9 @@ import {Query} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 
 // create a connector for PostgreSQL database
-const connector = new PgConnector('postgresql://qustar:test@localhost:5432/db');
+const connector = new PgConnector(
+  'postgresql://user:password@localhost:5432/qustar'
+);
 
 // construct a query
 const query = Query.table({

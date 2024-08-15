@@ -1,6 +1,6 @@
 # qustar-mysql2
 
-[mysql2](https://www.npmjs.com/package/mysql2) support for [qustar](https://www.npmjs.com/package/qustar).
+MySQL support for [qustar](https://www.npmjs.com/package/qustar) via [mysql2](https://www.npmjs.com/package/mysql2) package.
 
 ## Installation
 
@@ -19,7 +19,9 @@ import {Query} from 'qustar';
 import {Mysql2Connector} from 'qustar-mysql2';
 
 // create a connector for MySQL database
-const connector = new Mysql2Connector('mysql://qustar:test@localhost:3306/db');
+const connector = new Mysql2Connector(
+  'mysql://user:password@localhost:3306/qustar'
+);
 
 // construct a query
 const query = Query.table({
@@ -48,8 +50,8 @@ import {Mysql2Connector} from 'qustar-mysql2';
 const pool = createPool({
   database: 'qustar',
   port: 3306,
-  user: 'qustar',
-  password: 'test',
+  user: 'user',
+  password: 'password',
   host: 'localhost',
 });
 
@@ -65,8 +67,8 @@ import {Mysql2Connector} from 'qustar-mysql2';
 const connector = new Mysql2Connector({
   database: 'db',
   port: 3306,
-  user: 'qustar',
-  password: 'test',
+  user: 'user',
+  password: 'password',
   host: 'localhost',
 });
 ```

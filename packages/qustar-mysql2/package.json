@@ -5,7 +5,7 @@
   "license": "MIT",
   "keywords": [
     "qustar",
-    "sqlite",
+    "mysql",
     "mysql2",
     "sql",
     "typescript"

@@ -1,6 +1,6 @@
 # qustar-pg
 
-[pg](https://www.npmjs.com/package/pg) support for [qustar](https://www.npmjs.com/package/qustar).
+PostgreSQL support for [qustar](https://www.npmjs.com/package/qustar) via [pg](https://www.npmjs.com/package/pg) package.
 
 ## Installation
 
@@ -19,7 +19,9 @@ import {Query} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 
 // create a connector for PostgreSQL database
-const connector = new PgConnector('postgresql://qustar:test@localhost:5432/db');
+const connector = new PgConnector(
+  'postgresql://user:password@localhost:5432/qustar'
+);
 
 // construct a query
 const query = Query.table({
@@ -58,10 +60,10 @@ import {Pool} from 'pg';
 import {PgConnector} from 'qustar-pg';
 
 const pool = new Pool({
-  database: 'db',
+  database: 'qustar',
   port: 5432,
-  user: 'qustar',
-  password: 'test',
+  user: 'user',
+  password: 'password',
   host: 'localhost',
 });
 
@@ -77,8 +79,8 @@ import {PgConnector} from 'qustar-pg';
 const connector = new PgConnector({
   database: 'qustar',
   port: 5432,
-  user: 'qustar',
-  password: 'test',
+  user: 'user',
+  password: 'password',
   host: 'localhost',
 });
 ```

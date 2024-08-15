@@ -2,7 +2,9 @@ import {Query} from 'qustar';
 import {Mysql2Connector} from 'qustar-mysql2';
 
 // create a connector for MySQL database
-const connector = new Mysql2Connector('mysql://qustar:test@localhost:3306/db');
+const connector = new Mysql2Connector(
+  'mysql://user:password@localhost:3306/qustar'
+);
 
 // construct a query
 const query = Query.table({

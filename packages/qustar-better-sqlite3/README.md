@@ -1,6 +1,6 @@
 # qustar-better-sqlite3
 
-[better-sqlite3](https://www.npmjs.com/package/better-sqlite3) support for [qustar](https://www.npmjs.com/package/qustar).
+SQLite support for [qustar](https://www.npmjs.com/package/qustar) via [better-sqlite3](https://www.npmjs.com/package/better-sqlite3) package.
 
 ## Installation
 
