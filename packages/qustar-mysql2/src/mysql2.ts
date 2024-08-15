@@ -1,11 +1,5 @@
 import {Pool, RowDataPacket, createPool} from 'mysql2';
-import {
-  Connector,
-  QuerySql,
-  SqlCommand,
-  convertToArgument,
-  renderMySql,
-} from 'qustar';
+import {Connector, QuerySql, SqlCommand, renderMySql} from 'qustar';
 
 export class Mysql2Connector implements Connector {
   private readonly db: Pool;
@@ -24,14 +18,13 @@ export class Mysql2Connector implements Connector {
     return renderMySql(query);
   }
 
-  async execute(statement: string): Promise<void> {
-    await this.db.promise().execute(statement);
+  async execute(sql: string): Promise<void> {
+    await this.db.promise().execute(sql);
   }
 
-  async select(command: SqlCommand): Promise<any[]> {
-    const [rows] = await this.db
-      .promise()
-      .query<RowDataPacket[]>(command.src, command.args.map(convertToArgument));
+  async query<T = any>(command: SqlCommand | string): Promise<T[]> {
+    const {sql, args} = SqlCommand.derive(command);
+    const [rows] = await this.db.promise().query<RowDataPacket[]>(sql, args);
 
     return rows.map((row: any) => {
       const result: any = {};

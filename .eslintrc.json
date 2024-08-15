@@ -1,6 +1,8 @@
 {
   "extends": "./node_modules/gts/",
   "rules": {
+    "n/no-extraneous-import": "warn",
+    "n/no-unpublished-import": "warn",
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-namespace": "off",

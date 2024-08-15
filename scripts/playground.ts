@@ -64,11 +64,11 @@ async function init(variant: string) {
 
         writeFileSync(
           './debug/query-raw.sql',
-          connector.render(compiledQuery).src
+          connector.render(compiledQuery).sql
         );
         writeFileSync(
           './debug/query-opt.sql',
-          connector.render(optimizedQuery).src
+          connector.render(optimizedQuery).sql
         );
         writeFileSync(
           './debug/args.json',
@@ -76,10 +76,10 @@ async function init(variant: string) {
         );
       }
 
-      const rows = await connector.select(renderedQuery);
+      const rows = await connector.query(renderedQuery);
 
       if (!options?.silent) {
-        console.log(renderedQuery.src);
+        console.log(renderedQuery.sql);
         console.log();
       }
 

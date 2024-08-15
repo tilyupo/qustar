@@ -37,7 +37,7 @@
     "clean": "rimraf dist",
     "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
-    "deploy": "npm run build && tsx ../../scripts/deploy.ts",
+    "deploy": "tsx ../../scripts/deploy.ts",
     "db": "docker run -it --rm -e POSTGRES_USER=qustar -e POSTGRES_PASSWORD=test -p 22783:5432 postgres:12.20-bullseye",
     "test": "vitest run",
     "test:watch": "run-p test:watch:*",

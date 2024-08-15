@@ -12,7 +12,7 @@ export function run(command: string, ...args: string[]): Promise<void> {
 
     publishProcess.on('close', code => {
       if (code !== 0) {
-        reject(new Error(`npm publish process exited with code ${code}`));
+        reject(new Error(`command existed with code ${code}`));
       } else {
         resolve();
       }

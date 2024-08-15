@@ -1,11 +1,5 @@
 import {Pool} from 'pg';
-import {
-  Connector,
-  QuerySql,
-  SqlCommand,
-  convertToArgument,
-  renderPostgreSql,
-} from 'qustar';
+import {Connector, QuerySql, SqlCommand, renderPostgreSql} from 'qustar';
 import {loadPg} from './load-pg.js';
 
 export class PgConnector implements Connector {
@@ -30,14 +24,13 @@ export class PgConnector implements Connector {
     return renderPostgreSql(query);
   }
 
-  async execute(statement: string): Promise<void> {
-    await (await this.db).query(statement);
+  async execute(sql: string): Promise<void> {
+    await (await this.db).query(sql);
   }
 
-  async select(command: SqlCommand): Promise<any[]> {
-    const {rows, fields} = await (
-      await this.db
-    ).query(command.src, command.args.map(convertToArgument));
+  async query<T = any>(command: SqlCommand | string): Promise<T[]> {
+    const {sql, args} = SqlCommand.derive(command);
+    const {rows, fields} = await (await this.db).query(sql, args);
 
     return rows.map((row: any) => {
       const result: any = {};

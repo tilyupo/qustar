@@ -26,16 +26,8 @@ import {
   SqlOrderBy,
   UnarySql,
 } from '../sql/sql.js';
-import {formatDate, indent} from '../utils.js';
+import {indent} from '../utils.js';
 
-export function convertToArgument(literal: Literal): LiteralValue {
-  // todo: add date, time, timetz, timestamptz, timestamp support
-  if ((literal.type.type as string) === 'date') {
-    return formatDate((literal as any).value);
-  } else {
-    return literal.value;
-  }
-}
 class RenderingContext {
   private placeholderIndex = 0;
 
@@ -167,7 +159,7 @@ function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
 
 function renderAlias(sql: AliasSql, ctx: RenderingContext): SqlCommand {
   return {
-    src: ctx.escapeId(sql.name),
+    sql: ctx.escapeId(sql.name),
     args: [],
   };
 }
@@ -247,17 +239,17 @@ function renderUnary(sql: UnarySql, ctx: RenderingContext): SqlCommand {
 
 function renderRaw(sql: RawSql, ctx: RenderingContext): SqlCommand {
   const src = [sql.src[0]];
-  const args: Literal[] = [];
+  const args: LiteralValue[] = [];
 
   for (let i = 1; i < sql.src.length; i += 1) {
     const arg = render(sql.args[i - 1], ctx);
     args.push(...arg.args);
-    src.push(`(${arg.src})`);
+    src.push(`(${arg.sql})`);
     src.push(sql.src[i]);
   }
 
   return {
-    src: src.join(''),
+    sql: src.join(''),
     args,
   };
 }
@@ -343,8 +335,8 @@ function renderSingleLiteral(
 ): SqlCommand {
   if (parameter) {
     return {
-      args: [literal],
-      src: ctx.placeholder(literal),
+      args: [literal.value],
+      sql: ctx.placeholder(literal),
     };
   } else {
     return renderSingleLiteralInline(literal, ctx);
@@ -372,8 +364,8 @@ function renderArrayLiteral(
   }
 
   return {
-    args: [literal],
-    src: ctx.placeholder(literal),
+    args: [literal.value],
+    sql: ctx.placeholder(literal),
   };
 }
 
@@ -408,7 +400,7 @@ function indentCommand(
     return command;
   }
   return {
-    src: indent(command.src, depth),
+    sql: indent(command.sql, depth),
     args: command.args,
   };
 }
@@ -416,7 +408,7 @@ function indentCommand(
 function straight(command: SqlCommand): SqlCommand {
   return {
     ...command,
-    src: command.src
+    sql: command.sql
       .split('\n')
       .map(x => x.trim())
       .join(' '),

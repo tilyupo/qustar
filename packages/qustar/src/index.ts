@@ -6,7 +6,6 @@ export {Query} from './query/query.js';
 export {sql} from './query/sql.js';
 export {renderMySql} from './render/mysql.js';
 export {renderPostgreSql} from './render/postgresql.js';
-export {convertToArgument} from './render/sql.js';
 export {renderSqlite} from './render/sqlite.js';
 export {optimize} from './sql/optimizer.js';
 export {

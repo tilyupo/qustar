@@ -1,5 +1,5 @@
 import {match} from 'ts-pattern';
-import {Literal, ScalarType} from './literal.js';
+import {LiteralValue, ScalarType} from './literal.js';
 import {
   SCALAR_COLUMN_ALIAS,
   SYSTEM_COLUMN_PREFIX,
@@ -17,14 +17,25 @@ import {
 } from './utils.js';
 
 export interface SqlCommand {
-  readonly src: string;
-  readonly args: Literal[];
+  readonly sql: string;
+  readonly args: LiteralValue[];
 }
 
 export namespace SqlCommand {
+  export function derive(command: SqlCommand | string): SqlCommand {
+    if (typeof command === 'string') {
+      return {
+        sql: command,
+        args: [],
+      };
+    } else {
+      return command;
+    }
+  }
+
   export function join(queries: SqlCommand[], sep = ''): SqlCommand {
     return {
-      src: queries.map(x => x.src).join(sep),
+      sql: queries.map(x => x.sql).join(sep),
       args: queries.flatMap(x => x.args),
     };
   }
@@ -32,8 +43,8 @@ export namespace SqlCommand {
 
 export interface Connector {
   render(query: QuerySql): SqlCommand;
-  select(query: SqlCommand): Promise<any[]>;
-  execute(statement: string): Promise<void>;
+  query<T = any>(command: SqlCommand | string): Promise<T[]>;
+  execute(sql: string): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -164,21 +175,21 @@ export function cmd(
   ...expr: Array<SqlCommand | string | number>
 ): SqlCommand {
   const parts: string[] = [template[0]];
-  const args: Literal[] = [];
+  const args: LiteralValue[] = [];
 
   for (let i = 1; i < template.length; i += 1) {
     const currentExpr = expr[i - 1];
     if (typeof currentExpr === 'number' || typeof currentExpr === 'string') {
       parts.push(currentExpr.toString());
     } else {
-      parts.push(currentExpr.src);
+      parts.push(currentExpr.sql);
       args.push(...currentExpr.args);
     }
     parts.push(template[i]);
   }
 
   return {
-    src: parts.join(''),
+    sql: parts.join(''),
     args,
   };
 }

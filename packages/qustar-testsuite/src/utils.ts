@@ -28,7 +28,7 @@ export function queryToSql(query: Query<any> | QueryTerminatorExpr<any>) {
   const optimizedQuery = optimize(compiledQuery);
   const renderedQuery = renderSqlite(optimizedQuery);
 
-  return renderedQuery.src;
+  return renderedQuery.sql;
 }
 
 export interface ExecuteOptions {
@@ -65,7 +65,7 @@ export function dump(
   );
   writeFileSync(
     `./debug/${token}/query-raw.sql`,
-    renderSqlite(compiledQuery).src
+    renderSqlite(compiledQuery).sql
   );
 
   const optimizedQuery = optimize(compiledQuery);
@@ -75,7 +75,7 @@ export function dump(
   );
 
   const renderedQuery = renderSqlite(optimizedQuery);
-  writeFileSync(`./debug/${token}/query-opt.sql`, renderedQuery.src);
+  writeFileSync(`./debug/${token}/query-opt.sql`, renderedQuery.sql);
   writeFileSync(
     `./debug/${token}/args.json`,
     JSON.stringify(renderedQuery.args, undefined, 2)
@@ -150,7 +150,7 @@ export function buildUtils(
     }
     const referenceCommand = provider.render(sql);
     const referenceRows = await provider
-      .select(referenceCommand)
+      .query(referenceCommand)
       .then((rows: any[]) => rows.map(x => materialize(x, projection)));
 
     if (options?.ignoreOrder) {
@@ -173,7 +173,7 @@ export function buildUtils(
 
         const command = provider.render(sql);
         const rows = await provider
-          .select(command)
+          .query(command)
           .then((rows: any[]) => rows.map(x => materialize(x, projection)));
 
         if (options?.ignoreOrder) {
@@ -188,7 +188,7 @@ export function buildUtils(
           err.message +=
             '\n\n  rows: ' + indent(JSON.stringify(rows, null, 2)).trim();
           err.message += indent(
-            '\nargs: ' + JSON.stringify(command.args) + '\n\n' + command.src
+            '\nargs: ' + JSON.stringify(command.args) + '\n\n' + command.sql
           );
 
           err.message += '\n\nref:';
@@ -199,7 +199,7 @@ export function buildUtils(
             '\nargs: ' +
               JSON.stringify(referenceCommand.args) +
               '\n\n' +
-              referenceCommand.src
+              referenceCommand.sql
           );
           throw err;
         }

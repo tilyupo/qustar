@@ -1,7 +1,6 @@
 # Qustar
 
 [![npm version](https://img.shields.io/npm/v/qustar.svg)](https://www.npmjs.com/package/qustar)
-[![contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/tilyupo/qustar/blob/main/CONTRIBUTING.md)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue)](https://github.com/tilyupo/qustar/blob/main/LICENSE)
 
 Query SQL database through an array-like API.
@@ -408,3 +407,7 @@ const users = query: Query.sql`SELECT id, name FROM users`.schema({
   // you can use 'ref' and 'back_ref' as well
 });
 ```
+
+## License
+
+MIT License, see `LICENSE`.

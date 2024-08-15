@@ -4,6 +4,7 @@ import {resolve as _resolve} from 'path';
 import {inc} from 'semver';
 // eslint-disable-next-line n/no-unsupported-features/node-builtins
 import {copyFileSync, readFileSync, rmSync} from 'fs';
+import {run} from './common/utils';
 
 const packageJsonPath = _resolve(process.cwd(), 'package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
@@ -15,7 +16,7 @@ async function getCurrentVersion() {
       `https://registry.npmjs.org/${packageName}`
     );
     return response.data['dist-tags'].latest;
-  } catch (error) {
+  } catch (error: any) {
     if (error.response && error.response.status === 404) {
       console.log('Package not found. Setting initial version to 0.0.1.');
       return '0.0.1';
@@ -66,6 +67,7 @@ async function publishPatch() {
 
     console.log(`Next version: ${nextVersion}`);
 
+    await run('npm', 'run', 'build');
     copyFileSync('../../LICENSE', './LICENSE');
 
     console.log('Updating package.json...');
@@ -88,4 +90,4 @@ async function publishPatch() {
   }
 }
 
-publishPatch();
+await publishPatch();

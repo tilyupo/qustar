@@ -268,12 +268,15 @@ export abstract class Query<T extends ValidValue<T>> {
   }
 
   renderInline(dialect: Dialect, options?: RenderOptions): string {
-    return this.render(dialect, {...options, parameters: false}).src;
+    return this.render(dialect, {...options, parameters: false}).sql;
   }
 
   async execute(connector: Connector): Promise<T[]> {
     const command = connector.render(this.pipe(compileQuery, optimize));
-    const rows = await connector.select(command);
+    const rows = await connector.query({
+      sql: command.sql,
+      args: command.args,
+    });
 
     return rows.map(row => materialize(row, this.projection));
   }

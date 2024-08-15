@@ -37,7 +37,7 @@
     "clean": "rimraf dist",
     "build": "tsx ../../scripts/build.ts",
     "dev": "tsc -w",
-    "deploy": "cp ../../README.md ./ && npm run build && tsx ../../scripts/deploy.ts && rm ./README.md",
+    "deploy": "cp ../../README.md ./ && tsx ../../scripts/deploy.ts && rm ./README.md",
     "test": "vitest run"
   },
   "devDependencies": {
