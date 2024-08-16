@@ -4,7 +4,7 @@ import {ScalarType} from '../literal.js';
 import {QuerySql} from '../sql/sql.js';
 import {renderSql} from './sql.js';
 
-export function renderPostgreSql(sql: QuerySql): SqlCommand {
+export function renderPostgresql(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
     float32Type: 'REAL',
     int32Type: 'INT',

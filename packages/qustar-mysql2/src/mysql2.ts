@@ -1,5 +1,5 @@
 import {Pool, RowDataPacket, createPool} from 'mysql2';
-import {Connector, QuerySql, SqlCommand, renderMySql} from 'qustar';
+import {Connector, QuerySql, SqlCommand, renderMysql} from 'qustar';
 
 export class Mysql2Connector implements Connector {
   private readonly db: Pool;
@@ -15,7 +15,7 @@ export class Mysql2Connector implements Connector {
   }
 
   render(query: QuerySql): SqlCommand {
-    return renderMySql(query);
+    return renderMysql(query);
   }
 
   async execute(sql: string): Promise<void> {

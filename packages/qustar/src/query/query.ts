@@ -2,8 +2,8 @@ import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
 import {EntityDescriptor, Table, toSchema} from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
-import {renderMySql} from '../render/mysql.js';
-import {renderPostgreSql} from '../render/postgresql.js';
+import {renderMysql} from '../render/mysql.js';
+import {renderPostgresql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
 import {
@@ -261,8 +261,8 @@ export abstract class Query<T extends ValidValue<T>> {
       x => ((options?.optimize ?? true) ? optimize(x) : x),
       match(dialect)
         .with('sqlite', () => renderSqlite)
-        .with('postgresql', () => renderPostgreSql)
-        .with('mysql', () => renderMySql)
+        .with('postgresql', () => renderPostgresql)
+        .with('mysql', () => renderMysql)
         .exhaustive()
     );
   }

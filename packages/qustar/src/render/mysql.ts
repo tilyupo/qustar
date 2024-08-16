@@ -2,7 +2,7 @@ import {SqlCommand} from '../connector.js';
 import {QuerySql} from '../sql/sql.js';
 import {renderSql} from './sql.js';
 
-export function renderMySql(sql: QuerySql): SqlCommand {
+export function renderMysql(sql: QuerySql): SqlCommand {
   return renderSql(sql, {
     float32Type: 'FLOAT',
     int32Type: 'SIGNED',

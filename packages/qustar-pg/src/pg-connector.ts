@@ -1,5 +1,5 @@
 import {Pool} from 'pg';
-import {Connector, QuerySql, SqlCommand, renderPostgreSql} from 'qustar';
+import {Connector, QuerySql, SqlCommand, renderPostgresql} from 'qustar';
 import {loadPg} from './load-pg.js';
 
 export class PgConnector implements Connector {
@@ -21,7 +21,7 @@ export class PgConnector implements Connector {
   }
 
   render(query: QuerySql): SqlCommand {
-    return renderPostgreSql(query);
+    return renderPostgresql(query);
   }
 
   async execute(sql: string): Promise<void> {
