@@ -54,7 +54,7 @@ const query = users
 const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
 
 // run the query
-console.log('users:', await query.execute(connector));
+console.log('users:', await query.fetch(connector));
 ```
 
 ## Supported database drivers
