@@ -15,7 +15,7 @@ describe('snapshot', () => {
     expect(
       Query.table({name: 'users', schema: {id: 'i32'}})
         .filter(x => x.id.eq(1))
-        .renderInline('postgresql')
+        .render('postgresql').sql
     ).toMatchInlineSnapshot(/* sql */ `
       SELECT
         "s1"."id"
@@ -42,7 +42,7 @@ describe('snapshot', () => {
           }),
           condition: (child, parent) => child.parent_id.eq(parent.id),
         })
-        .renderInline('postgresql')
+        .render('postgresql').sql
     ).toMatchInlineSnapshot(/* sql */ `
       SELECT
         "s1_1"."id" AS "p",

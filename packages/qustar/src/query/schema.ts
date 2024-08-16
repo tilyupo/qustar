@@ -25,6 +25,22 @@ export interface SqlTemplate {
   >;
 }
 
+export namespace SqlTemplate {
+  export function derive(sql: SqlTemplate | string): SqlTemplate {
+    if (typeof sql === 'string') {
+      return {
+        src: Object.freeze({
+          ...[sql],
+          raw: [sql],
+        }),
+        args: [],
+      };
+    } else {
+      return sql;
+    }
+  }
+}
+
 export interface GenericRef<TType extends string> {
   readonly type: TType;
   // ref is always defined at root (so path length always

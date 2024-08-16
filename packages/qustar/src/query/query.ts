@@ -6,6 +6,7 @@ import {renderMysql} from '../render/mysql.js';
 import {renderPostgresql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
+import {Handle} from '../types/query';
 import {
   ConvertMappingToValue,
   ConvertScalarMappingToScalarValue,
@@ -61,7 +62,7 @@ export interface JoinOptionsPublic<
 > {
   readonly type: JoinType;
   readonly right: Query<Right>;
-  readonly condition?: JoinFilterFn<Left, Right>;
+  readonly condition: JoinFilterFn<Left, Right>;
   readonly select: JoinMapFn<Left, Right, Result>;
 }
 
@@ -157,6 +158,19 @@ export namespace Query {
 }
 
 export abstract class Query<T extends ValidValue<T>> {
+  /**
+   * Describes SQL table name and schema.
+   * @param descriptor table descriptor
+   * @returns query that selects all columns form the table described in schema.
+   * @example
+   *  Query.table({
+   *    name: 'users',
+   *    schema: {
+   *      id: 'i32',
+   *      name: {type: 'text', nullable: true},
+   *    }
+   *  })
+   */
   static table<const TSchema extends EntityDescriptor>(
     descriptor: Table<TSchema>
   ): Query<DeriveEntity<TSchema>> {
@@ -172,14 +186,37 @@ export abstract class Query<T extends ValidValue<T>> {
     return table;
   }
 
+  /**
+   * Describes raw SQL with schema.
+   * @param options SQL and schema required to run raw sql
+   * @returns query that selects all columns from the raw SQL described in schema
+   * @example
+   *  // parametrized query
+   *  import {sql} from 'qustar';
+   *  Query.raw({
+   *    sql: sql`SELECT id FROM users WHERE id = ${42}`,
+   *    schema: {
+   *      id: 'i32',
+   *    }
+   *  })
+   *
+   * @example
+   *  // plain string for SQL
+   *  Query.raw({
+   *    sql: 'SELECT id FROM users WHERE id = 42',
+   *    schema: {
+   *      id: 'i32',
+   *    }
+   *  })
+   */
   static raw<const TSchema extends EntityDescriptor>(options: {
-    sql: SqlTemplate;
+    sql: SqlTemplate | string;
     schema: TSchema;
   }): Query<DeriveEntity<TSchema>> {
     const query = new ProxyQuery(
       new QuerySource({
         type: 'sql',
-        sql: options.sql,
+        sql: SqlTemplate.derive(options.sql),
         schema: toSchema(() => query, options.schema),
       })
     );
@@ -191,8 +228,25 @@ export abstract class Query<T extends ValidValue<T>> {
     public readonly projection: Projection
   ) {}
 
+  /**
+   * Implementation of the visitor pattern for {@link Query}
+   * @param visitor will be used by descendants to call relevant methods
+   */
   abstract visit<T>(visitor: QueryVisitor<T>): T;
 
+  /**
+   * Applies transformations to the query one by one. Result of a transformation is the input of the next.
+   * @example
+   *  function deletedUsers(query: Query<User>): Query<User> {
+   *    return query.filter(user => user.deleted);
+   *  }
+   *
+   *  function userInfo(query: Query<User>): Query<UserInfo> {
+   *    return query.map(user => ({ id: user.id, name: user.name }))
+   *  }
+   *
+   *  const deletedUserInfos = query.pipe(deletedUsers, userInfo);
+   */
   pipe(): (input: Query<T>) => Query<T>;
   pipe<R>(fn1: (arg: Query<T>) => R): (arg: Query<T>) => R;
   pipe<A, R>(fn1: (arg: Query<T>) => A, fn2: (arg: A) => R): R;
@@ -255,9 +309,19 @@ export abstract class Query<T extends ValidValue<T>> {
     )(this);
   }
 
+  /**
+   * Renders the query into SQL. PostgreSQL, MySQL and SQLite dialects are supported. For
+   * other dialects consider writing your own rendering function. An example can be found
+   * at [github](https://github.com/tilyupo/qustar/blob/4af9e814efd781d44989fa96fbff03f5ebdc07b9/packages/qustar/src/render/sql.ts#L70).
+   * @param dialect describes what built-in SQL dialect to use for {@link Query} rendering
+   * @param options additional options that affect query rendering process
+   * @returns SQL command that can be used to query a database
+   * @example
+   *  const command = query.render('sqlite', { parameters: true });
+   */
   render(dialect: Dialect, options?: RenderOptions): SqlCommand {
     return this.pipe(
-      x => compileQuery(x, options),
+      x => compileQuery(x, {parameters: false, ...options}),
       x => ((options?.optimize ?? true) ? optimize(x) : x),
       match(dialect)
         .with('sqlite', () => renderSqlite)
@@ -267,10 +331,20 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
-  renderInline(dialect: Dialect, options?: RenderOptions): string {
-    return this.render(dialect, {...options, parameters: false}).sql;
-  }
-
+  /**
+   * Runs the query using the connector.
+   * @param connector database connector that will be used to run the query
+   * @returns all rows that match the query
+   * @example
+   *  import {PgConnector} from 'qustar-pg';
+   *
+   *  // you can use any connector, postgresql as an example
+   *  const connector = new PgConnector(
+   *    'postgresql://user:passwd@localhost:5432'
+   *  );
+   *
+   *  const users = query.execute(connector);
+   */
   async execute(connector: Connector): Promise<T[]> {
     const command = connector.render(this.pipe(compileQuery, optimize));
     const rows = await connector.query({
@@ -283,6 +357,22 @@ export abstract class Query<T extends ValidValue<T>> {
 
   // modificators
 
+  /**
+   * Applies GROUP BY clause to the query.
+   * @param param0 group by options
+   * @returns query with group by applied
+   *
+   * @example
+   *  // groups users by age and selects only groups with average height less than 10
+   *  query.groupBy({
+   *    by: user => user.age,
+   *    select: user => ({
+   *      count: Expr.count(1),
+   *      meanHeight: user.height.mean()
+   *    }),
+   *    having: stats => stats.meanHeight.lt(10),
+   *  })
+   */
   groupBy<Result extends Mapping>({
     by,
     select,
@@ -306,14 +396,42 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
+  /**
+   * Applies WHERE clause to the query.
+   * @param filter function that accepts {@link Handle} and returns boolean expression
+   * @returns query with filter applied
+   * @example
+   *  // filter users with age === 42
+   *  query.filter(user => user.age.eq(42))
+   */
   filter(filter: FilterFn<T>): Query<T> {
     return FilterQuery.create(this, filter);
   }
 
+  /**
+   * Alias for {@link Query.filter}. Applies WHERE clause to the query.
+   *
+   * @param filter function that accepts {@link Handle} and returns boolean expression
+   * @returns query with filter applied
+   * @example
+   *  // filter users with age === 42
+   *  query.where(user => user.age.eq(42))
+   */
   where(filter: FilterFn<T>): Query<T> {
     return this.filter(filter);
   }
 
+  /**
+   * Applies a projection to the query. The projection, as every operation on a query,
+   * will be translated to 100% SQL.
+   * @param selector function that accepts {@link Handle} and returns a projection
+   * @returns query with projection applied
+   * @example
+   *  query.map(user => ({
+   *    id: user.id,
+   *    fullName: user.firstName.concat(' ', user.lastName),
+   *  }))
+   */
   map<Result extends Mapping>(
     selector: MapValueFn<T, Result>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
@@ -325,12 +443,32 @@ export abstract class Query<T extends ValidValue<T>> {
     return new MapQuery<any>(nextSource, mapping);
   }
 
+  /**
+   * Alias for {@link Query.map}
+   *
+   * Applies a projection to the query. The projection, as every operation on a query,
+   * will be translated to 100% SQL.
+   * @param selector function that accepts {@link Handle} and returns a projection
+   * @returns query with projection applied
+   * @example
+   *  query.select(user => ({
+   *    id: user.id,
+   *    fullName: user.firstName.concat(' ', user.lastName),
+   *  }))
+   */
   select<TMapping extends Mapping>(
     selector: MapValueFn<T, TMapping>
   ): Query<Expand<ConvertMappingToValue<TMapping>>> {
     return this.map<any>(selector);
   }
 
+  /**
+   * Applies `ORDER BY <expr> ASC` clause. This method overrides previous ordering of the query.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with ascending order applied
+   * @example
+   *  query.orderByAsc(user => user.age);
+   */
   orderByAsc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
@@ -341,6 +479,13 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
+  /**
+   * Applies `ORDER BY <expr> DESC` clause. This method overrides previous ordering of the query.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with descending order applied
+   * @example
+   *  query.orderByDesc(user => user.age);
+   */
   orderByDesc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
@@ -351,30 +496,78 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
+  /**
+   * Applies `ORDER BY ... <expr> ASC` clause. If it follows another ordering operation, then it will apply a secondary order for records with matching primary order.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with ascending order applied
+   * @example
+   *  query
+   *    .orderByDesc(user => user.age)
+   *    .thenByAsc(user => user.height);
+   */
   thenByAsc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
     return this.orderByAsc(selector);
   }
 
+  /**
+   * Applies `ORDER BY ... <expr> DESC` clause. If it follows another ordering operation, then it will apply a secondary order for records with matching primary order.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with descending order applied
+   * @example
+   *  query
+   *    .orderByDesc(user => user.age)
+   *    .thenByDesc(user => user.height);
+   */
   thenByDesc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
     return this.orderByDesc(selector);
   }
 
+  /**
+   * Alias for {@link Query.orderByDesc}.
+   *
+   * Applies descending order to the query.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with descending order applied
+   * @example
+   *  query.sortByAsc(user => user.age);
+   */
   sortByDesc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): Query<T> {
     return this.orderByDesc(selector);
   }
 
+  /**
+   * Alias for {@link Query.orderByAsc}.
+   *
+   * Applies ascending order to the query.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with ascending order applied
+   * @example
+   *  query.sortByAsc(user => user.age);
+   */
   sortByAsc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): Query<T> {
     return this.orderByAsc(selector);
   }
 
+  /**
+   * Applies `JOIN` clause to the query. It's usually more convenient to use `innerJoin`, `leftJoin`, `rightJoin` instead of just this method.
+   * @param options join operation options
+   * @returns query with join applied
+   * @example
+   *  postsQuery.join({
+   *    type: 'inner',
+   *    right: usersQuery,
+   *    condition: (post, user) => user.id.eq(post.authorId),
+   *    select: (post, user) => ({...post, author: user}),
+   *  });
+   */
   join<Right extends ValidValue<Right>, Result extends Mapping>(
     options: JoinOptionsPublic<T, Right, Result>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
@@ -400,6 +593,17 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `LEFT JOIN` clause to the query.
+   * @param options join operation options
+   * @returns query with left join applied
+   * @example
+   *  postsQuery.leftJoin({
+   *    right: usersQuery,
+   *    condition: (post, user) => user.id.eq(post.reviewerId),
+   *    select: (post, user) => ({...post, reviewer: user}),
+   *  });
+   */
   leftJoin<Right extends ValidValue<Right>, Result extends Mapping>(
     options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
@@ -409,6 +613,17 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `INNER JOIN` clause to the query.
+   * @param options join operation options
+   * @returns query with left join applied
+   * @example
+   *  postsQuery.innerJoin({
+   *    right: usersQuery,
+   *    condition: (post, user) => user.id.eq(post.authorId),
+   *    select: (post, user) => ({...post, author: user}),
+   *  });
+   */
   innerJoin<Right extends ValidValue<Right>, Result extends Mapping>(
     options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
@@ -418,6 +633,17 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `RIGHT JOIN` clause to the query.
+   * @param options join operation options
+   * @returns query with left join applied
+   * @example
+   *  postsQuery.rightJoin({
+   *    right: usersQuery,
+   *    condition: (post, user) => user.id.eq(post.authorId),
+   *    select: (post, user) => ({...post, author: user}),
+   *  });
+   */
   rightJoin<Right extends ValidValue<Right>, Result extends Mapping>(
     options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
@@ -427,6 +653,15 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Maps every item of a query to many (possible zero) items.
+   * @param selector function that accepts {@link Handle} and returns a query
+   * @returns query that consists of concatenated result of all subqueries
+   * @example
+   *  const allPosts = usersQuery.flatMap(user =>
+   *    postsQuery.filter(post => post.authorId.eq(user.id))
+   *  );
+   */
   flatMap<Result = any>(selector: MapQueryFn<T, Result>): Query<Result> {
     const nextSource: QuerySource = new QuerySource({
       type: 'query',
@@ -436,7 +671,7 @@ export abstract class Query<T extends ValidValue<T>> {
     const target = selector(leftHandle);
 
     if (!(target instanceof Query)) {
-      throw new Error('flatMap can only map to nested query');
+      throw new Error('flatMap can only map to a query');
     }
 
     const right = new QuerySource({type: 'query', query: target});
@@ -450,6 +685,17 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Alias for {@link Query.flatMap}.
+   *
+   * Maps every item of a query to many (possible zero) items.
+   * @param selector function that accepts {@link Handle} and returns a query
+   * @returns query that consists of concatenated result of all subqueries
+   * @example
+   *  const allPosts = usersQuery.selectMany(user =>
+   *    postsQuery.filter(post => post.authorId.eq(user.id))
+   *  );
+   */
   selectMany<Result = any>(selector: MapQueryFn<T, Result>): Query<Result> {
     return this.flatMap(selector);
   }
@@ -461,6 +707,13 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
+  /**
+   * Applies `UNION` clause.
+   * @param query another query to union with
+   * @returns a combined query that has all unique values from both queries
+   * @example
+   *  studentsQuery.union(teachersQuery)
+   */
   union(query: Query<T>): Query<T> {
     return this.combine({
       type: 'union',
@@ -468,6 +721,13 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `UNION ALL` clause.
+   * @param query another query to union with
+   * @returns a combined query that has all (possibly duplicate) values from both queries
+   * @example
+   *  studentsQuery.unionAll(teachersQuery)
+   */
   unionAll(query: Query<T>): Query<T> {
     return this.combine({
       type: 'union_all',
@@ -475,6 +735,13 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `INTERSECT` clause.
+   * @param query another query to intersect with
+   * @returns query that represents the dataset that is common in both the original queries
+   * @example
+   *  studentsQuery.intersect(teachersQuery)
+   */
   intersect(query: Query<T>): Query<T> {
     return this.combine({
       type: 'intersect',
@@ -482,6 +749,15 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `EXCEPT` clause.
+   * @param query another (right) query to except with
+   * @returns
+   * query that represents all the unique records from the left query,
+   * except the records that are present in the result set of the right query
+   * @example
+   *  studentsQuery.except(teachersQuery)
+   */
   except(query: Query<T>): Query<T> {
     return this.combine({
       type: 'except',
@@ -489,6 +765,16 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Combines two queries. Original ordering of the queries is preserved.
+   * @param query query to concatenate to the end of the original query
+   * @returns query with second query concatenated to the end of the first
+   * @remark
+   * Under the hood `qustar` uses `UNION ALL` with post-ordering to preserve original ordering of
+   * the queries.
+   * @example
+   *  studentsQuery.concat(teachersQuery)
+   */
   concat(query: Query<T>): Query<T> {
     return this.combine({
       type: 'concat',
@@ -496,18 +782,50 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
+  /**
+   * Applies `DISTINCT` keyword to the query.
+   * @returns query with only distinct values in it
+   * @example
+   *  users.map(user => user.name).unique();
+   */
   unique(): Query<T> {
     return new UniqueQuery(new QuerySource({type: 'query', query: this}));
   }
 
+  /**
+   * Alias for {@link Query.unique}.
+   *
+   * Applies `DISTINCT` keyword to the query.
+   * @returns query with only distinct values in it
+   * @example
+   *  users.map(user => user.name).distinct();
+   */
   distinct(): Query<T> {
     return this.unique();
   }
 
+  /**
+   * Alias for {@link Query.unique}.
+   *
+   * Applies `DISTINCT` keyword to the query.
+   * @returns query with only distinct values in it
+   * @example
+   *  users.map(user => user.name).uniq();
+   */
   uniq(): Query<T> {
     return this.unique();
   }
 
+  /**
+   * Limits number of items that query can return.
+   * @param limit number of items to query
+   * @param offset number of items to skip
+   * @returns query with at most `limit` number of items
+   * @example
+   *  posts.orderByDesc(post => = post.createdAt).limit(10);
+   * @example
+   *  posts.orderByDesc(post => = post.createdAt).limit(5, 15);
+   */
   limit(limit: number, offset?: number): Query<T> {
     return new PaginationQuery(
       new QuerySource({type: 'query', query: this}),
@@ -516,29 +834,70 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
-  slice(start: number, end?: number): Query<T> {
+  /**
+   * Returns a slice of an original query.
+   * In contrast to `Array.slice`, `Query.slice` doesn't support negative indexes.
+   * @param start
+   * The beginning index of the specified portion of the query.
+   * If start is undefined, then the slice begins at index 0.
+   * @param end
+   * The end index of the specified portion of the query.
+   * This is exclusive of the element at the index 'end'.
+   * If end is undefined, then the slice extends to the end of the query.
+   * @example
+   *  users.slice(10, 15);
+   */
+  slice(start?: number, end?: number): Query<T> {
     if (end !== undefined) {
-      return this.limit(end - start, start);
+      return this.limit(end - (start ?? 0), start);
     } else {
-      return this.skip(start);
+      return this.skip(start ?? 0);
     }
   }
 
-  take(count: number): Query<T> {
-    return this.limit(count);
+  /**
+   * Alias for {@link Query.limit}
+   *
+   * Limits number of items that query can return.
+   * @param count number of items to query
+   * @param skip number of items to skip
+   * @returns query with at most `count` number of items
+   * @example
+   *  posts.orderByDesc(post => = post.createdAt).take(10);
+   * @example
+   *  posts.orderByDesc(post => = post.createdAt).take(5, 15);
+   */
+  take(count: number, skip?: number): Query<T> {
+    return this.limit(count, skip);
   }
 
-  skip(offset: number): Query<T> {
+  /**
+   * Drops first `offset` number of items.
+   * @param offset number of items to skip from the original query
+   * @returns query without first `offset` number of items
+   * @example
+   *  users.drop(10);
+   */
+  drop(count: number): Query<T> {
+    return this.skip(count);
+  }
+
+  /**
+   * Alias for {@link Query.drop}
+   *
+   * Skips first `count` number of items.
+   * @param count number of items to skip from the original query
+   * @returns query without first `count` number of items
+   * @example
+   *  users.skip(10);
+   */
+  skip(count: number): Query<T> {
     // SQL doesn't allow to use OFFSET without LIMIT
     return new PaginationQuery(
       new QuerySource({type: 'query', query: this}),
       1_000_000_000_000_000,
-      offset
+      count
     );
-  }
-
-  drop(count: number): Query<T> {
-    return this.skip(count);
   }
 
   // terminators

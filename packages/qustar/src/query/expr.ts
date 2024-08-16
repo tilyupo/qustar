@@ -66,11 +66,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   // sql
 
   static raw<const TSchema extends ScalarDescriptor>(options: {
-    sql: SqlTemplate;
+    sql: SqlTemplate | string;
     schema: TSchema;
   }): Expr<DeriveScalar<TSchema>> {
     return new SqlExpr<DeriveScalar<TSchema>>(
-      options.sql,
+      SqlTemplate.derive(options.sql),
       scalarDescriptorToScalarType(options.schema)
     );
   }
