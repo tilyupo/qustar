@@ -6,7 +6,7 @@ import {renderMysql} from '../render/mysql.js';
 import {renderPostgresql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
-import {Handle} from '../types/query';
+import {Handle, NumericMapping} from '../types/query';
 import {
   ConvertMappingToValue,
   ConvertScalarMappingToScalarValue,
@@ -911,7 +911,7 @@ export abstract class Query<T extends ValidValue<T>> {
 
   // terminators
 
-  max<Scalar extends ScalarMapping>(
+  max<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>
@@ -919,7 +919,7 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('max', this.map(selector));
   }
 
-  min<Scalar extends ScalarMapping>(
+  min<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>
@@ -927,7 +927,7 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('min', this.map(selector));
   }
 
-  mean<Scalar extends ScalarMapping>(
+  mean<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>
@@ -935,7 +935,7 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('mean', this.map(selector));
   }
 
-  avg<Scalar extends ScalarMapping>(
+  avg<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>
@@ -943,7 +943,7 @@ export abstract class Query<T extends ValidValue<T>> {
     return this.mean(selector);
   }
 
-  average<Scalar extends ScalarMapping>(
+  average<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>
@@ -951,7 +951,7 @@ export abstract class Query<T extends ValidValue<T>> {
     return this.mean(selector);
   }
 
-  sum<Scalar extends ScalarMapping>(
+  sum<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>

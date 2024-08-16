@@ -16,11 +16,6 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
 
       describe('max', () => {
         testTerm('id', posts => posts.max(x => x.id), 6);
-        testTerm(
-          'title',
-          posts => posts.max(x => x.title.toLowerCase()),
-          'typescript'
-        );
         testTerm('author.id', posts => posts.max(x => x.author.id), 3);
       });
 
@@ -31,7 +26,6 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
           posts => posts.orderByAsc(x => x.id).min(x => x.id),
           1
         );
-        testTerm('title', posts => posts.min(x => x.title), 'C#');
         testTerm('author.id', posts => posts.min(x => x.author.id), 1);
       });
 

@@ -86,6 +86,7 @@ type __TestHandle = Assert<
 
 export type EntityMapping = Record<string, SingleScalarOperand>;
 export type ScalarMapping = SingleScalarOperand;
+export type NumericMapping = SingleScalarOperand<number | null>;
 export type Mapping = ScalarMapping | EntityMapping | EntityHandle<object>;
 
 export type MapValueFn<
@@ -177,7 +178,7 @@ type __TestQuery = [
   Query<User>,
   Assert<
     [
-      Equal<QueryValue<typeof x1>, {b: number}>,
+      Equal<QueryValue<typeof x1>, {b: number | null}>,
       Equal<QueryValue<typeof x2>, User>,
       Equal<QueryValue<typeof x3>, Post>,
       Equal<QueryValue<typeof x4>, Comment>,
