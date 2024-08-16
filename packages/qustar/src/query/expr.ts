@@ -1,19 +1,22 @@
 import {match} from 'ts-pattern';
-import {Connector, materialize} from '../connector.js';
+import {Connector, materialize, SqlCommand} from '../connector.js';
 import {ScalarDescriptor, scalarDescriptorToScalarType} from '../descriptor.js';
 import {
+  inferLiteral,
   Literal,
   ScalarType,
   SingleLiteralValue,
-  inferLiteral,
 } from '../literal.js';
+import {renderMysql} from '../render/mysql.js';
+import {renderPostgresql} from '../render/postgresql.js';
+import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
 import {Assert, Equal} from '../types/query.js';
 import {DeriveScalar} from '../types/schema.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {compileQuery} from './compiler.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
-import {Query, QuerySource} from './query.js';
+import {Dialect, Query, QuerySource, RenderOptions} from './query.js';
 import {SqlTemplate} from './schema.js';
 
 // expr
@@ -1260,6 +1263,67 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
   ) {
     super();
   }
+  pipe(): QueryTerminatorExpr<T>;
+  pipe<R>(fn1: (arg: QueryTerminatorExpr<T>) => R): R;
+  pipe<A, R>(fn1: (arg: QueryTerminatorExpr<T>) => A, fn2: (arg: A) => R): R;
+  pipe<A, B, R>(
+    fn1: (arg: QueryTerminatorExpr<T>) => A,
+    fn2: (arg: A) => B,
+    fn3: (arg: B) => R
+  ): R;
+  pipe<A, B, C, R>(
+    fn1: (arg: QueryTerminatorExpr<T>) => A,
+    fn2: (arg: A) => B,
+    fn3: (arg: B) => C,
+    fn4: (arg: C) => R
+  ): R;
+  pipe<A, B, C, D, R>(
+    fn1: (arg: QueryTerminatorExpr<T>) => A,
+    fn2: (arg: A) => B,
+    fn3: (arg: B) => C,
+    fn4: (arg: B) => D,
+    fn5: (arg: D) => R
+  ): R;
+  pipe<A, B, C, D, E, R>(
+    fn1: (arg: QueryTerminatorExpr<T>) => A,
+    fn2: (arg: A) => B,
+    fn3: (arg: B) => C,
+    fn4: (arg: B) => D,
+    fn5: (arg: D) => E,
+    fn6: (arg: E) => R
+  ): R;
+  pipe<A, B, C, D, E, F, R>(
+    fn1: (arg: QueryTerminatorExpr<T>) => A,
+    fn2: (arg: A) => B,
+    fn3: (arg: B) => C,
+    fn4: (arg: B) => D,
+    fn5: (arg: D) => E,
+    fn6: (arg: E) => F,
+    fn7: (arg: F) => R
+  ): R;
+  pipe<A, B, C, D, E, F, G, R>(
+    fn1: (arg: QueryTerminatorExpr<T>) => A,
+    fn2: (arg: A) => B,
+    fn3: (arg: B) => C,
+    fn4: (arg: B) => D,
+    fn5: (arg: D) => E,
+    fn6: (arg: E) => F,
+    fn7: (arg: F) => G,
+    fn8: (arg: G) => R
+  ): R;
+  pipe(...fns: Function[]) {
+    if (fns.length === 0) {
+      return (input: Query<T>) => input;
+    }
+    if (fns.length === 1) {
+      return fns[0];
+    }
+    return fns.reverse().reduce(
+      (prevFn, nextFn) =>
+        (...args: any[]) =>
+          prevFn(nextFn(...args))
+    )(this);
+  }
 
   async fetch(connector: Connector): Promise<T> {
     const command = connector.render(optimize(compileQuery(this)));
@@ -1269,6 +1333,18 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
     });
 
     return materialize(rows[0] ?? null, this.projection());
+  }
+
+  render(dialect: Dialect, options?: RenderOptions): SqlCommand {
+    return this.pipe(
+      x => compileQuery(x, {parameters: false, ...options}),
+      x => ((options?.optimize ?? true) ? optimize(x) : x),
+      match(dialect)
+        .with('sqlite', () => renderSqlite)
+        .with('postgresql', () => renderPostgresql)
+        .with('mysql', () => renderMysql)
+        .exhaustive()
+    );
   }
 
   visit<T>(visitor: ExprVisitor<T>): T {

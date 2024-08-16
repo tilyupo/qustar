@@ -113,12 +113,7 @@ async function init(variant: string) {
   try {
     const query = Query.table({name: 'users', schema: {id: 'i32'}});
 
-    console.log(
-      await query
-        .filter(x => false)
-        .sum(x => x.id)
-        .fetch(connector)
-    );
+    console.log(await query.sum(x => x.id).fetch(connector));
 
     // await execute(query, {noOpt: false});
   } finally {

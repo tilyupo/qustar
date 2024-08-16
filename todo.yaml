@@ -56,6 +56,7 @@ testing:
   - separate gen tests for optimizer and interpreter
   - interpreter
   - gen
+  - add query expr snapshot tests
 
 query compiler:
   - use one join for all props from the same ref

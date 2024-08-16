@@ -247,8 +247,8 @@ export abstract class Query<T extends ValidValue<T>> {
    *
    *  const deletedUserInfos = query.pipe(deletedUsers, userInfo);
    */
-  pipe(): (input: Query<T>) => Query<T>;
-  pipe<R>(fn1: (arg: Query<T>) => R): (arg: Query<T>) => R;
+  pipe(): Query<T>;
+  pipe<R>(fn1: (arg: Query<T>) => R): R;
   pipe<A, R>(fn1: (arg: Query<T>) => A, fn2: (arg: A) => R): R;
   pipe<A, B, R>(
     fn1: (arg: Query<T>) => A,
