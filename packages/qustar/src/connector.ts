@@ -91,7 +91,20 @@ function flatRowToObject(row: FlatRow): unknown {
   return result;
 }
 
-export function materialize(row: any, projection: Projection): any {
+export function materialize(row: any | null, projection: Projection): any {
+  assert(row !== undefined, 'invalid row: ' + row);
+
+  if (row === null) {
+    if (
+      (projection.type === 'scalar' && projection.scalarType.nullable) ||
+      (projection.type === 'object' && projection.nullable)
+    ) {
+      return null;
+    } else {
+      throw new Error('got null for non-nullable row');
+    }
+  }
+
   for (const key of Object.keys(row)) {
     if (key.startsWith(SYSTEM_COLUMN_PREFIX)) {
       delete row[key];

@@ -913,43 +913,57 @@ export abstract class Query<T extends ValidValue<T>> {
 
   max<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return new QueryTerminatorExpr('max', this.map(selector));
   }
 
   min<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return new QueryTerminatorExpr('min', this.map(selector));
   }
 
   mean<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return new QueryTerminatorExpr('mean', this.map(selector));
   }
 
   avg<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return this.mean(selector);
   }
 
   average<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return this.mean(selector);
   }
 
   sum<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return new QueryTerminatorExpr('sum', this.map(selector));
   }
 
   first<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<ConvertScalarMappingToScalarValue<Scalar>>> {
+  ): QueryTerminatorExpr<Expand<
+    ConvertScalarMappingToScalarValue<Scalar>
+  > | null> {
     return new QueryTerminatorExpr('first', this.map(selector));
   }
 

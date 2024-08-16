@@ -1,4 +1,5 @@
 import {match} from 'ts-pattern';
+import {Connector, materialize} from '../connector.js';
 import {ScalarDescriptor, scalarDescriptorToScalarType} from '../descriptor.js';
 import {
   Literal,
@@ -6,9 +7,11 @@ import {
   SingleLiteralValue,
   inferLiteral,
 } from '../literal.js';
+import {optimize} from '../sql/optimizer.js';
 import {Assert, Equal} from '../types/query.js';
 import {DeriveScalar} from '../types/schema.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
+import {compileQuery} from './compiler.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
 import {Query, QuerySource} from './query.js';
 import {SqlTemplate} from './schema.js';
@@ -1258,26 +1261,27 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
     super();
   }
 
+  async fetch(connector: Connector): Promise<T> {
+    const command = connector.render(optimize(compileQuery(this)));
+    const rows = await connector.query({
+      sql: command.sql,
+      args: command.args,
+    });
+
+    return materialize(rows[0] ?? null, this.projection());
+  }
+
   visit<T>(visitor: ExprVisitor<T>): T {
     return visitor.queryTerminator(this);
   }
 
   projection(): Projection {
-    if (this.terminator === 'max' || this.terminator === 'min') {
-      const queryProj = this.query.projection;
-      assert(
-        queryProj.type === 'scalar',
-        'query projection is not scalar: ' + queryProj.type
-      );
-      return {
-        type: 'scalar',
-        scalarType: {
-          ...queryProj.scalarType,
-          nullable: true,
-        },
-        expr: this,
-      };
-    } else if (this.terminator === 'sum' || this.terminator === 'mean') {
+    if (
+      this.terminator === 'sum' ||
+      this.terminator === 'mean' ||
+      this.terminator === 'max' ||
+      this.terminator === 'min'
+    ) {
       const queryProj = this.query.projection;
       assert(
         queryProj.type === 'scalar',

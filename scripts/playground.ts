@@ -31,8 +31,6 @@ async function init(variant: string) {
 
   const initScripts = createInitSqlScript('sqlite');
 
-  console.log(initScripts.join('\n'));
-
   for (const script of initScripts) {
     await connector.execute(script);
   }
@@ -106,18 +104,23 @@ async function init(variant: string) {
     }
   }
 
-  return {execute, close: () => connector.close()};
+  return {execute, close: () => connector.close(), connector};
 }
 
 (async () => {
-  const {execute, close} = await init('pg');
+  const {execute, close, connector} = await init('sqlite3');
 
   try {
-    const query = Query.table({name: 'users', schema: {id: 'i32'}}).map(
-      x => x.id
+    const query = Query.table({name: 'users', schema: {id: 'i32'}});
+
+    console.log(
+      await query
+        .filter(x => false)
+        .sum(x => x.id)
+        .fetch(connector)
     );
 
-    await execute(query, {noOpt: false});
+    // await execute(query, {noOpt: false});
   } finally {
     await close();
   }
