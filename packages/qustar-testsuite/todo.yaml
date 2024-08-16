@@ -1,2 +1,3 @@
 - remove vitest dependency, use some lib for assertions
 - add first terminator tests
+- add fetchFirst tests

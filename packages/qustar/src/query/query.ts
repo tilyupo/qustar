@@ -336,16 +336,9 @@ export abstract class Query<T extends ValidValue<T>> {
    * @param connector database connector that will be used to run the query
    * @returns all rows that match the query
    * @example
-   *  import {PgConnector} from 'qustar-pg';
-   *
-   *  // you can use any connector, postgresql as an example
-   *  const connector = new PgConnector(
-   *    'postgresql://user:passwd@localhost:5432'
-   *  );
-   *
-   *  const users = query.execute(connector);
+   *  await usersQuery.fetch(connector);
    */
-  async execute(connector: Connector): Promise<T[]> {
+  async fetch(connector: Connector): Promise<T[]> {
     const command = connector.render(this.pipe(compileQuery, optimize));
     const rows = await connector.query({
       sql: command.sql,
@@ -353,6 +346,22 @@ export abstract class Query<T extends ValidValue<T>> {
     });
 
     return rows.map(row => materialize(row, this.projection));
+  }
+
+  /**
+   * Runs the query using the connector and returns the first matching row
+   * @param connector database connector that will be used to run the query
+   * @returns first row that matches the query
+   * @example
+   *  await usersQuery.fetchFirst(connector);
+   */
+  async fetchFirst(connector: Connector): Promise<T | null> {
+    const rows = await this.limit(1).fetch(connector);
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return rows[0];
   }
 
   // modificators

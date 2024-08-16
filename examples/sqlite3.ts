@@ -13,7 +13,7 @@ const query = Query.table({
 });
 
 // run the query using the connector
-const users = await query.execute(connector);
+const users = await query.fetch(connector);
 
 // use the result
 console.log(users);

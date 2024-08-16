@@ -1,4 +1,6 @@
 roadmap:
+  - add fetchFirstOrThrow
+  - add safe run that catches all errors and rethrows them with github issue tracker url
 
 docs:
   - Usage doc is too verbose, Andrei whats an high level overview like https://diesel.rs/ examples
