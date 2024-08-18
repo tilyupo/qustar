@@ -98,6 +98,16 @@ export type DeriveEntity<T extends EntityDescriptor> = {
   [K in keyof T]: DeriveEntityPropertyValue<T[K]>;
 };
 
+export type DeriveInsertEntity<T extends EntityDescriptor> = {
+  [K in keyof T as T[K] extends Prop<any, infer TIsGen, infer TIsRef>
+    ? TIsGen extends true
+      ? never
+      : TIsRef extends true
+        ? never
+        : K
+    : never]: T[K] extends Prop<infer TType, any, any> ? TType : never;
+};
+
 export type DeriveEntityPropertyValue<T extends Prop<any, any, any>> =
   IsAny<T> extends true
     ? any

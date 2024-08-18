@@ -127,19 +127,12 @@ try {
       id: Q.i32(),
       title: Q.string(),
       author_id: Q.i32(),
-      author: Q.ref({
-        references: () => users,
-        condition: (post, user) => user.id.eq(post.author_id),
-      }),
     },
   });
 
-  const query = users
-    .flatMap(x => x.posts.orderByAsc(x => x.id))
-    .orderByAsc(x => x.id)
-    .map(x => x.id);
+  await users.insert({id: 4, name: 'test'}).execute(connector);
 
-  await execute(query, {noOpt: false});
+  await execute(users, {noOpt: false});
 } finally {
   await connector.close();
 }

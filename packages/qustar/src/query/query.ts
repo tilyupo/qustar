@@ -3,6 +3,7 @@ import {Connector, materialize, SqlCommand} from '../connector.js';
 import {
   DeriveEntity,
   DeriveEntityDescriptor,
+  DeriveInsertEntity,
   EntityDescriptor,
   Table,
   toSchema,
@@ -1448,7 +1449,7 @@ export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
     );
   }
 
-  insert(...rows: DeriveEntity<TSchema>[]): InsertStmt<TSchema> {
+  insert(...rows: DeriveInsertEntity<TSchema>[]): InsertStmt<TSchema> {
     return new InsertStmt(this.table, rows);
   }
 
@@ -1537,10 +1538,6 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
     );
     await connector.execute(command.sql);
   }
-
-  async exec(connector: Connector): Promise<void> {
-    return await this.execute(connector);
-  }
 }
 
 export class DeleteStmt<
@@ -1564,7 +1561,7 @@ export class InsertStmt<
 > extends Stmt<TSchema> {
   constructor(
     table: Table<TSchema>,
-    public readonly rows: DeriveEntity<TSchema>[]
+    public readonly rows: DeriveInsertEntity<TSchema>[]
   ) {
     super(table);
   }
