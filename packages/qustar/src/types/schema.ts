@@ -36,10 +36,10 @@ type DeriveRef<T extends RefDescriptor> = T extends ForwardRefDescriptor
 
 type DeriveForwardRef<T extends ForwardRefDescriptor> =
   T['required'] extends true
-    ? Query.infer<ReturnType<T['references']>>
-    : Query.infer<ReturnType<T['references']>> | null;
+    ? Query.Infer<ReturnType<T['references']>>
+    : Query.Infer<ReturnType<T['references']>> | null;
 
-type DeriveBackRef<T extends BackRefDescriptor> = Query.infer<
+type DeriveBackRef<T extends BackRefDescriptor> = Query.Infer<
   ReturnType<T['references']>
 >[];
 

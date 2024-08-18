@@ -153,8 +153,8 @@ interface GroupByOptions<T extends ValidValue<T>, Result extends Mapping> {
 export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
 export namespace Query {
-  export type infer<T extends Query<any>> = QueryValue<T>;
-  export type schema<T extends ValidateEntity<T>> = DeriveEntityDescriptor<T>;
+  export type Infer<T extends Query<any>> = QueryValue<T>;
+  export type Schema<T extends ValidateEntity<T>> = DeriveEntityDescriptor<T>;
 }
 
 export abstract class Query<T extends ValidValue<T>> {

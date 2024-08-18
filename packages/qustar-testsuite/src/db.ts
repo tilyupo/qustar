@@ -1,4 +1,4 @@
-import {Query} from 'qustar';
+import {Q, Query} from 'qustar';
 import {match} from 'ts-pattern';
 
 export interface User {
@@ -9,7 +9,7 @@ export interface User {
   comments: Comment[];
 }
 
-export const users: Query<User> = Query.table<Query.schema<User>>({
+export const users: Query<User> = Q.table<Q.Schema<User>>({
   name: 'users',
   schema: {
     id: 'i32',
@@ -36,7 +36,7 @@ export interface Post {
   comments: Comment[];
 }
 
-export const posts: Query<Post> = Query.table<Query.schema<Post>>({
+export const posts: Query<Post> = Q.table<Q.Schema<Post>>({
   name: 'posts',
   schema: {
     id: 'i32',
@@ -69,7 +69,7 @@ export interface Comment {
   parent: Comment | null;
 }
 
-export const comments: Query<Comment> = Query.table<Query.schema<Comment>>({
+export const comments: Query<Comment> = Query.table<Q.Schema<Comment>>({
   name: 'comments',
   schema: {
     id: 'i32',

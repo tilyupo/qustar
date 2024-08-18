@@ -4,6 +4,7 @@ export {compileQuery} from './query/compiler.js';
 export {Expr, QueryTerminatorExpr} from './query/expr.js';
 export {Query} from './query/query.js';
 export {sql} from './query/sql.js';
+export {Q} from './qustar.js';
 export {renderMysql} from './render/mysql.js';
 export {renderPostgresql} from './render/postgresql.js';
 export {renderSqlite} from './render/sqlite.js';
