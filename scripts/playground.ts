@@ -1,6 +1,6 @@
 /* eslint-disable n/no-extraneous-import */
 import {writeFileSync} from 'fs';
-import {Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
+import {Q, Query, QueryTerminatorExpr, compileQuery, optimize} from 'qustar';
 import {BetterSqlite3Connector} from 'qustar-better-sqlite3';
 import {PgConnector} from 'qustar-pg';
 import {Sqlite3Connector} from 'qustar-sqlite3';
@@ -108,27 +108,38 @@ async function init(variant: string) {
 }
 
 const {execute, connector: connector} = await init('sqlite3');
-
 try {
-  const users = Query.table({name: 'users', schema: {id: 'i32', name: 'text'}});
+  const users = Q.table({
+    name: 'users',
+    schema: {
+      id: Q.i32(),
+      name: Q.string(),
+      posts: Q.backRef({
+        references: () => posts,
+        condition: (user, post) => user.id.eq(post.author_id),
+      }),
+    },
+  });
 
-  await users
-    .insert({id: 4, name: 'test'}, {id: 5, name: 'new'})
-    .exec(connector);
+  const posts = Q.table({
+    name: 'posts',
+    schema: {
+      id: Q.i32(),
+      title: Q.string(),
+      author_id: Q.i32(),
+      author: Q.ref({
+        references: () => users,
+        condition: (post, user) => user.id.eq(post.author_id),
+      }),
+    },
+  });
 
-  await execute(users, {noOpt: false});
+  const query = users
+    .flatMap(x => x.posts.orderByAsc(x => x.id))
+    .orderByAsc(x => x.id)
+    .map(x => x.id);
 
-  await users
-    .filter(x => x.id.eq(1))
-    .delete()
-    .execute(connector);
-  await execute(users, {noOpt: false});
-  await users
-    .filter(x => x.id.eq(3))
-    .update(x => ({name: x.name.concat(' new name'), id: x.id.mul(10)}))
-    .execute(connector);
-
-  await execute(users, {noOpt: false});
+  await execute(query, {noOpt: false});
 } finally {
   await connector.close();
 }

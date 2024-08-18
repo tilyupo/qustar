@@ -11,6 +11,7 @@ import {Query} from './query.js';
 export interface Field {
   readonly scalarType: SingleScalarType;
   readonly name: string;
+  readonly isGenerated: boolean;
 }
 
 export interface Schema {
@@ -55,12 +56,12 @@ export interface GenericRef<TType extends string> {
   readonly condition: JoinFilterFn<any, any>;
 }
 
-export interface ParentRef extends GenericRef<'parent'> {
+export interface ForwardRef extends GenericRef<'parent'> {
   readonly nullable: boolean;
 }
 
-export interface ChildrenRef extends GenericRef<'children'> {
+export interface BackRef extends GenericRef<'children'> {
   readonly nullable: false;
 }
 
-export type Ref = ParentRef | ChildrenRef;
+export type Ref = ForwardRef | BackRef;

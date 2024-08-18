@@ -12,18 +12,16 @@ export interface User {
 export const users: Query<User> = Q.table<Q.Schema<User>>({
   name: 'users',
   schema: {
-    id: 'i32',
-    name: 'text',
-    posts: {
-      type: 'back_ref',
+    id: Q.i32(),
+    name: Q.string(),
+    posts: Q.backRef({
       references: () => posts,
       condition: (user, post) => user.id.eq(post.author_id),
-    },
-    comments: {
-      type: 'back_ref',
+    }),
+    comments: Q.backRef({
       references: () => comments,
       condition: (user, comment) => user.id.eq(comment.commenter_id),
-    },
+    }),
   },
 });
 
@@ -39,20 +37,17 @@ export interface Post {
 export const posts: Query<Post> = Q.table<Q.Schema<Post>>({
   name: 'posts',
   schema: {
-    id: 'i32',
-    title: 'text',
-    author_id: 'i32',
-    author: {
-      type: 'ref',
-      required: true,
+    id: Q.i32(),
+    title: Q.string(),
+    author_id: Q.i32(),
+    author: Q.ref({
       references: () => users,
       condition: (post, user) => user.id.eq(post.author_id),
-    },
-    comments: {
-      type: 'back_ref',
+    }),
+    comments: Q.backRef({
       references: () => comments,
       condition: (post, comment) => post.id.eq(comment.post_id),
-    },
+    }),
   },
 });
 
@@ -72,31 +67,24 @@ export interface Comment {
 export const comments: Query<Comment> = Query.table<Q.Schema<Comment>>({
   name: 'comments',
   schema: {
-    id: 'i32',
-    text: 'text',
-    post_id: 'i32',
-    commenter_id: 'i32',
-    parent_id: {type: 'i32', nullable: true},
-    deleted: {
-      type: 'boolean',
-    },
-    post: {
-      type: 'ref',
-      required: true,
+    id: Q.i32(),
+    text: Q.string(),
+    post_id: Q.i32(),
+    commenter_id: Q.i32(),
+    parent_id: Q.i32().null(),
+    deleted: Q.boolean(),
+    post: Q.ref({
       references: () => posts,
       condition: (comment, post) => post.id.eq(comment.post_id),
-    },
-    author: {
-      type: 'ref',
-      required: true,
+    }),
+    author: Q.ref({
       references: () => users,
       condition: (comment, user) => user.id.eq(comment.commenter_id),
-    },
-    parent: {
-      type: 'ref',
+    }),
+    parent: Q.ref({
       references: () => comments,
       condition: (comment, parent) => parent.id.eq(comment.parent_id),
-    },
+    }).null(),
   },
 });
 

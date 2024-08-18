@@ -1,4 +1,4 @@
-import {Query, sql} from 'qustar';
+import {Q, Query, sql} from 'qustar';
 import {SuiteContext} from '../describe.js';
 
 export function describeSql({describe, expectQuery, test}: SuiteContext) {
@@ -8,7 +8,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
         const query = Query.raw({
           sql: sql`SELECT 1 as value`,
           schema: {
-            value: 'i32',
+            value: Q.i32(),
           },
         });
 
@@ -27,8 +27,8 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
               p.id
           `,
           schema: {
-            id: 'i32',
-            idx: 'i32',
+            id: Q.i32(),
+            idx: Q.i32(),
           },
         }).map(x => ({...x, idx: x.idx.sub(1)}));
 
@@ -49,7 +49,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
             Query.raw({
               sql: sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`,
               schema: {
-                id: 'i32',
+                id: Q.i32(),
               },
             }).sum(x => x.id)
           );
@@ -61,14 +61,12 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
         const query = Query.raw({
           sql: sql`SELECT * FROM posts`,
           schema: {
-            author_id: {type: 'i32'},
-            id: 'i32',
-            author: {
-              type: 'ref',
-              required: true,
+            author_id: Q.i32(),
+            id: Q.i32(),
+            author: Q.ref({
               references: () => users,
               condition: (post, user) => post.author_id.eq(user.id),
-            },
+            }),
           },
         })
           .orderByAsc(x => x.id)

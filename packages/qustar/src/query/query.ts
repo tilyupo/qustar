@@ -1,6 +1,12 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
-import {EntityDescriptor, Table, toSchema} from '../descriptor.js';
+import {
+  DeriveEntity,
+  DeriveEntityDescriptor,
+  EntityDescriptor,
+  Table,
+  toSchema,
+} from '../descriptor.js';
 import {SingleLiteralValue} from '../literal.js';
 import {renderMysql} from '../render/mysql.js';
 import {renderPostgresql} from '../render/postgresql.js';
@@ -24,11 +30,6 @@ import {
   ValidValue,
 } from '../types/query.js';
 import {
-  DeriveEntity,
-  DeriveEntityDescriptor,
-  ValidateEntity,
-} from '../types/schema.js';
-import {
   arrayEqual,
   assert,
   assertNever,
@@ -50,7 +51,7 @@ import {
   PropProjection,
   ScalarProjection,
 } from './projection.js';
-import {ChildrenRef, ParentRef, Ref, Schema, SqlTemplate} from './schema.js';
+import {BackRef, ForwardRef, Ref, Schema, SqlTemplate} from './schema.js';
 
 export type Dialect = 'sqlite' | 'postgresql' | 'mysql';
 export type JoinType = 'inner' | 'left' | 'right';
@@ -154,7 +155,7 @@ export type RenderOptions = CompilationOptions & {readonly optimize?: boolean};
 
 export namespace Query {
   export type Infer<T extends Query<any>> = QueryValue<T>;
-  export type Schema<T extends ValidateEntity<T>> = DeriveEntityDescriptor<T>;
+  export type Schema<T extends object> = DeriveEntityDescriptor<T>;
 }
 
 export abstract class Query<T extends ValidValue<T>> {
@@ -1130,14 +1131,17 @@ function createRefHandle(locator: LocatorExpr<any>, ref: Ref): any {
 
 export function createChildrenRefHandle(
   parent: LocatorExpr<any>,
-  ref: ChildrenRef
+  ref: BackRef
 ) {
   return FilterQuery.create(ref.child(), child =>
     ref.condition(createHandle(parent), child)
   );
 }
 
-function createParentRefHandle(locator: LocatorExpr<any>, ref: ParentRef): any {
+function createParentRefHandle(
+  locator: LocatorExpr<any>,
+  ref: ForwardRef
+): any {
   return createHandle(locator.push(ref.path));
 }
 
@@ -1531,7 +1535,6 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
       command.args.length === 0,
       'parametrized statements are not supported'
     );
-    console.log(command.sql);
     await connector.execute(command.sql);
   }
 

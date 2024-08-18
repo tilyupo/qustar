@@ -1,6 +1,10 @@
 import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
-import {ScalarDescriptor, scalarDescriptorToScalarType} from '../descriptor.js';
+import {
+  DeriveEntityPropertyValue,
+  scalarDescriptorToScalarType,
+  SingleScalarDescriptor,
+} from '../descriptor.js';
 import {
   inferLiteral,
   Literal,
@@ -12,7 +16,6 @@ import {renderPostgresql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
 import {Assert, Equal} from '../types/query.js';
-import {DeriveScalar} from '../types/schema.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {compileQuery} from './compiler.js';
 import {Projection, PropPath, ScalarProjection} from './projection.js';
@@ -71,11 +74,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // sql
 
-  static raw<const TSchema extends ScalarDescriptor>(options: {
+  static raw<const TSchema extends SingleScalarDescriptor>(options: {
     sql: SqlTemplate | string;
     schema: TSchema;
-  }): Expr<DeriveScalar<TSchema>> {
-    return new SqlExpr<DeriveScalar<TSchema>>(
+  }): Expr<DeriveEntityPropertyValue<TSchema>> {
+    return new SqlExpr<DeriveEntityPropertyValue<TSchema>>(
       SqlTemplate.derive(options.sql),
       scalarDescriptorToScalarType(options.schema)
     );

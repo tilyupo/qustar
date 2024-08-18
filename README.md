@@ -30,7 +30,7 @@ import {PgConnector} from 'qustar-pg';
 import {Query} from 'qustar';
 
 // specify a schema
-const users = await Query.table({
+const users = Query.table({
   name: 'users',
   schema: {
     id: 'i32', // 32 bit integer
