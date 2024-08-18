@@ -177,7 +177,9 @@ export function compileInsertStmt(
         }
 
         result.push(
-          assertNoLooseJoins(compileLiteralExpr(Expr.from(value), ctx))
+          assertNoLooseJoins(
+            compileLiteralExpr(new LiteralExpr(inferLiteral(value as any)), ctx)
+          )
         );
       }
 
