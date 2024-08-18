@@ -1,8 +1,8 @@
 import {SqlCommand} from '../connector.js';
-import {QuerySql} from '../sql/sql.js';
+import {Sql} from '../sql/sql.js';
 import {renderSql} from './sql.js';
 
-export function renderSqlite(sql: QuerySql): SqlCommand {
+export function renderSqlite(sql: Sql): SqlCommand {
   return renderSql(sql, {
     float32Type: 'REAL',
     int32Type: 'INT',

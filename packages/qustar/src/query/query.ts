@@ -1513,6 +1513,17 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
 
   abstract visit<T>(visitor: StmtVisitor<T>): T;
 
+  render(dialect: Dialect, options?: RenderOptions): SqlCommand {
+    const compiled = compileStmt(this, {parameters: false, ...options});
+    // todo: add optimization
+
+    return match(dialect)
+      .with('sqlite', () => renderSqlite(compiled))
+      .with('postgresql', () => renderPostgresql(compiled))
+      .with('mysql', () => renderMysql(compiled))
+      .exhaustive();
+  }
+
   async execute(connector: Connector): Promise<void> {
     const compilationResult = compileStmt(this, {parameters: false});
     const command = connector.render(compilationResult);

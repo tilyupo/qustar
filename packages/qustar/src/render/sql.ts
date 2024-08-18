@@ -21,10 +21,10 @@ import {
   InsertSql,
   LiteralSql,
   LookupSql,
-  QuerySql,
   RawSql,
   RowNumberSql,
   SelectSql,
+  Sql,
   SqlOrderBy,
   StmtSql,
   UnarySql,
@@ -64,10 +64,7 @@ export interface SqlRenderingOptions {
   textType: 'TEXT' | 'CHAR' | (string & {});
 }
 
-export function renderSql(
-  sql: QuerySql | StmtSql,
-  options: SqlRenderingOptions
-): SqlCommand {
+export function renderSql(sql: Sql, options: SqlRenderingOptions): SqlCommand {
   return render(sql, new RenderingContext(options ?? {}));
 }
 

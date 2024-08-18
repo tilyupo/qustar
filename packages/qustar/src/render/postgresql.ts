@@ -1,10 +1,10 @@
 import {match} from 'ts-pattern';
 import {SqlCommand} from '../connector.js';
 import {ScalarType} from '../literal.js';
-import {QuerySql} from '../sql/sql.js';
+import {Sql} from '../sql/sql.js';
 import {renderSql} from './sql.js';
 
-export function renderPostgresql(sql: QuerySql): SqlCommand {
+export function renderPostgresql(sql: Sql): SqlCommand {
   return renderSql(sql, {
     float32Type: 'REAL',
     int32Type: 'INT',

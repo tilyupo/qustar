@@ -107,27 +107,28 @@ async function init(variant: string) {
   return {execute, connector};
 }
 
-const {execute, connector: conn} = await init('sqlite3');
+const {execute, connector: connector} = await init('sqlite3');
 
 try {
   const users = Query.table({name: 'users', schema: {id: 'i32', name: 'text'}});
 
-  await users.insert({id: 4, name: 'test'}, {id: 5, name: 'new'}).exec(conn);
+  await users
+    .insert({id: 4, name: 'test'}, {id: 5, name: 'new'})
+    .exec(connector);
 
   await execute(users, {noOpt: false});
 
   await users
     .filter(x => x.id.eq(1))
-    .filter(x => x.id.ne(2))
     .delete()
-    .execute(conn);
+    .execute(connector);
   await execute(users, {noOpt: false});
   await users
     .filter(x => x.id.eq(3))
     .update(x => ({name: x.name.concat(' new name'), id: x.id.mul(10)}))
-    .exec(conn);
+    .execute(connector);
 
   await execute(users, {noOpt: false});
 } finally {
-  await conn.close();
+  await connector.close();
 }
