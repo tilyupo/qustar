@@ -5,13 +5,16 @@ import {
   BinarySql,
   CaseSqlWhen,
   EMPTY_SELECT,
+  ExprSql,
+  LiteralSql,
   QuerySql,
   SelectSql,
   SelectSqlColumn,
   SelectSqlJoin,
-  Sql,
   SqlOrderBy,
+  SqlSet,
   SqlSource,
+  StmtSql,
   falseLiteral,
   oneLiteral,
   trueLiteral,
@@ -32,9 +35,11 @@ import {
 import {ObjectProjection, PropPath, ScalarProjection} from './projection.js';
 import {
   CombineQuery,
+  DeleteStmt,
   FilterQuery,
   FlatMapQuery,
   GroupByQuery,
+  InsertStmt,
   JoinQuery,
   MapQuery,
   OrderByQuery,
@@ -42,7 +47,9 @@ import {
   ProxyQuery,
   Query,
   QuerySource,
+  Stmt,
   UniqueQuery,
+  UpdateStmt,
   createHandle,
 } from './query.js';
 
@@ -55,8 +62,8 @@ class CompilationContext {
   private aliasCounter = 1;
   public readonly parameters: boolean;
 
-  constructor(options: CompilationOptions) {
-    this.parameters = options.parameters ?? true;
+  constructor(public readonly compilationOptions: CompilationOptions) {
+    this.parameters = compilationOptions.parameters ?? true;
   }
 
   getAlias(source: QuerySource): string {
@@ -81,7 +88,7 @@ type QueryCompilationResult = CompilationResult<QuerySql>;
 export class CompilationError extends Error {
   constructor(
     message: string,
-    public sql: Sql,
+    public sql: ExprSql,
     public joins: Join[]
   ) {
     super(message);
@@ -93,20 +100,90 @@ export function compileQuery(
   options?: CompilationOptions
 ): QuerySql {
   const ctx = new CompilationContext(options ?? {});
-  const {sql, joins} =
+  return assertNoLooseJoins(
     query instanceof Query
       ? _compileQuery(query, ctx)
-      : _compileQueryTerminatorExpr(query, ctx);
+      : _compileQueryTerminatorExpr(query, ctx)
+  );
+}
 
-  if (joins.length > 0) {
-    throw new CompilationError(
-      'loose joins are not allowed after query compilation',
-      sql,
-      [...joins]
-    );
-  }
+export function compileStmt(
+  stmt: Stmt<any>,
+  options?: CompilationOptions
+): StmtSql {
+  const ctx = new CompilationContext(options ?? {});
 
-  return sql;
+  return stmt.visit({
+    delete: x => compileDeleteStmt(x, ctx),
+    insert: x => compileInsertStmt(x, ctx),
+    update: x => compileUpdateStmt(x, ctx),
+  });
+}
+
+export function compileDeleteStmt(
+  stmt: DeleteStmt<any>,
+  ctx: CompilationContext
+): StmtSql {
+  return {
+    type: 'delete',
+    table: {
+      type: 'table',
+      table: stmt.table.name,
+      as: ctx.getAlias(stmt.source),
+    },
+    where: assertNoLooseJoins(_compileExpr(stmt.filter, ctx)),
+  };
+}
+
+export function compileUpdateStmt(
+  stmt: UpdateStmt<any>,
+  ctx: CompilationContext
+): StmtSql {
+  return {
+    type: 'update',
+    table: {
+      type: 'table',
+      table: stmt.table.name,
+      as: ctx.getAlias(stmt.source),
+    },
+    where: assertNoLooseJoins(_compileExpr(stmt.filter, ctx)),
+    set: Object.entries(stmt.set).map(
+      ([key, value]): SqlSet => ({
+        column: key,
+        value: assertNoLooseJoins(_compileExpr(Expr.from(value), ctx)),
+      })
+    ),
+  };
+}
+
+export function compileInsertStmt(
+  stmt: InsertStmt<any>,
+  ctx: CompilationContext
+): StmtSql {
+  const columns = uniqueBy(stmt.rows.flatMap(Object.keys), x => x);
+  return {
+    type: 'insert',
+    table: stmt.table.name,
+    columns,
+    rows: stmt.rows.map(row => {
+      const result: LiteralSql[] = [];
+
+      for (const column of columns) {
+        const value: unknown = row[column];
+        if (value === undefined) {
+          throw new Error(
+            'undefined is not supported in insert. Column name: ' + column
+          );
+        }
+
+        result.push(
+          assertNoLooseJoins(compileLiteralExpr(Expr.from(value), ctx))
+        );
+      }
+
+      return result;
+    }),
+  };
 }
 
 function _compileQuery(
@@ -127,7 +204,7 @@ function _compileQuery(
   });
 
   let newResultJoins: Join[];
-  let newResultSql: Sql;
+  let newResultSql: ExprSql;
   if (sql.type === 'select') {
     newResultJoins = joins.filter(join => join.rootAlias !== sql.from?.as);
     newResultSql = {
@@ -724,7 +801,7 @@ function compileGroupByQuery(
   const projection = compileProjection(query, ctx);
   const having = query.having ? _compileExpr(query.having, ctx) : undefined;
   const joins = [...projection.joins, ...(having?.joins ?? [])];
-  const groupBy: Sql[] = [];
+  const groupBy: ExprSql[] = [];
   for (const expr of query.by) {
     const sql = _compileExpr(expr, ctx);
     groupBy.push(sql.sql);
@@ -774,36 +851,34 @@ function compileFlatMapQuery(
   };
 }
 
+function assertNoLooseJoins<T>(compilationResult: CompilationResult<T>): T {
+  assert(compilationResult.joins.length === 0, 'loose joins are not allowed');
+  return compilationResult.sql;
+}
+
 export function compileExpr(
   expr: Expr<any>,
   options?: CompilationOptions
-): Sql {
-  const {sql, joins} = _compileExpr(
-    expr,
-    new CompilationContext(options ?? {})
+): ExprSql {
+  return assertNoLooseJoins(
+    _compileExpr(expr, new CompilationContext(options ?? {}))
   );
-
-  if (joins.length > 0) {
-    throw new Error('loose joins are not allowed after expr compilation');
-  }
-
-  return sql;
 }
 
 interface Join {
   readonly type: 'left' | 'inner';
-  readonly condition: Sql;
+  readonly condition: ExprSql;
   readonly right: QuerySql;
   readonly rightAlias: string;
   readonly rootAlias: string;
 }
 
-interface CompilationResult<T = Sql> {
+interface CompilationResult<T = ExprSql> {
   readonly sql: T;
   readonly joins: readonly Join[];
 }
 
-type ExprCompilationResult = CompilationResult<Sql>;
+type ExprCompilationResult = CompilationResult<ExprSql>;
 
 function _compileExpr(
   expr: Expr<any>,
@@ -838,7 +913,7 @@ function compileBinaryExpr(
 
   const nullable = lhsProj.scalarType.nullable || rhsProj.scalarType.nullable;
 
-  let naiveSql: Sql = {
+  let naiveSql: ExprSql = {
     type: 'binary',
     op: expr.op,
     lhs: lhs.sql,
@@ -933,7 +1008,7 @@ function compileBinaryExpr(
   }
 
   if (expr.op === '!=' && nullable) {
-    const lhsNullRhsNotNull: Sql = {
+    const lhsNullRhsNotNull: ExprSql = {
       type: 'binary',
       op: 'and',
       lhs: lhsProj.scalarType.nullable
@@ -952,7 +1027,7 @@ function compileBinaryExpr(
         : trueLiteral,
     };
 
-    const lhsNotNullRhsNull: Sql = {
+    const lhsNotNullRhsNull: ExprSql = {
       type: 'binary',
       op: 'and',
       lhs: lhsProj.scalarType.nullable
@@ -999,7 +1074,7 @@ function compileUnaryExpr(
 ): ExprCompilationResult {
   const {sql: inner, joins} = _compileExpr(expr.inner, ctx);
 
-  let resultSql: Sql = {
+  let resultSql: ExprSql = {
     type: 'unary',
     inner,
     op: expr.op,
@@ -1222,7 +1297,7 @@ function compileFuncExpr(
 function compileLiteralExpr(
   expr: LiteralExpr<any>,
   ctx: CompilationContext
-): ExprCompilationResult {
+): CompilationResult<LiteralSql> {
   return {
     sql: {
       type: 'literal',

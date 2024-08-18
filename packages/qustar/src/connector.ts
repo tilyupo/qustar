@@ -7,7 +7,7 @@ import {
 } from './query/compiler.js';
 import {isNumeric} from './query/expr.js';
 import {Projection, PropPath} from './query/projection.js';
-import {QuerySql} from './sql/sql.js';
+import {Sql} from './sql/sql.js';
 import {
   arrayEqual,
   assert,
@@ -42,7 +42,7 @@ export namespace SqlCommand {
 }
 
 export interface Connector {
-  render(query: QuerySql): SqlCommand;
+  render(query: Sql): SqlCommand;
   query<T = any>(command: SqlCommand | string): Promise<T[]>;
   execute(sql: string): Promise<void>;
   close(): Promise<void>;

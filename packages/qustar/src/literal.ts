@@ -101,7 +101,7 @@ export function assertSingleLiteral(
   }
 }
 
-export function inferLiteral(value: LiteralValue): Literal {
+export function inferSingleLiteral(value: SingleLiteralValue): SingleLiteral {
   // todo: add date support
 
   if (typeof value === 'string') {
@@ -143,6 +143,19 @@ export function inferLiteral(value: LiteralValue): Literal {
       type: {type: 'null', nullable: true},
       value,
     };
+  }
+
+  return assertNever(value, 'unsupported type of the value: ' + typeof value);
+}
+
+export function inferLiteral(value: LiteralValue): Literal {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'boolean' ||
+    typeof value === 'number' ||
+    value === null
+  ) {
+    return inferSingleLiteral(value);
   }
 
   if (Array.isArray(value)) {

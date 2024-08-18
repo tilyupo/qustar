@@ -1,6 +1,8 @@
 roadmap:
   - add fetchFirstOrThrow
   - add safe run that catches all errors and rethrows them with github issue tracker url
+  - add qustar/internal for connector API
+  - add stmt optimization
 
 docs:
   - Usage doc is too verbose, Andrei whats an high level overview like https://diesel.rs/ examples

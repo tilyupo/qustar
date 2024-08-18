@@ -4,6 +4,7 @@ import {
   BinarySql,
   CaseSql,
   CombinationSql,
+  ExprSql,
   FuncSql,
   LiteralSql,
   LookupSql,
@@ -13,7 +14,6 @@ import {
   SelectSql,
   SelectSqlColumn,
   SelectSqlJoin,
-  Sql,
   SqlSource,
   UnarySql,
 } from './sql.js';
@@ -45,15 +45,15 @@ interface QuerySqlMapper {
 }
 
 interface SqlMapper extends QuerySqlMapper {
-  func: (sql: FuncSql) => Sql;
+  func: (sql: FuncSql) => ExprSql;
   alias: (sql: AliasSql) => AliasSql;
-  binary: (sql: BinarySql) => Sql;
-  case: (sql: CaseSql) => Sql;
-  literal: (sql: LiteralSql) => Sql;
-  lookup: (sql: LookupSql) => Sql;
-  unary: (sql: UnarySql) => Sql;
-  raw: (sql: RawSql) => Sql;
-  rowNumber: (sql: RowNumberSql) => Sql;
+  binary: (sql: BinarySql) => ExprSql;
+  case: (sql: CaseSql) => ExprSql;
+  literal: (sql: LiteralSql) => ExprSql;
+  lookup: (sql: LookupSql) => ExprSql;
+  unary: (sql: UnarySql) => ExprSql;
+  raw: (sql: RawSql) => ExprSql;
+  rowNumber: (sql: RowNumberSql) => ExprSql;
   source: (sql: SqlSource) => SqlSource;
   column: (
     sql: SelectSqlColumn
@@ -68,7 +68,7 @@ export function mapQuery(sql: QuerySql, mapper: SqlMapper): QuerySql {
     .exhaustive();
 }
 
-export function mapSql(sql: Sql, mapper: SqlMapper): Sql {
+export function mapSql(sql: ExprSql, mapper: SqlMapper): ExprSql {
   return match(sql)
     .with({type: 'func'}, x => mapFunc(x, mapper))
     .with({type: 'alias'}, x => mapAlias(x, mapper))
@@ -84,7 +84,7 @@ export function mapSql(sql: Sql, mapper: SqlMapper): Sql {
     .exhaustive();
 }
 
-function mapFunc(sql: FuncSql, mapper: SqlMapper): Sql {
+function mapFunc(sql: FuncSql, mapper: SqlMapper): ExprSql {
   return mapper.func({
     type: sql.type,
     args: sql.args.map(x => mapSql(x, mapper)),
@@ -92,11 +92,11 @@ function mapFunc(sql: FuncSql, mapper: SqlMapper): Sql {
   });
 }
 
-function mapAlias(sql: AliasSql, mapper: SqlMapper): Sql {
+function mapAlias(sql: AliasSql, mapper: SqlMapper): ExprSql {
   return mapper.alias(sql);
 }
 
-function mapBinary(sql: BinarySql, mapper: SqlMapper): Sql {
+function mapBinary(sql: BinarySql, mapper: SqlMapper): ExprSql {
   return mapper.binary({
     type: sql.type,
     op: sql.op,
@@ -105,7 +105,7 @@ function mapBinary(sql: BinarySql, mapper: SqlMapper): Sql {
   });
 }
 
-function mapCase(sql: CaseSql, mapper: SqlMapper): Sql {
+function mapCase(sql: CaseSql, mapper: SqlMapper): ExprSql {
   return mapper.case({
     type: sql.type,
     subject: mapSql(sql.subject, mapper),
@@ -126,11 +126,11 @@ function mapCombination(sql: CombinationSql, mapper: SqlMapper): QuerySql {
   });
 }
 
-function mapLiteral(sql: LiteralSql, mapper: SqlMapper): Sql {
+function mapLiteral(sql: LiteralSql, mapper: SqlMapper): ExprSql {
   return mapper.literal(sql);
 }
 
-function mapLookup(sql: LookupSql, mapper: SqlMapper): Sql {
+function mapLookup(sql: LookupSql, mapper: SqlMapper): ExprSql {
   return mapper.lookup({
     type: sql.type,
     prop: sql.prop,
@@ -203,7 +203,7 @@ export function mapSelect(sql: SelectSql, mapper: SqlMapper): SelectSql {
   });
 }
 
-function mapUnary(sql: UnarySql, mapper: SqlMapper): Sql {
+function mapUnary(sql: UnarySql, mapper: SqlMapper): ExprSql {
   return mapper.unary({
     type: sql.type,
     op: sql.op,
@@ -211,7 +211,7 @@ function mapUnary(sql: UnarySql, mapper: SqlMapper): Sql {
   });
 }
 
-function mapRaw(sql: RawSql, mapper: SqlMapper): Sql {
+function mapRaw(sql: RawSql, mapper: SqlMapper): ExprSql {
   return mapper.raw({
     type: sql.type,
     src: sql.src,
@@ -219,7 +219,7 @@ function mapRaw(sql: RawSql, mapper: SqlMapper): Sql {
   });
 }
 
-function mapRowNumber(sql: RowNumberSql, mapper: SqlMapper): Sql {
+function mapRowNumber(sql: RowNumberSql, mapper: SqlMapper): ExprSql {
   return mapper.rowNumber({
     type: sql.type,
     orderBy: sql.orderBy

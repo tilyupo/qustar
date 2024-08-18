@@ -1,7 +1,9 @@
 import {Literal} from '../literal.js';
 import {JoinType, OrderByType} from '../query/query.js';
 
-export type Sql =
+export type QuerySql = SelectSql | CombinationSql;
+
+export type ExprSql =
   | AliasSql
   | BinarySql
   | CaseSql
@@ -14,7 +16,9 @@ export type Sql =
   | RawSql
   | RowNumberSql;
 
-export type QuerySql = SelectSql | CombinationSql;
+export type StmtSql = InsertSql | DeleteSql | UpdateSql;
+
+export type Sql = ExprSql | StmtSql;
 
 export interface GenericSql<TType extends string> {
   readonly type: TType;
@@ -48,7 +52,7 @@ export type FuncSql = GenericFuncSql<
 export interface GenericFuncSql<TFunc extends string>
   extends GenericSql<'func'> {
   readonly func: TFunc;
-  readonly args: readonly Sql[];
+  readonly args: readonly ExprSql[];
 }
 
 // === literal ===
@@ -75,7 +79,7 @@ export type UnarySql = GenericUnarySql<UnarySqlOp>;
 export interface GenericUnarySql<TVariant extends string>
   extends GenericSql<'unary'> {
   readonly op: TVariant;
-  readonly inner: Sql;
+  readonly inner: ExprSql;
 }
 
 // === binary ===
@@ -107,21 +111,21 @@ export type BinarySql = GenericBinarySql<BinarySqlOp>;
 export interface GenericBinarySql<TVariant extends string>
   extends GenericSql<'binary'> {
   readonly op: TVariant;
-  readonly lhs: Sql;
-  readonly rhs: Sql;
+  readonly lhs: ExprSql;
+  readonly rhs: ExprSql;
 }
 
 // === case ===
 
 export interface CaseSql extends GenericSql<'case'> {
-  readonly subject: Sql;
+  readonly subject: ExprSql;
   readonly whens: readonly CaseSqlWhen[];
-  readonly fallback: Sql;
+  readonly fallback: ExprSql;
 }
 
 export interface CaseSqlWhen {
-  readonly condition: Sql;
-  readonly result: Sql;
+  readonly condition: ExprSql;
+  readonly result: ExprSql;
 }
 
 // === unary ===
@@ -133,7 +137,7 @@ export interface AliasSql extends GenericSql<'alias'> {
 // === path ===
 
 export interface LookupSql extends GenericSql<'lookup'> {
-  readonly subject: Sql;
+  readonly subject: ExprSql;
   readonly prop: string;
 }
 
@@ -141,7 +145,35 @@ export interface LookupSql extends GenericSql<'lookup'> {
 
 export interface RawSql extends GenericSql<'raw'> {
   readonly src: TemplateStringsArray;
-  readonly args: Sql[];
+  readonly args: ExprSql[];
+}
+
+// === insert ===
+
+export interface InsertSql extends GenericSql<'insert'> {
+  readonly table: string;
+  readonly columns: string[];
+  readonly rows: LiteralSql[][];
+}
+
+// === delete ===
+
+export interface DeleteSql extends GenericSql<'delete'> {
+  readonly table: TableSqlSource;
+  readonly where: ExprSql;
+}
+
+// === update ===
+
+export interface SqlSet {
+  readonly column: string;
+  readonly value: ExprSql;
+}
+
+export interface UpdateSql extends GenericSql<'update'> {
+  readonly table: TableSqlSource;
+  readonly set: SqlSet[];
+  readonly where: ExprSql;
 }
 
 // === select ===
@@ -165,9 +197,9 @@ export interface SelectSql extends GenericSql<'select'> {
   readonly columns: readonly SelectSqlColumn[];
   readonly from: SqlSource | undefined;
   readonly joins: readonly SelectSqlJoin[];
-  readonly where: Sql | undefined;
-  readonly groupBy: readonly Sql[] | undefined;
-  readonly having: Sql | undefined;
+  readonly where: ExprSql | undefined;
+  readonly groupBy: readonly ExprSql[] | undefined;
+  readonly having: ExprSql | undefined;
   readonly orderBy: readonly SqlOrderBy[] | undefined;
   readonly limit: number | undefined;
   readonly offset: number | undefined;
@@ -176,39 +208,36 @@ export interface SelectSql extends GenericSql<'select'> {
 // select select
 
 export interface SelectSqlColumn {
-  readonly expr: Sql;
+  readonly expr: ExprSql;
   readonly as: string;
 }
 
 // select from
 
-export interface GenericSelectSqlFrom<TType extends string> {
+export interface GenericSqlSource<TType extends string> {
   readonly type: TType;
   readonly as: string;
 }
 
-export interface SelectSqlFromQuery extends GenericSelectSqlFrom<'query'> {
+export interface QuerySqlSource extends GenericSqlSource<'query'> {
   readonly query: QuerySql;
 }
 
-export interface SelectSqlFromTable extends GenericSelectSqlFrom<'table'> {
+export interface TableSqlSource extends GenericSqlSource<'table'> {
   readonly table: string;
 }
 
-export interface SelectSqlFromSql extends GenericSelectSqlFrom<'sql'> {
+export interface RawSqlSource extends GenericSqlSource<'sql'> {
   readonly sql: RawSql;
 }
 
-export type SqlSource =
-  | SelectSqlFromTable
-  | SelectSqlFromQuery
-  | SelectSqlFromSql;
+export type SqlSource = TableSqlSource | QuerySqlSource | RawSqlSource;
 
 // select join
 
 export interface SelectSqlJoin {
   readonly right: SqlSource;
-  readonly condition: Sql;
+  readonly condition: ExprSql;
   readonly type: JoinType;
   readonly lateral: boolean;
 }
@@ -217,7 +246,7 @@ export interface SelectSqlJoin {
 
 export interface SqlOrderBy {
   readonly type: OrderByType;
-  readonly expr: Sql;
+  readonly expr: ExprSql;
 }
 
 // === combination ===

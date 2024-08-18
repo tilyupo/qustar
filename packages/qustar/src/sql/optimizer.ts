@@ -4,12 +4,12 @@ import {assert, compose} from '../utils.js';
 import {ID_SQL_MAPPER, mapQuery, mapSelect, mapSql} from './mapper.js';
 import {
   BinarySql,
+  ExprSql,
   falseLiteral,
   LookupSql,
   nullLiteral,
   QuerySql,
   SelectSql,
-  Sql,
   trueLiteral,
 } from './sql.js';
 
@@ -45,7 +45,7 @@ export function optimize(sql: QuerySql): QuerySql {
   }
 }
 
-function optimizeLogicalBinaryTrivial(sql: BinarySql): Sql {
+function optimizeLogicalBinaryTrivial(sql: BinarySql): ExprSql {
   if (sql.op === 'and') {
     if (sql.lhs.type === 'literal' && !sql.lhs.parameter) {
       if (sql.lhs.literal.value === true) {
@@ -82,8 +82,8 @@ function optimizeLogicalBinaryTrivial(sql: BinarySql): Sql {
   return sql;
 }
 
-function propagateNull(sql: Sql): Sql {
-  function isNullLiteral(sql: Sql) {
+function propagateNull(sql: ExprSql): ExprSql {
+  function isNullLiteral(sql: ExprSql) {
     return sql.type === 'literal' && sql.literal.type.type === 'null';
   }
 
@@ -135,7 +135,7 @@ function propagateNull(sql: Sql): Sql {
   return sql;
 }
 
-function removeCoalesceToFalse(sql: Sql): Sql {
+function removeCoalesceToFalse(sql: ExprSql): ExprSql {
   if (sql.type === 'binary' && (sql.op === 'and' || sql.op === 'or')) {
     return {
       type: 'binary',
@@ -227,9 +227,9 @@ function mergeable(outer: SelectSql, inner: SelectSql): boolean {
 }
 
 function combineConditions(
-  a: Sql | undefined,
-  b: Sql | undefined
-): Sql | undefined {
+  a: ExprSql | undefined,
+  b: ExprSql | undefined
+): ExprSql | undefined {
   if (!a) {
     return b;
   }
@@ -250,7 +250,7 @@ function remapLookupRefs(
   lookup: LookupSql,
   target: SelectSql,
   targetAlias: string
-): Sql {
+): ExprSql {
   if (lookup.subject.type === 'alias' && lookup.subject.name === targetAlias) {
     const innerColumn = target.columns.find(x => x.as === lookup.prop);
 
@@ -405,7 +405,7 @@ function optimizeSelectJoins(outer: SelectSql): SelectSql {
   return result;
 }
 
-function extractDefinedAliases(sql: Sql): Set<string> {
+function extractDefinedAliases(sql: ExprSql): Set<string> {
   const result: Set<string> = new Set();
 
   mapSql(sql, {

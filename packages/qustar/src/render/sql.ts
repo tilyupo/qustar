@@ -15,16 +15,20 @@ import {
   BinarySql,
   CaseSql,
   CombinationSql,
+  DeleteSql,
+  ExprSql,
   FuncSql,
+  InsertSql,
   LiteralSql,
   LookupSql,
   QuerySql,
   RawSql,
   RowNumberSql,
   SelectSql,
-  Sql,
   SqlOrderBy,
+  StmtSql,
   UnarySql,
+  UpdateSql,
 } from '../sql/sql.js';
 import {indent} from '../utils.js';
 
@@ -61,13 +65,13 @@ export interface SqlRenderingOptions {
 }
 
 export function renderSql(
-  sql: QuerySql,
+  sql: QuerySql | StmtSql,
   options: SqlRenderingOptions
 ): SqlCommand {
   return render(sql, new RenderingContext(options ?? {}));
 }
 
-function render(sql: Sql, ctx: RenderingContext): SqlCommand {
+function render(sql: ExprSql | StmtSql, ctx: RenderingContext): SqlCommand {
   return match(sql)
     .with({type: 'func'}, x => renderFunc(x, ctx))
     .with({type: 'alias'}, x => renderAlias(x, ctx))
@@ -80,7 +84,43 @@ function render(sql: Sql, ctx: RenderingContext): SqlCommand {
     .with({type: 'unary'}, x => renderUnary(x, ctx))
     .with({type: 'raw'}, x => renderRaw(x, ctx))
     .with({type: 'row_number'}, x => renderRowNumber(x, ctx))
+    .with({type: 'delete'}, x => renderDelete(x, ctx))
+    .with({type: 'insert'}, x => renderInsert(x, ctx))
+    .with({type: 'update'}, x => renderUpdate(x, ctx))
     .exhaustive();
+}
+
+function renderDelete(sql: DeleteSql, ctx: RenderingContext): SqlCommand {
+  // todo: add escapeId for table?
+  return cmd`DELETE FROM ${sql.table.table} AS ${ctx.escapeId(sql.table.as)}\nWHERE ${render(sql.where, ctx)}`;
+}
+
+function renderInsert(sql: InsertSql, ctx: RenderingContext): SqlCommand {
+  const rows = SqlCommand.join(
+    sql.rows.map(
+      row =>
+        cmd`(${SqlCommand.join(
+          row.map(value => renderLiteral(value, ctx)),
+          ', '
+        )})`
+    ),
+    ',\n'
+  );
+
+  // todo: add escapeId for table?
+  return cmd`INSERT INTO ${sql.table} (${sql.columns.map(x => ctx.escapeId(x)).join(', ')}) VALUES ${rows}`;
+}
+
+function renderUpdate(sql: UpdateSql, ctx: RenderingContext): SqlCommand {
+  const assignments = SqlCommand.join(
+    sql.set.map(
+      assignment => cmd`${assignment.column} = ${render(assignment.value, ctx)}`
+    ),
+    ',\n'
+  );
+
+  // todo: add escapeId for table?
+  return cmd`UPDATE ${sql.table.table} AS ${ctx.escapeId(sql.table.as)}\nSET\n${indentCommand(assignments, 2, ctx)}\nWHERE ${render(sql.where, ctx)}`;
 }
 
 function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
@@ -164,7 +204,7 @@ function renderAlias(sql: AliasSql, ctx: RenderingContext): SqlCommand {
   };
 }
 
-function renderWrap(sql: Sql, ctx: RenderingContext): SqlCommand {
+function renderWrap(sql: ExprSql, ctx: RenderingContext): SqlCommand {
   const result = render(sql, ctx);
   if (
     sql.type === 'lookup' ||
@@ -451,6 +491,7 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
       )
       .with(
         {type: 'table'},
+        // todo: add escapeId for table?
         ({table, as: alias}) => cmd`FROM\n  ${table} AS ${ctx.escapeId(alias)}`
       )
       .with(
@@ -481,6 +522,7 @@ function renderSelect(sql: SelectSql, ctx: RenderingContext): SqlCommand {
         {type: 'query'},
         right => cmd`(\n${indentCommand(render(right.query, ctx), 2, ctx)}\n  )`
       )
+      // todo: add escapeId for table?
       .with({type: 'table'}, right => cmd`${right.table}`)
       .with(
         {type: 'sql'},

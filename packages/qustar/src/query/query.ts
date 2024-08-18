@@ -35,7 +35,7 @@ import {
   deduplicateFirstWins,
   startsWith,
 } from '../utils.js';
-import {CompilationOptions, compileQuery} from './compiler.js';
+import {CompilationOptions, compileQuery, compileStmt} from './compiler.js';
 import {
   Expr,
   LocatorExpr,
@@ -160,7 +160,7 @@ export namespace Query {
 export abstract class Query<T extends ValidValue<T>> {
   /**
    * Describes SQL table name and schema.
-   * @param descriptor table descriptor
+   * @param table table name and schema
    * @returns query that selects all columns form the table described in schema.
    * @example
    *  Query.table({
@@ -172,18 +172,9 @@ export abstract class Query<T extends ValidValue<T>> {
    *  })
    */
   static table<const TSchema extends EntityDescriptor>(
-    descriptor: Table<TSchema>
-  ): Query<DeriveEntity<TSchema>> {
-    const schema: (table: () => Query<any>) => Schema = table =>
-      toSchema(table, descriptor.schema);
-    const table = new ProxyQuery<DeriveEntity<TSchema>>(
-      new QuerySource({
-        type: 'table',
-        name: descriptor.name,
-        schema: schema(() => table),
-      })
-    );
-    return table;
+    table: Table<TSchema>
+  ): TableQuery<TSchema> {
+    return new TableQuery<TSchema>(table);
   }
 
   /**
@@ -1416,5 +1407,130 @@ export class GroupByQuery<T extends ValidValue<T>> extends Query<T> {
 
   visit<T>(visitor: QueryVisitor<T>): T {
     return visitor.groupBy(this);
+  }
+}
+
+export interface DeleteOptions<T extends ValidValue<T>> {
+  filter: FilterFn<T>;
+}
+
+export type UpdateFn<T extends object> = (handle: Handle<T>) => UpdateSet<T>;
+
+export interface UpdateOptions<T extends object> {
+  readonly set: UpdateFn<T>;
+  readonly filter: FilterFn<T>;
+}
+
+export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
+  DeriveEntity<TSchema>
+> {
+  constructor(public readonly table: Table<TSchema>) {
+    const schema: (query: () => Query<any>) => Schema = query =>
+      toSchema(query, table.schema);
+    super(
+      new QuerySource({
+        type: 'table',
+        name: table.name,
+        schema: schema(() => this),
+      })
+    );
+  }
+
+  delete(filter: FilterFn<DeriveEntity<TSchema>>): DeleteStmt<TSchema> {
+    return new DeleteStmt(
+      this.table,
+      this.source,
+      Expr.from(filter(createHandle(this.source)))
+    );
+  }
+
+  insert(...rows: DeriveEntity<TSchema>[]): InsertStmt<TSchema> {
+    return new InsertStmt(this.table, rows);
+  }
+
+  update(options: UpdateOptions<DeriveEntity<TSchema>>): UpdateStmt<TSchema> {
+    return new UpdateStmt(
+      this.table,
+      this.source,
+      options.set(createHandle(this.source)),
+      Expr.from(options.filter(createHandle(this.source)))
+    );
+  }
+}
+
+export interface StmtVisitor<T> {
+  delete(stmt: DeleteStmt<any>): T;
+  insert(stmt: InsertStmt<any>): T;
+  update(stmt: UpdateStmt<any>): T;
+}
+
+export abstract class Stmt<TSchema extends EntityDescriptor> {
+  constructor(public readonly table: Table<TSchema>) {}
+
+  abstract visit<T>(visitor: StmtVisitor<T>): T;
+
+  async execute(connector: Connector): Promise<void> {
+    const compilationResult = compileStmt(this, {parameters: false});
+    const command = connector.render(compilationResult);
+    assert(
+      command.args.length === 0,
+      'parametrized statements are not supported'
+    );
+    console.log(command.sql);
+    await connector.execute(command.sql);
+  }
+}
+
+export class DeleteStmt<
+  TSchema extends EntityDescriptor,
+> extends Stmt<TSchema> {
+  constructor(
+    table: Table<TSchema>,
+    public readonly source: QuerySource,
+    public readonly filter: Expr<boolean | null>
+  ) {
+    super(table);
+  }
+
+  visit<T>(visitor: StmtVisitor<T>): T {
+    return visitor.delete(this);
+  }
+}
+
+export class InsertStmt<
+  TSchema extends EntityDescriptor,
+> extends Stmt<TSchema> {
+  constructor(
+    table: Table<TSchema>,
+    public readonly rows: DeriveEntity<TSchema>[]
+  ) {
+    super(table);
+  }
+
+  visit<T>(visitor: StmtVisitor<T>): T {
+    return visitor.insert(this);
+  }
+}
+
+type UpdateSet<T extends object> = {
+  [K in keyof T]?: T[K] extends SingleLiteralValue
+    ? SingleScalarOperand<T[K]>
+    : never;
+};
+
+export class UpdateStmt<
+  TSchema extends EntityDescriptor,
+> extends Stmt<TSchema> {
+  constructor(
+    table: Table<TSchema>,
+    public readonly source: QuerySource,
+    public readonly set: UpdateSet<DeriveEntity<TSchema>>,
+    public readonly filter: Expr<boolean | null>
+  ) {
+    super(table);
+  }
+
+  visit<T>(visitor: StmtVisitor<T>): T {
+    return visitor.update(this);
   }
 }

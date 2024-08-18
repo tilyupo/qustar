@@ -17,9 +17,7 @@
     "allowUnusedLabels": false,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "lib": [
-      "es2018"
-    ],
+    "lib": ["es2018"],
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "pretty": true,
@@ -29,7 +27,5 @@
     // "noPropertyAccessFromIndexSignature": true,
     // "noUncheckedIndexedAccess": true
   },
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
