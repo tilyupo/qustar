@@ -1476,7 +1476,6 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
       command.args.length === 0,
       'parametrized statements are not supported'
     );
-    console.log(command.sql);
     await connector.execute(command.sql);
   }
 }

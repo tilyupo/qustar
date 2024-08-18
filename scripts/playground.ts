@@ -112,7 +112,9 @@ const {execute, connector} = await init('sqlite3');
 try {
   const users = Query.table({name: 'users', schema: {id: 'i32', name: 'text'}});
 
-  await users.insert({id: 4, name: 'test'}).execute(connector);
+  await users
+    .insert({id: 4, name: 'test'}, {id: 5, name: 'new'})
+    .execute(connector);
 
   await execute(users, {noOpt: false});
 
@@ -121,7 +123,7 @@ try {
   await users
     .update({
       filter: x => x.id.eq(3),
-      set: x => ({name: x.name.concat(' new name')}),
+      set: x => ({name: x.name.concat(' new name'), id: x.id.mul(10)}),
     })
     .execute(connector);
 

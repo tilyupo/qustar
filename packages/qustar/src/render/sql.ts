@@ -92,7 +92,7 @@ function render(sql: ExprSql | StmtSql, ctx: RenderingContext): SqlCommand {
 
 function renderDelete(sql: DeleteSql, ctx: RenderingContext): SqlCommand {
   // todo: add escapeId for table?
-  return cmd`DELETE FROM ${sql.table.table} AS ${ctx.escapeId(sql.table.as)}\nWHERE ${render(sql.where, ctx)}`;
+  return cmd`DELETE FROM\n  ${sql.table.table} AS ${ctx.escapeId(sql.table.as)}\nWHERE\n  ${straight(render(sql.where, ctx))}`;
 }
 
 function renderInsert(sql: InsertSql, ctx: RenderingContext): SqlCommand {
@@ -108,7 +108,7 @@ function renderInsert(sql: InsertSql, ctx: RenderingContext): SqlCommand {
   );
 
   // todo: add escapeId for table?
-  return cmd`INSERT INTO ${sql.table} (${sql.columns.map(x => ctx.escapeId(x)).join(', ')}) VALUES ${rows}`;
+  return cmd`INSERT INTO\n  ${sql.table} (${sql.columns.map(x => ctx.escapeId(x)).join(', ')})\nVALUES\n${indentCommand(rows, 1, ctx)}`;
 }
 
 function renderUpdate(sql: UpdateSql, ctx: RenderingContext): SqlCommand {
@@ -120,7 +120,7 @@ function renderUpdate(sql: UpdateSql, ctx: RenderingContext): SqlCommand {
   );
 
   // todo: add escapeId for table?
-  return cmd`UPDATE ${sql.table.table} AS ${ctx.escapeId(sql.table.as)}\nSET\n${indentCommand(assignments, 2, ctx)}\nWHERE ${render(sql.where, ctx)}`;
+  return cmd`UPDATE\n  ${sql.table.table} AS ${ctx.escapeId(sql.table.as)}\nSET\n${indentCommand(assignments, 1, ctx)}\nWHERE\n  ${straight(render(sql.where, ctx))}`;
 }
 
 function renderFunc(sql: FuncSql, ctx: RenderingContext): SqlCommand {
