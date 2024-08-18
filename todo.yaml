@@ -31,6 +31,7 @@ features:
       - raise an error in sqlite if cast to int/float has non numeric chars
       - use round in sqlite instead of cast for float -> int
   - use = ANY($1::int[]) instead of emulating array literal in PostgreSQL
+  - allow to derive schema at runtime using a connector
 
 tech:
   - refactor combine query compiler
