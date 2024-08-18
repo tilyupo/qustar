@@ -59,6 +59,9 @@ testing:
   - interpreter
   - gen
   - add query expr snapshot tests
+  - add insert tests
+  - add update tests
+  - add delete tests
 
 query compiler:
   - use one join for all props from the same ref

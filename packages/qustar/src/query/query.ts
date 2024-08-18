@@ -1418,7 +1418,7 @@ export type UpdateFn<T extends object> = (handle: Handle<T>) => UpdateSet<T>;
 
 export interface UpdateOptions<T extends object> {
   readonly set: UpdateFn<T>;
-  readonly filter: FilterFn<T>;
+  readonly condition: FilterFn<T>;
 }
 
 export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
@@ -1453,7 +1453,51 @@ export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
       this.table,
       this.source,
       options.set(createHandle(this.source)),
-      Expr.from(options.filter(createHandle(this.source)))
+      Expr.from(options.condition(createHandle(this.source)))
+    );
+  }
+
+  filter(filter: FilterFn<DeriveEntity<TSchema>>): TableFilterQuery<TSchema> {
+    const source = new QuerySource({type: 'query', query: this});
+    const handle = createHandle(source);
+    const filterExpr = Expr.from(filter(handle));
+
+    return new TableFilterQuery(this.table, source, filterExpr);
+  }
+}
+
+export class TableFilterQuery<
+  TSchema extends EntityDescriptor,
+> extends FilterQuery<DeriveEntity<TSchema>> {
+  constructor(
+    public readonly table: Table<TSchema>,
+    source: QuerySource,
+    filterExpr: Expr<boolean | null>
+  ) {
+    super(source, filterExpr);
+  }
+
+  filter(filter: FilterFn<DeriveEntity<TSchema>>): TableFilterQuery<TSchema> {
+    const handle = createHandle(this.source);
+    const filterExpr = Expr.from(filter(handle));
+
+    return new TableFilterQuery(
+      this.table,
+      this.source,
+      Expr.and(this.filterExpr, filterExpr)
+    );
+  }
+
+  delete(): DeleteStmt<TSchema> {
+    return new DeleteStmt(this.table, this.source, this.filterExpr);
+  }
+
+  update(updateFn: UpdateFn<DeriveEntity<TSchema>>): UpdateStmt<TSchema> {
+    return new UpdateStmt(
+      this.table,
+      this.source,
+      updateFn(createHandle(this.source)),
+      this.filterExpr
     );
   }
 }
@@ -1476,7 +1520,12 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
       command.args.length === 0,
       'parametrized statements are not supported'
     );
+    console.log(command.sql);
     await connector.execute(command.sql);
+  }
+
+  async exec(connector: Connector): Promise<void> {
+    return await this.execute(connector);
   }
 }
 
