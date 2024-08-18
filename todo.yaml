@@ -39,6 +39,7 @@ tech:
   - noPropertyAccessFromIndexSignature
   - noUncheckedIndexedAccess
   - no-explicit-any
+  - make order of condition arguments consistent across descriptor and internal schema
 
 testing:
   - run tests on CI
