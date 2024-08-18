@@ -166,7 +166,7 @@ export function toSchema(
         })
         .map(
           (x): Ref => ({
-            type: 'parent',
+            type: 'forward_ref',
             child: table,
             parent: x.type.options.references,
             nullable: x.nullable,
@@ -184,7 +184,7 @@ export function toSchema(
         })
         .map(
           (x): Ref => ({
-            type: 'children',
+            type: 'back_ref',
             child: x.type.options.references,
             nullable: false,
             parent: table,

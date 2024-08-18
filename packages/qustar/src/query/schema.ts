@@ -56,11 +56,11 @@ export interface GenericRef<TType extends string> {
   readonly condition: JoinFilterFn<any, any>;
 }
 
-export interface ForwardRef extends GenericRef<'parent'> {
+export interface ForwardRef extends GenericRef<'forward_ref'> {
   readonly nullable: boolean;
 }
 
-export interface BackRef extends GenericRef<'children'> {
+export interface BackRef extends GenericRef<'back_ref'> {
   readonly nullable: false;
 }
 

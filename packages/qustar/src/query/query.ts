@@ -1120,9 +1120,9 @@ function createPropHandle(locator: LocatorExpr<any>, path: PropPath): any {
 }
 
 function createRefHandle(locator: LocatorExpr<any>, ref: Ref): any {
-  if (ref.type === 'parent') {
+  if (ref.type === 'forward_ref') {
     return createParentRefHandle(locator, ref);
-  } else if (ref.type === 'children') {
+  } else if (ref.type === 'back_ref') {
     return createChildrenRefHandle(locator, ref);
   }
 
