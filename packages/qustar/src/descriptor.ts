@@ -59,10 +59,18 @@ export class Prop<
     return new Prop({type: 'scalar', scalarTypeType: 'boolean'}, false, false);
   }
 
+  /**
+   * Will be removed in the next release.
+   * @deprecated
+   */
   static ref<T>(options: RefOptions<T>): Prop<T, false, true> {
     return new Prop({type: 'forward_ref', options}, false, false);
   }
 
+  /**
+   * Will be removed in the next release.
+   * @deprecated
+   */
   static backRef<T>(options: RefOptions<T>): Prop<T[], false, true> {
     return new Prop({type: 'back_ref', options}, false, false);
   }

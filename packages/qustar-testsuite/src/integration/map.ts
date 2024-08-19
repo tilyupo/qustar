@@ -1,4 +1,4 @@
-import {MapValueFn, Mapping} from 'qustar';
+import {MapValueFn} from 'qustar';
 import {comments, posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
 import {Post} from '../utils.js';
@@ -12,7 +12,9 @@ export function describeMap({
   describe('query', () => {
     describe('map to', () => {
       const testMap = testFactory(
-        <Result extends Mapping>(mapper: MapValueFn<Post, Result>) => {
+        // todo: use generic (workaround for typescript):
+        // <Result extends Mapping>(mapper: MapValueFn<Post, Result>) => {
+        (mapper: MapValueFn<Post, any>) => {
           return [
             posts
               .orderByAsc(x => x.id)
