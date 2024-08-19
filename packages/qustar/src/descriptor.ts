@@ -99,6 +99,7 @@ export type DeriveEntity<T extends EntityDescriptor> = {
 };
 
 export type DeriveInsertEntity<T extends EntityDescriptor> = {
+  // required non ref/generated fields
   [K in keyof T as T[K] extends Prop<any, infer TIsGen, infer TIsRef>
     ? TIsGen extends true
       ? never
@@ -106,6 +107,13 @@ export type DeriveInsertEntity<T extends EntityDescriptor> = {
         ? never
         : K
     : never]: T[K] extends Prop<infer TType, any, any> ? TType : never;
+} & {
+  // optional generated fields
+  [K in keyof T as T[K] extends Prop<any, infer TIsGen, any>
+    ? TIsGen extends true
+      ? K
+      : never
+    : never]?: T[K] extends Prop<infer TType, any, any> ? TType : never;
 };
 
 export type DeriveEntityPropertyValue<T extends Prop<any, any, any>> =
