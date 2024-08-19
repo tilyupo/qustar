@@ -1,4 +1,5 @@
-import {Q, Query} from 'qustar';
+import {Dialect, Q, Query} from 'qustar';
+import {TableQuery} from 'qustar/dist/esm/src/query/query';
 import {match} from 'ts-pattern';
 
 export interface User {
@@ -88,9 +89,39 @@ export const comments: Query<Comment> = Query.table<Q.Schema<Comment>>({
   },
 });
 
-export function createInitSqlScript(
-  dialect: 'sqlite' | 'postgresql' | 'mysql'
-) {
+export interface Job {
+  id: number;
+  name: string;
+  salary: number | null;
+  deleted: boolean;
+  post_id: number | null;
+  author_id: number;
+
+  post: Post | null;
+  author: User;
+}
+
+export const jobs: TableQuery<Q.Schema<Job>> = Q.table<Q.Schema<Job>>({
+  name: 'jobs',
+  schema: {
+    id: Q.i32(),
+    name: Q.string().generated(),
+    post_id: Q.i32().null(),
+    author_id: Q.i32(),
+    salary: Q.i32().null(),
+    deleted: Q.boolean(),
+    post: Q.ref({
+      references: () => posts,
+      condition: (comment, post) => post.id.eq(comment.post_id),
+    }).null(),
+    author: Q.ref({
+      references: () => users,
+      condition: (comment, user) => user.id.eq(comment.commenter_id),
+    }),
+  },
+});
+
+export function createInitSqlScript(dialect: Dialect) {
   const booleanType = match(dialect)
     .with('mysql', () => 'BOOLEAN')
     .with('postgresql', () => 'BOOLEAN')
@@ -160,6 +191,15 @@ export function createInitSqlScript(
       (6, '+1', 1, 1, ${falseValue}, 5),
       (7, 'me too', 1, 2, ${falseValue}, NULL),
       (8, 'nah', 2, 3, ${trueValue}, 5);
+    --
+    CREATE TABLE IF NOT EXISTS jobs (
+      id INT NOT NULL,
+      name TEXT NOT NULL DEFAULT 'unknown',
+      salary INT NULL,
+      deleted ${booleanType} NOT NULL,
+      post_id INT NULL,
+      author_id INT NOT NULL
+    );
   `.split('--');
 }
 

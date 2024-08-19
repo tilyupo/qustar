@@ -10,7 +10,8 @@ import {
   optimize,
   renderSqlite,
 } from 'qustar';
-import {Comment, EXAMPLE_DB, Post, User, comments, posts, users} from './db.js';
+import {Stmt} from 'qustar/dist/esm/src/query/query.js';
+import {Comment, EXAMPLE_DB, Post, User} from './db.js';
 import {TestApi} from './describe.js';
 import {simpleExpectDeepEqual} from './expect.js';
 
@@ -82,15 +83,9 @@ export function dump(
   );
 }
 
-export interface QuerySet {
-  readonly users: Query<User>;
-  readonly posts: Query<Post>;
-  readonly comments: Query<Comment>;
-}
-
 export interface DescribeOrmUtils {
   execute<T>(
-    query: Query<T> | QueryTerminatorExpr<any>,
+    query: Query<T> | QueryTerminatorExpr<any> | Stmt<any>,
     options?: ExecuteOptions
   ): Promise<T[]>;
   expectQuery<T>(
@@ -98,14 +93,9 @@ export interface DescribeOrmUtils {
     expected: any,
     options?: ExecuteOptions
   ): Promise<void>;
-  test(
-    name: string,
-    f: (querySet: QuerySet) => Promise<void>,
-    options?: ExecuteOptions
-  ): void;
+  test(name: string, f: () => Promise<void>, options?: ExecuteOptions): void;
   testFactory<Param, Result>(
     f: (
-      q: QuerySet,
       param: Param
     ) =>
       | Query<Result>
@@ -121,7 +111,7 @@ export interface DescribeOrmUtils {
 
 export function buildUtils(
   testApi: TestApi,
-  provider: Connector | undefined,
+  connector: Connector,
   migrationsApplied: Promise<void>
 ): DescribeOrmUtils {
   const test = testApi.test;
@@ -132,7 +122,7 @@ export function buildUtils(
     options?: ExecuteOptions
   ) {
     await migrationsApplied;
-    if (!provider) {
+    if (!connector) {
       return;
     }
 
@@ -148,8 +138,8 @@ export function buildUtils(
     if (options?.optOnly) {
       sql = optimize(sql);
     }
-    const referenceCommand = provider.render(sql);
-    const referenceRows = await provider
+    const referenceCommand = connector.render(sql);
+    const referenceRows = await connector
       .query(referenceCommand)
       .then((rows: any[]) => rows.map(x => materialize(x, projection)));
 
@@ -171,8 +161,8 @@ export function buildUtils(
           sql = optimize(sql);
         }
 
-        const command = provider.render(sql);
-        const rows = await provider
+        const command = connector.render(sql);
+        const rows = await connector
           .query(command)
           .then((rows: any[]) => rows.map(x => materialize(x, projection)));
 
@@ -233,14 +223,6 @@ export function buildUtils(
     return (expectedRows ?? result)!;
   }
 
-  const sources = [
-    {
-      posts: posts,
-      users: users,
-      comments: comments,
-    },
-  ];
-
   async function expectQuery(query, expected, options) {
     const rows = await execute(query, options);
 
@@ -266,27 +248,23 @@ export function buildUtils(
     expectQuery,
     test(name, f) {
       test(name, async () => {
-        for (const source of sources) {
-          await f(source);
-        }
+        await f();
       });
     },
     testFactory(f) {
       return (name, arg, expected, options) => {
         test(name, async () => {
-          for (const source of sources) {
-            let queries = f(source, arg);
-            if (!Array.isArray(queries)) {
-              queries = [queries];
-            }
+          let queries = f(arg);
+          if (!Array.isArray(queries)) {
+            queries = [queries];
+          }
 
-            for (const query of queries) {
-              await expectQuery(
-                query,
-                Array.isArray(expected) ? expected : [expected],
-                options
-              );
-            }
+          for (const query of queries) {
+            await expectQuery(
+              query,
+              Array.isArray(expected) ? expected : [expected],
+              options
+            );
           }
         });
       };

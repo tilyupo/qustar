@@ -1,4 +1,5 @@
 import {MapValueFn, Mapping} from 'qustar';
+import {comments, posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
 import {Post} from '../utils.js';
 
@@ -11,7 +12,7 @@ export function describeMap({
   describe('query', () => {
     describe('map to', () => {
       const testMap = testFactory(
-        <Result extends Mapping>({posts}, mapper: MapValueFn<Post, Result>) => {
+        <Result extends Mapping>(mapper: MapValueFn<Post, Result>) => {
           return [
             posts
               .orderByAsc(x => x.id)
@@ -29,7 +30,7 @@ export function describeMap({
         }
       );
 
-      test('use ref after map', async ({comments}) => {
+      test('use ref after map', async () => {
         const query = comments
           .map(x => x.post)
           .map(x => x.author)
@@ -95,7 +96,7 @@ export function describeMap({
         {one: {id: 2, lvl1: {lvl2: {lvl3: 1}}}}
       );
 
-      test('use nested ref', async ({comments}) => {
+      test('use nested ref', async () => {
         const query = comments
           .map(x => ({post: x.post}))
           .map(x => x.post.author.name);
@@ -105,7 +106,7 @@ export function describeMap({
 
       testMap('special symbols', () => ({'%&""*"-+': 1}), {'%&""*"-+': 1});
 
-      test('two refs with the same name', async ({comments}) => {
+      test('two refs with the same name', async () => {
         const query = comments
           .orderByAsc(x => x.id)
           .map(x => ({...x.post, ...x}))
@@ -114,7 +115,7 @@ export function describeMap({
         await expectQuery(query, ['Dima', 'Dima', 'Anna', 'Max']);
       });
 
-      test('two refs with the same name', async ({comments}) => {
+      test('two refs with the same name', async () => {
         const query = comments
           .map(x => ({...x, ...x.post}))
           .map(x => x.author.name);

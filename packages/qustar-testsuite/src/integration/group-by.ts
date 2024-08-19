@@ -1,4 +1,5 @@
 import {Expr, FilterFn, MapValueFn, Mapping} from 'qustar';
+import {posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
 
 export function describeGroupBy({describe, testFactory}: SuiteContext) {
@@ -6,10 +7,7 @@ export function describeGroupBy({describe, testFactory}: SuiteContext) {
     describe('groupBy', () => {
       describe('aggregation', () => {
         const testGroupBy = testFactory(
-          <Result extends Mapping>(
-            {posts},
-            mapper: MapValueFn<number, Result>
-          ) => {
+          <Result extends Mapping>(mapper: MapValueFn<number, Result>) => {
             return posts
               .groupBy({
                 by: x => x.author_id,
@@ -29,7 +27,7 @@ export function describeGroupBy({describe, testFactory}: SuiteContext) {
       });
 
       describe('having', () => {
-        const testHaving = testFactory(({posts}, having: FilterFn<number>) => {
+        const testHaving = testFactory((having: FilterFn<number>) => {
           return posts
             .groupBy({
               by: x => x.author_id,

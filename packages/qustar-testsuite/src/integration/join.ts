@@ -1,9 +1,10 @@
+import {comments, posts, users} from '../db.js';
 import {SuiteContext} from '../describe.js';
 
 export function describeJoin({describe, expectQuery, test}: SuiteContext) {
   describe('query', () => {
     describe('join', () => {
-      test('inner', async ({posts, users}) => {
+      test('inner', async () => {
         const query = posts
           .join({
             type: 'inner',
@@ -21,7 +22,7 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
         ]);
       });
 
-      test('left', async ({comments}) => {
+      test('left', async () => {
         const query = comments
           .join({
             type: 'left',
@@ -35,7 +36,7 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
         await expectQuery(query, [null, null, 5, 5]);
       });
 
-      test('right', async ({comments}) => {
+      test('right', async () => {
         const query = comments
           .join({
             type: 'right',

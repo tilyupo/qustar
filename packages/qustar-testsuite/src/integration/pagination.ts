@@ -1,4 +1,5 @@
 import {Query} from 'qustar';
+import {posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
 import {Post} from '../utils.js';
 
@@ -6,7 +7,7 @@ export function describePagination({describe, testFactory}: SuiteContext) {
   describe('query', () => {
     describe('pagination [1, 2, 3, 4, 5, 6]', () => {
       const testPagination = testFactory(
-        ({posts}, limits: [limit: number, offset: number | undefined][]) => {
+        (limits: [limit: number, offset: number | undefined][]) => {
           return limits
             .reduce(
               (q, [limit, offset]) => q.limit(limit, offset),

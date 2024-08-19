@@ -1,4 +1,5 @@
 import {FilterFn} from 'qustar';
+import {comments, posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
 import {Post} from '../utils.js';
 
@@ -10,7 +11,7 @@ export function describeFilter({
 }: SuiteContext) {
   describe('query', () => {
     describe('filter by', () => {
-      const testFilter = testFactory(({posts}, filter: FilterFn<Post>) => {
+      const testFilter = testFactory((filter: FilterFn<Post>) => {
         return posts
           .filter(filter)
           .orderByAsc(x => x.id)
@@ -33,7 +34,7 @@ export function describeFilter({
         ['Ruby', 'C++', 'Python']
       );
 
-      test("comment parent text != 'never'", async ({comments}) => {
+      test("comment parent text != 'never'", async () => {
         const query = comments
           .filter(x => x.parent.text.ne('never'))
           .map(x => x.id);

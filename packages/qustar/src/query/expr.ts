@@ -2,8 +2,8 @@ import {match} from 'ts-pattern';
 import {Connector, materialize, SqlCommand} from '../connector.js';
 import {
   DeriveEntityPropertyValue,
+  ScalarDescriptor,
   scalarDescriptorToScalarType,
-  SingleScalarDescriptor,
 } from '../descriptor.js';
 import {
   inferLiteral,
@@ -74,7 +74,7 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // sql
 
-  static rawExpr<const TSchema extends SingleScalarDescriptor>(options: {
+  static rawExpr<const TSchema extends ScalarDescriptor>(options: {
     sql: SqlTemplate | string;
     schema: TSchema;
   }): Expr<DeriveEntityPropertyValue<TSchema>> {

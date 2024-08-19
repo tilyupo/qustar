@@ -1,13 +1,13 @@
 import {Query, QueryTerminatorExpr, SingleLiteralValue} from 'qustar';
+import {posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
-import {Post, QuerySet} from '../utils.js';
+import {Post} from '../utils.js';
 
 export function describeTerminator({describe, testFactory}: SuiteContext) {
   describe('query', () => {
     describe('terminator', () => {
       const testTerm = testFactory(
         <T extends SingleLiteralValue>(
-          {posts}: QuerySet,
           mapper: (q: Query<Post>) => QueryTerminatorExpr<T>
         ) => {
           return mapper(posts);

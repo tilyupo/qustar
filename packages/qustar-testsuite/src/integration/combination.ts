@@ -1,3 +1,4 @@
+import {posts, users} from '../db.js';
 import {SuiteContext} from '../describe.js';
 
 export function describeCombination({
@@ -7,7 +8,7 @@ export function describeCombination({
 }: SuiteContext) {
   describe('query', async () => {
     describe('combination', () => {
-      test('string union all', async ({posts, users}) => {
+      test('string union all', async () => {
         const lhs = users.select(x => x.name);
         const rhs = posts.select(x => x.title);
         const query = lhs
@@ -18,7 +19,7 @@ export function describeCombination({
         await expectQuery(query, ['Anna', 'C#', 'C++']);
       });
 
-      test('object union all', async ({posts, users}) => {
+      test('object union all', async () => {
         const lhs = users.select(x => ({id: x.id, name: x.name}));
         const rhs = posts.select(x => ({id: x.id, name: x.title}));
         const query = lhs
@@ -33,7 +34,7 @@ export function describeCombination({
         ]);
       });
 
-      test('concat (asc, desc)', async ({posts, users}) => {
+      test('concat (asc, desc)', async () => {
         const lhs = users.select(x => x.id).orderByAsc(x => x);
         const rhs = posts.select(x => x.id).orderByDesc(x => x);
         const query = lhs.concat(rhs);
@@ -41,7 +42,7 @@ export function describeCombination({
         await expectQuery(query, [1, 2, 3, 6, 5, 4, 3, 2, 1]);
       });
 
-      test('concat (desc, asc)', async ({posts, users}) => {
+      test('concat (desc, asc)', async () => {
         const lhs = users.select(x => x.id).orderByDesc(x => x);
         const rhs = posts.select(x => x.id).orderByAsc(x => x);
         const query = lhs.concat(rhs);

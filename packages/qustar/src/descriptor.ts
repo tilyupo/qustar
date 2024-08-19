@@ -32,6 +32,7 @@ export class Prop<
   TIsRef extends boolean,
 > {
   __jsType?: TJsType;
+  __jsNull?: null extends TJsType ? 1 : 0;
 
   static i8(): Prop<number, false, false> {
     return new Prop({type: 'scalar', scalarTypeType: 'i8'}, false, false);
@@ -105,14 +106,18 @@ export type DeriveInsertEntity<T extends EntityDescriptor> = {
       ? never
       : TIsRef extends true
         ? never
-        : K
+        : null extends T[K]
+          ? never
+          : K
     : never]: T[K] extends Prop<infer TType, any, any> ? TType : never;
 } & {
   // optional generated fields
   [K in keyof T as T[K] extends Prop<any, infer TIsGen, any>
     ? TIsGen extends true
       ? K
-      : never
+      : null extends T[K]
+        ? K
+        : never
     : never]?: T[K] extends Prop<infer TType, any, any> ? TType : never;
 };
 
@@ -127,10 +132,22 @@ export type DeriveEntityDescriptor<T extends object> = {
   [K in keyof T]: Prop<T[K], any, any>;
 };
 
-export type SingleScalarDescriptor = Prop<SingleLiteralValue, any, any>;
+type ConsolidateBoolean<T> = T extends boolean ? boolean : T;
+
+export type ScalarDescriptor<
+  T extends SingleLiteralValue = SingleLiteralValue,
+  TActual = Exclude<T, null>,
+  TNull = null extends T ? null : never,
+> =
+  | (TActual extends any
+      ? Prop<ConsolidateBoolean<TActual> | TNull, any, any>
+      : never)
+  | (TActual extends any ? Prop<ConsolidateBoolean<TActual>, any, any> : never);
+
+type X = ScalarDescriptor;
 
 export function scalarDescriptorToScalarType(
-  prop: SingleScalarDescriptor
+  prop: ScalarDescriptor
 ): SingleScalarType {
   assert(
     prop.type.type === 'scalar',

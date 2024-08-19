@@ -1,16 +1,17 @@
-import {Expr, Q, SingleLiteralValue, sql} from 'qustar';
+import {Expr, Q, sql} from 'qustar';
+import {comments, users} from '../db.js';
 import {SuiteContext} from '../describe.js';
 import {ExecuteOptions} from '../utils.js';
 
 export function describeExpr({expectQuery, test, describe}: SuiteContext) {
   describe('expr', () => {
-    function testExpr<T extends SingleLiteralValue>(
+    function testExpr(
       name: string,
-      expr: Expr<T>,
+      expr: Expr<any>,
       expected: any,
       options?: ExecuteOptions
     ) {
-      test(name, async ({users}) => {
+      test(name, async () => {
         const query = users
           .orderByAsc(x => x.id)
           .drop(1)
@@ -206,6 +207,11 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
 
     describe('sql', () => {
       testExpr('1 + 1', Q.rawExpr({sql: sql`1 + 1`, schema: Q.i32()}), 2);
+      testExpr(
+        '1 + NULL',
+        Q.rawExpr({sql: sql`1 + NULL`, schema: Q.i32().null()}),
+        null
+      );
       testExpr('1 + ?', Q.rawExpr({sql: sql`1 + ${2}`, schema: Q.i32()}), 3);
       testExpr(
         'SELECT 2',
@@ -213,7 +219,7 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
         2
       );
 
-      test('${comments.id} + 1', async ({comments}) => {
+      test('${comments.id} + 1', async () => {
         const query = comments
           .map(x => Expr.rawExpr({sql: sql`${x.id} + 1`, schema: Q.i32()}))
           .orderByAsc(x => x);

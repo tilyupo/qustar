@@ -1,3 +1,4 @@
+import {posts, users} from '../db.js';
 import {SuiteContext} from '../describe.js';
 
 export function describeFlatMap({
@@ -11,7 +12,7 @@ export function describeFlatMap({
       if (lateralSupport) {
         // there was a problem with ambiguous column selection because
         // system ordering __orm_system__ordering__0 was specified twice
-        test('user post ids', async ({users}) => {
+        test('user post ids', async () => {
           const query = users
             .flatMap(x => x.posts.orderByAsc(x => x.id))
             .orderByAsc(x => x.id)
@@ -21,7 +22,7 @@ export function describeFlatMap({
         });
       }
 
-      test('user posts (order by title)', async ({users}) => {
+      test('user posts (order by title)', async () => {
         const query = users
           .orderByDesc(x => x.id)
           .flatMap(x => x.posts.orderByAsc(x => x.id).map(y => y.title))
@@ -34,7 +35,7 @@ export function describeFlatMap({
         );
       });
 
-      test('user posts (preserve flat map order)', async ({users}) => {
+      test('user posts (preserve flat map order)', async () => {
         const query = users
           .orderByDesc(x => x.id)
           .flatMap(x => x.posts.orderByAsc(x => x.id).map(y => y.title));
@@ -46,7 +47,7 @@ export function describeFlatMap({
         );
       });
 
-      test('user posts preserve ordering', async ({users}) => {
+      test('user posts preserve ordering', async () => {
         const query = users
           .orderByAsc(x => x.id)
           .flatMap(x => x.posts.map(y => y.id).orderByDesc(x => x));
@@ -56,7 +57,7 @@ export function describeFlatMap({
         });
       });
 
-      test('comments boolean deleted', async ({users}) => {
+      test('comments boolean deleted', async () => {
         const query = users
           .flatMap(x => x.comments.map(x => ({id: x.id, deleted: x.deleted})))
           .orderByAsc(x => x.id)
@@ -67,7 +68,7 @@ export function describeFlatMap({
         });
       });
 
-      test('nested refs', async ({posts}) => {
+      test('nested refs', async () => {
         const query = posts
           .orderByAsc(x => x.id)
           .flatMap(post =>

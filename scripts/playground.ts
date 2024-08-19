@@ -114,10 +114,6 @@ try {
     schema: {
       id: Q.i32(),
       name: Q.string(),
-      posts: Q.backRef({
-        references: () => posts,
-        condition: (user, post) => user.id.eq(post.author_id),
-      }),
     },
   });
 
@@ -127,12 +123,26 @@ try {
       id: Q.i32(),
       title: Q.string(),
       author_id: Q.i32(),
+      author: Q.ref({
+        references: () => users,
+        condition: (post, user) => post.author_id.eq(user.id),
+      }),
+      authors: Q.backRef({
+        references: () => users,
+        condition: (post, user) => post.author_id.eq(user.id),
+      }),
     },
   });
 
+  const x = await posts.map(x => x).fetch(connector);
+  const y = await posts.map(x => ({...x, author: x.author})).fetch(connector);
+
+  console.log('x:', x);
+  console.log('y:', y);
+
   await users.insert({id: 4, name: 'test'}).execute(connector);
 
-  await execute(users, {noOpt: false});
+  // await execute(users, {noOpt: false});
 } finally {
   await connector.close();
 }

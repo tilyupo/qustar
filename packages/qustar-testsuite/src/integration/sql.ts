@@ -1,4 +1,5 @@
 import {Q, sql} from 'qustar';
+import {users} from '../db.js';
 import {SuiteContext} from '../describe.js';
 
 export function describeSql({describe, expectQuery, test}: SuiteContext) {
@@ -42,7 +43,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
         ]);
       });
 
-      test('subquery', async ({users}) => {
+      test('subquery', async () => {
         const query = users
           .orderByAsc(x => x.id)
           .map(x =>
@@ -57,7 +58,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
         await expectQuery(query, [6, 9, 6]);
       });
 
-      test('schema', async ({users}) => {
+      test('schema', async () => {
         const query = Q.rawQuery({
           sql: sql`SELECT * FROM posts`,
           schema: {

@@ -1,4 +1,5 @@
 import {MapScalarFn, ScalarMapping} from 'qustar';
+import {posts} from '../db.js';
 import {SuiteContext} from '../describe.js';
 import {Post} from '../utils.js';
 
@@ -11,10 +12,7 @@ export function describeOrder({
   describe('query', () => {
     describe('order by', () => {
       const testOrderBy = testFactory(
-        <Result extends ScalarMapping>(
-          {posts},
-          orderBy: MapScalarFn<Post, Result>
-        ) => {
+        <Result extends ScalarMapping>(orderBy: MapScalarFn<Post, Result>) => {
           return posts
             .orderByAsc(orderBy)
             .limit(3)
@@ -30,7 +28,7 @@ export function describeOrder({
         'TypeScript',
       ]);
 
-      test('user id asc post id desc', async ({posts}) => {
+      test('user id asc post id desc', async () => {
         const query = posts
           .orderByAsc(x => x.author_id)
           .thenByDesc(x => x.id)
@@ -39,7 +37,7 @@ export function describeOrder({
         await expectQuery(query, [3, 2, 1, 5, 4, 6]);
       });
 
-      test('user id desc post id asc', async ({posts}) => {
+      test('user id desc post id asc', async () => {
         const query = posts
           .orderByDesc(x => x.author_id)
           .thenByAsc(x => x.id)
@@ -48,7 +46,7 @@ export function describeOrder({
         await expectQuery(query, [6, 4, 5, 1, 2, 3]);
       });
 
-      test('order by select', async ({posts}) => {
+      test('order by select', async () => {
         const query = posts.map(x => x.comments.count()).orderByAsc(x => x);
 
         await expectQuery(query, [0, 0, 0, 0, 1, 3]);

@@ -1,14 +1,16 @@
 import {createInitSqlScript, describeConnector} from 'qustar-testsuite';
-import {describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {Mysql2Connector} from '../src/mysql2.js';
 
 describeConnector(
-  {test, describe, expectDeepEqual: (a, b, m) => expect(a).to.deep.equal(b, m)},
   {
-    connector: new Mysql2Connector(
-      'mysql://qustar:test@localhost:22784/qustar'
-    ),
-    initSql: createInitSqlScript('mysql'),
+    test,
+    describe,
+    expectDeepEqual: (a, b, m) => expect(a).to.deep.equal(b, m),
+    beforeEach,
+    afterEach,
   },
+  new Mysql2Connector('mysql://qustar:test@localhost:22784/qustar'),
+  createInitSqlScript('mysql'),
   {fuzzing: false}
 );

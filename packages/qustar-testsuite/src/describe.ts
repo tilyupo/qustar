@@ -15,6 +15,8 @@ import {buildUtils, DescribeOrmUtils} from './utils.js';
 export interface TestApi {
   test: (name: string, f: () => Promise<void> | void) => void;
   describe: (name: string, f: () => Promise<void> | void) => void;
+  beforeEach: (fn: () => Promise<void>) => void;
+  afterEach: (fn: () => Promise<void>) => void;
   expectDeepEqual?: <T>(a: T, b: T, message?: string) => void;
 }
 
@@ -26,25 +28,24 @@ export interface TestSuiteOptions {
 
 export function describeConnectorInternal(
   api: TestApi,
-  connOptions: {connector: Connector; initSql: string | string[]} | undefined,
+  connector: Connector,
+  initSql: string | string[],
   options: TestSuiteOptions
 ) {
-  let migrationsApplied = Promise.resolve();
-  if (connOptions) {
-    migrationsApplied = (async () => {
-      const scripts = Array.isArray(connOptions.initSql)
-        ? connOptions.initSql
-        : [connOptions.initSql];
-      for (const script of scripts) {
-        await connOptions.connector.execute(script);
-      }
-    })();
-  }
+  const migrationsApplied = (async () => {
+    const scripts = Array.isArray(initSql) ? initSql : [initSql];
+    for (const script of scripts) {
+      await connector.execute(script);
+    }
+  })();
 
   const ctx: SuiteContext = {
-    ...buildUtils(api, connOptions?.connector, migrationsApplied),
+    ...buildUtils(api, connector, migrationsApplied),
     describe: api.describe,
     lateralSupport: options.lateralSupport,
+    connector,
+    beforeEach: api.beforeEach,
+    afterEach: api.afterEach,
   };
 
   describeCombination(ctx);
@@ -69,10 +70,11 @@ export function describeConnectorInternal(
 
 export function describeConnector(
   api: TestApi,
-  connOptions: {connector: Connector; initSql: string | string[]} | undefined,
+  connector: Connector,
+  initSql: string | string[],
   options: Partial<TestSuiteOptions>
 ) {
-  describeConnectorInternal(api, connOptions, {
+  describeConnectorInternal(api, connector, initSql, {
     fuzzing: true,
     rawSql: true,
     lateralSupport: options.lateralSupport ?? true,
@@ -82,5 +84,8 @@ export function describeConnector(
 
 export interface SuiteContext extends DescribeOrmUtils {
   describe: (name: string, f: () => Promise<void> | void) => void;
+  beforeEach: (fn: () => Promise<void>) => void;
+  afterEach: (fn: () => Promise<void>) => void;
   lateralSupport: boolean;
+  connector: Connector;
 }
