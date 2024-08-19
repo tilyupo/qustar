@@ -7,9 +7,9 @@ Query SQL database through an array-like API.
 
 ## Features
 
-✅ High level query builder that doesn't limit you (seriously)  
+✅ Expressive AND declarative query builder  
 ✅ TypeScript support  
-✅ Supports any database through a connector API:  
+✅ Supports many databases out of the box:  
   ✅ PostgreSQL  
   ✅ SQLite  
   ✅ MySQL  
@@ -19,9 +19,10 @@ Query SQL database through an array-like API.
   ⬜ ClickHouse  
   ⬜ CockroachDB  
   ⬜ PlanetScale  
+  ⬜ Custom Connector  
 ✅ Navigation properties  
-✅ No codegen required  
-✅ All queries are translated into 100% SQL  
+✅ Codegen free  
+✅ Surprise free, all queries produce 100% SQL  
 ✅ Raw SQL support  
 ⬜ Migrations  
 ⬜ Transactions
