@@ -152,8 +152,6 @@ export type ScalarDescriptor<
       : never)
   | (TActual extends any ? Prop<ConsolidateBoolean<TActual>, any, any> : never);
 
-type X = ScalarDescriptor;
-
 export function scalarDescriptorToScalarType(
   prop: ScalarDescriptor
 ): SingleScalarType {
