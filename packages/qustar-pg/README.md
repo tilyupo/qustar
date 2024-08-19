@@ -15,7 +15,7 @@ npm install qustar qustar-pg pg
 Here is a minimal example:
 
 ```ts
-import {Query} from 'qustar';
+import {Q} from 'qustar';
 import {PgConnector} from 'qustar-pg';
 
 // create a connector for PostgreSQL database
@@ -24,10 +24,10 @@ const connector = new PgConnector(
 );
 
 // construct a query
-const query = Query.table({
+const query = Q.table({
   name: 'users',
   schema: {
-    id: 'i32',
+    id: Q.i32(),
   },
 });
 

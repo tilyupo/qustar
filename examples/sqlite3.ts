@@ -1,14 +1,14 @@
-import {Query} from 'qustar';
+import {Q} from 'qustar';
 import {Sqlite3Connector} from 'qustar-sqlite3';
 
 // create a connector for in-memory SQLite database
 const connector = new Sqlite3Connector(':memory:');
 
 // construct a query
-const query = Query.table({
+const query = Q.table({
   name: 'users',
   schema: {
-    id: 'i32',
+    id: Q.i32(),
   },
 });
 

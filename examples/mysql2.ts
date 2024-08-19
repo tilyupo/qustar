@@ -1,4 +1,4 @@
-import {Query} from 'qustar';
+import {Q} from 'qustar';
 import {Mysql2Connector} from 'qustar-mysql2';
 
 // create a connector for MySQL database
@@ -7,10 +7,10 @@ const connector = new Mysql2Connector(
 );
 
 // construct a query
-const query = Query.table({
+const query = Q.table({
   name: 'users',
   schema: {
-    id: 'i32',
+    id: Q.i32(),
   },
 });
 

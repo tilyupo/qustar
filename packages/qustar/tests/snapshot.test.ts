@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'vitest';
 import {Query} from '../src/query/query.js';
+import {Q} from '../src/qustar.js';
 
 expect.addSnapshotSerializer({
   test(val) {
@@ -13,7 +14,7 @@ expect.addSnapshotSerializer({
 describe('snapshot', () => {
   test('eq', () => {
     expect(
-      Query.table({name: 'users', schema: {id: 'i32'}})
+      Query.table({name: 'users', schema: {id: Q.i32()}})
         .filter(x => x.id.eq(1))
         .render('postgresql').sql
     ).toMatchInlineSnapshot(/* sql */ `
@@ -29,7 +30,7 @@ describe('snapshot', () => {
   test('innerJoin', () => {
     const comments = Query.table({
       name: 'comments',
-      schema: {parent_id: {type: 'i32', nullable: true}, id: 'i32'},
+      schema: {parent_id: Q.i32().null(), id: Q.i32()},
     });
     expect(
       comments

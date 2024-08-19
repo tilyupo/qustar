@@ -74,7 +74,7 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // sql
 
-  static raw<const TSchema extends SingleScalarDescriptor>(options: {
+  static rawExpr<const TSchema extends SingleScalarDescriptor>(options: {
     sql: SqlTemplate | string;
     schema: TSchema;
   }): Expr<DeriveEntityPropertyValue<TSchema>> {

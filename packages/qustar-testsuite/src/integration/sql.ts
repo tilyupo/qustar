@@ -1,11 +1,11 @@
-import {Q, Query, sql} from 'qustar';
+import {Q, sql} from 'qustar';
 import {SuiteContext} from '../describe.js';
 
 export function describeSql({describe, expectQuery, test}: SuiteContext) {
   describe('query', () => {
     describe('sql', () => {
       test('SELECT 1 as value', async () => {
-        const query = Query.raw({
+        const query = Q.rawQuery({
           sql: sql`SELECT 1 as value`,
           schema: {
             value: Q.i32(),
@@ -16,7 +16,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
       });
 
       test('row_number', async () => {
-        const query = Query.raw({
+        const query = Q.rawQuery({
           sql: sql`
             SELECT
               p.id,
@@ -46,7 +46,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
         const query = users
           .orderByAsc(x => x.id)
           .map(x =>
-            Query.raw({
+            Q.rawQuery({
               sql: sql`SELECT * FROM posts as p WHERE p.author_id = ${x.id}`,
               schema: {
                 id: Q.i32(),
@@ -58,7 +58,7 @@ export function describeSql({describe, expectQuery, test}: SuiteContext) {
       });
 
       test('schema', async ({users}) => {
-        const query = Query.raw({
+        const query = Q.rawQuery({
           sql: sql`SELECT * FROM posts`,
           schema: {
             author_id: Q.i32(),

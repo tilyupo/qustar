@@ -27,16 +27,16 @@ Here an example usage of qustar:
 
 ```ts
 import {PgConnector} from 'qustar-pg';
-import {Query} from 'qustar';
+import {Q} from 'qustar';
 
 // specify a schema
-const users = Query.table({
+const users = Q.table({
   name: 'users',
   schema: {
-    id: 'i32', // 32 bit integer
-    firstName: 'text', // any text
-    lastName: 'text',
-    age: {type: 'i32', nullable: true}, // nullable integer
+    id: Q.i32(), // 32 bit integer
+    firstName: Q.string(), // any text
+    lastName: Q.string(),
+    age: Q.i32().null(), // nullable integer
   },
 });
 
@@ -80,9 +80,9 @@ If you implemented your own connector, let me know and I will add it to the list
 Any query starts from a table or a [raw sql](#raw-sql). We will talk more about raw queries later, for now the basic usage looks like this:
 
 ```ts
-import {Query} from 'qustar';
+import {Q} from 'qustar';
 
-const users = Query.table({
+const users = Q.table({
   name: 'users',
   schema: {
     id: 'i32',
@@ -111,10 +111,10 @@ For methods like `.filter` or `.map` you pass a callback which returns an _expre
 // for arrays you would write: users.filter(x => x.age + 1 === x.height - 5)
 const a = users.filter(user => user.age.add(1).eq(user.height.sub(5)));
 
-// you can also use Expr to achieve the same
-import {Expr} from 'qustar';
+// you can also use Q.eq to achieve the same
+import {Q} from 'qustar';
 
-const b = users.map(user => Expr.eq(user.age.add(1), user.height.sub(5));
+const b = users.map(user => Q.eq(user.age.add(1), user.height.sub(5));
 ```
 
 We can't use native operators like `+` or `===` because JavaScript doesn't support operator overloading. You can find full list of supported expression operations [here](#expressions).
@@ -126,7 +126,7 @@ Now lets talk about queries and expressions.
 #### .filter(condition)
 
 ```ts
-const adults = Query.table('users')
+const adults = Q.table('users')
   // users with age >= 18
   .filter(user => /* any expression */ user.age.gte(18));
 ```
@@ -134,13 +134,13 @@ const adults = Query.table('users')
 #### .map(mapper)
 
 ```ts
-const userIds = Query.table('users').map(user => user.id);
+const userIds = Q.table('users').map(user => user.id);
 
-const user = Query.table('users')
+const user = Q.table('users')
   // you can map to an object
   .map(user => ({id: user.id, name: user.name}));
 
-const userInfo = Query.table('users')
+const userInfo = Q.table('users')
   // you can map to nested objects
   .map(user => ({
     id: user.id,
@@ -154,7 +154,7 @@ const userInfo = Query.table('users')
 #### .orderByDesc(selector), .orderByDescAsc(selector)
 
 ```ts
-const users = Query.table('users')
+const users = Q.table('users')
   // order by age in ascending order
   .orderByAsc(user => user.age)
   // then order by name in descending order
@@ -164,7 +164,7 @@ const users = Query.table('users')
 #### .drop(count), Query.limit(count)
 
 ```ts
-const users = Query.table('users')
+const users = Q.table('users')
   .orderByAsc(user => user.id)
   // skip first ten users
   .drop(10)
@@ -177,7 +177,7 @@ const users = Query.table('users')
 You can also use `.slice` method to achieve the same:
 
 ```ts
-const users = Query.table('users')
+const users = Q.table('users')
   // start = 10, end = 15
   .slice(10, 15);
 ```
@@ -187,9 +187,9 @@ const users = Query.table('users')
 Qustar supports `.innerJoin`, `.leftJoin`, `.rightJoin` and `.fullJoin`:
 
 ```ts
-const bobPosts = Query.table('posts')
+const bobPosts = Q.table('posts')
   .innerJoin({
-    right: Query.table('users'),
+    right: Q.table('users'),
     // condition is optional
     condition: (post, user) => post.authorId.eq(user.id),
     select: (post, author) => ({
@@ -203,7 +203,7 @@ const bobPosts = Query.table('posts')
 Qustar also supports refs to avoid writing joins manually each time you need a related entity:
 
 ```ts
-const posts = Query.table({
+const posts = Q.table({
   name: 'posts',
   // we don't want to specify all table columns in this example, only the ref
   additionalProperties: true,
@@ -212,7 +212,7 @@ const posts = Query.table({
       type: 'ref',
       // post can't exist without an author
       required: true,
-      references: () => Query.table('users'),
+      references: () => Q.table('users'),
       condition: (post, user) => post.authorId.eq(user.id),
     },
   },
@@ -229,7 +229,7 @@ Here we used query [schema](#schema). We will talk more about schema later.
 You can select distinct rows using `.unique` method:
 
 ```ts
-const names = Query.table('users')
+const names = Q.table('users')
   .map(user => user.name)
   .unique();
 ```
@@ -237,7 +237,7 @@ const names = Query.table('users')
 #### .groupBy(options)
 
 ```ts
-const stats = Query.table('users').groupBy({
+const stats = Q.table('users').groupBy({
   by: user => user.age,
   select: user => ({
     age: user.age,
@@ -250,8 +250,8 @@ const stats = Query.table('users').groupBy({
 #### .union(query)
 
 ```ts
-const studentNames = Query.table('students').map(student => student.name);
-const teacherNames = Query.table('teachers').map(teacher => teacher.name);
+const studentNames = Q.table('students').map(student => student.name);
+const teacherNames = Q.table('teachers').map(teacher => teacher.name);
 
 const uniqueNames = studentNames.union(teacherNames);
 ```
@@ -259,8 +259,8 @@ const uniqueNames = studentNames.union(teacherNames);
 #### .unionAll(query)
 
 ```ts
-const studentNames = Query.table('students').map(student => student.name);
-const teacherNames = Query.table('teachers').map(teacher => teacher.name);
+const studentNames = Q.table('students').map(student => student.name);
+const teacherNames = Q.table('teachers').map(teacher => teacher.name);
 
 const peopleCount = studentNames.unionAll(teacherNames).count();
 ```
@@ -268,8 +268,8 @@ const peopleCount = studentNames.unionAll(teacherNames).count();
 #### .concat(query)
 
 ```ts
-const studentNames = Query.table('students').map(student => student.name);
-const teacherNames = Query.table('teachers').map(teacher => teacher.name);
+const studentNames = Q.table('students').map(student => student.name);
+const teacherNames = Q.table('teachers').map(teacher => teacher.name);
 
 // concat preserves original ordering
 const allNames = studentNames.concat(teacherNames);
@@ -278,8 +278,8 @@ const allNames = studentNames.concat(teacherNames);
 #### .intersect(query)
 
 ```ts
-const studentNames = Query.table('students').map(student => student.name);
-const teacherNames = Query.table('teachers').map(teacher => teacher.name);
+const studentNames = Q.table('students').map(student => student.name);
+const teacherNames = Q.table('teachers').map(teacher => teacher.name);
 
 const studentAndTeacherNames = studentNames.intersect(teacherNames);
 ```
@@ -287,8 +287,8 @@ const studentAndTeacherNames = studentNames.intersect(teacherNames);
 #### .except(query)
 
 ```ts
-const studentNames = Query.table('students').map(student => student.name);
-const teacherNames = Query.table('teachers').map(teacher => teacher.name);
+const studentNames = Q.table('students').map(student => student.name);
+const teacherNames = Q.table('teachers').map(teacher => teacher.name);
 
 const studentOnlyNames = studentNames.except(teacherNames);
 ```
@@ -296,8 +296,8 @@ const studentOnlyNames = studentNames.except(teacherNames);
 #### .flatMap(mapper)
 
 ```ts
-const postsWithAuthor = Query.table('users').flatMap(user =>
-  Query.table('posts')
+const postsWithAuthor = Q.table('users').flatMap(user =>
+  Q.table('posts')
     .filter(post => post.authorId.eq(user.id))
     .map(post => ({text: post.text, author: user.name}))
 );
@@ -306,14 +306,14 @@ const postsWithAuthor = Query.table('users').flatMap(user =>
 Qustar also supports `back_ref` properties:
 
 ```ts
-const users = Query.table({
+const users = Q.table({
   name: 'users',
   // we don't want to specify all table columns in this example
   additionalProperties: true,
   schema: {
     posts: {
       type: 'back_ref',
-      references: () => Query.table('posts'),
+      references: () => Q.table('posts'),
       condition: (user, post) => user.id.eq(post.authorId),
     },
   },
@@ -329,7 +329,7 @@ const postsWithAuthor = users.flatMap(user =>
 Qustar requires you to define the schema statically:
 
 ```ts
-const users = Query.table({
+const users = Q.table({
   name: 'users',
   schema: {
     // non nullable Int32 column
@@ -343,7 +343,7 @@ const users = Query.table({
 Knowing schema ahead of time allows qustar to make some optimizations to improve resulting query. Defining query schema statically also enables you to put an entity into a nested field:
 
 ```ts
-const posts = Query.table('posts')
+const posts = Q.table('posts')
   .innerJoin({
     // users table from the above example
     right: users,
@@ -378,7 +378,7 @@ The list of supported column types:
 You can use raw SQL like so:
 
 ```ts
-const users = Query.sql`SELECT * from users`
+const users = Q.sql`SELECT * from users`
   // we must specify schema so qustar knows how to compose a query
   .schema({id: 'i32', age: 'i32'})
   .filter(user => user.age.lte(25))
@@ -388,8 +388,8 @@ const users = Query.sql`SELECT * from users`
 You can also use aliases in a nested query like so:
 
 ```ts
-const postIds = Query.table('users').flatMap(user =>
-  Query.sql`
+const postIds = Q.table('users').flatMap(user =>
+  Q.sql`
     SELECT
       id
     FROM
@@ -399,10 +399,10 @@ const postIds = Query.table('users').flatMap(user =>
 );
 ```
 
-As you can see, you must call `Query.schema` to specify columns statically:
+As you can see, you must call `Q.schema` to specify columns statically:
 
 ```ts
-const users = query: Query.sql`SELECT id, name FROM users`.schema({
+const users = query: Q.sql`SELECT id, name FROM users`.schema({
   id: {type: 'i32'},
   name: {type: 'text', nullable: true},
   // you can use 'ref' and 'back_ref' as well

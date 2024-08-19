@@ -18,7 +18,6 @@ features:
   - typescript support
   - support schema aliases for columns (in db A, in js B)
   - migrations from schema
-  - insert/delete/update
   - transactions
   - array support
   - support decimal type
@@ -118,3 +117,6 @@ done:
   - list of features at the top
   - move comparison out of why and far away
   - it's not obvious that map works at SQL level
+  - insert
+  - delete
+  - update

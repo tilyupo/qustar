@@ -186,7 +186,7 @@ export abstract class Query<T extends ValidValue<T>> {
    * @example
    *  // parametrized query
    *  import {sql} from 'qustar';
-   *  Query.raw({
+   *  Query.rawQuery({
    *    sql: sql`SELECT id FROM users WHERE id = ${42}`,
    *    schema: {
    *      id: 'i32',
@@ -195,14 +195,14 @@ export abstract class Query<T extends ValidValue<T>> {
    *
    * @example
    *  // plain string for SQL
-   *  Query.raw({
+   *  Query.rawQuery({
    *    sql: 'SELECT id FROM users WHERE id = 42',
    *    schema: {
    *      id: 'i32',
    *    }
    *  })
    */
-  static raw<const TSchema extends EntityDescriptor>(options: {
+  static rawQuery<const TSchema extends EntityDescriptor>(options: {
     sql: SqlTemplate | string;
     schema: TSchema;
   }): Query<DeriveEntity<TSchema>> {
