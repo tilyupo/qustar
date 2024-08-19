@@ -42,7 +42,7 @@ function toPostgreSqlType(type: ScalarType): string | undefined {
     })
     .with({type: 'f32'}, () => 'real')
     .with({type: 'f64'}, () => 'double precision')
-    .with({type: 'text'}, () => 'text')
+    .with({type: 'string'}, () => 'string')
     .with({type: 'null'}, () => undefined)
     .exhaustive();
 }

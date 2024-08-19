@@ -52,7 +52,7 @@ export class Prop<
     return new Prop({type: 'scalar', scalarTypeType: 'f64'}, false, false);
   }
   static string(): Prop<string, false, false> {
-    return new Prop({type: 'scalar', scalarTypeType: 'text'}, false, false);
+    return new Prop({type: 'scalar', scalarTypeType: 'string'}, false, false);
   }
   static boolean(): Prop<boolean, false, false> {
     return new Prop({type: 'scalar', scalarTypeType: 'boolean'}, false, false);

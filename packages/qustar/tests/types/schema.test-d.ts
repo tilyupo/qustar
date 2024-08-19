@@ -150,23 +150,23 @@
 //         );
 //       });
 
-//       test('text', () => {
-//         check<{x: string}>(derive({x: 'text'}));
-//         check<{x: string}>(derive<Query.Schema<{x: string}>>({x: 'text'}));
-//         check<{x: string}>(derive({x: {type: 'text'}}));
+//       test('string', () => {
+//         check<{x: string}>(derive({x: 'string'}));
+//         check<{x: string}>(derive<Query.Schema<{x: string}>>({x: 'string'}));
+//         check<{x: string}>(derive({x: {type: 'string'}}));
 //         check<{x: string}>(
-//           derive<Query.Schema<{x: string}>>({x: {type: 'text'}})
+//           derive<Query.Schema<{x: string}>>({x: {type: 'string'}})
 //         );
-//         check<{x: string}>(derive({x: {type: 'text', nullable: false}}));
+//         check<{x: string}>(derive({x: {type: 'string', nullable: false}}));
 //         check<{x: string}>(
 //           derive<Query.Schema<{x: string}>>({
-//             x: {type: 'text', nullable: false},
+//             x: {type: 'string', nullable: false},
 //           })
 //         );
-//         check<{x: string | null}>(derive({x: {type: 'text', nullable: true}}));
+//         check<{x: string | null}>(derive({x: {type: 'string', nullable: true}}));
 //         check<{x: string | null}>(
 //           derive<Query.Schema<{x: string | null}>>({
-//             x: {type: 'text', nullable: true},
+//             x: {type: 'string', nullable: true},
 //           })
 //         );
 //       });

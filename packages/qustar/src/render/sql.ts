@@ -347,7 +347,7 @@ function renderSingleLiteralInline(
     .with({type: {type: 'i64'}}, ({value}) => cmd`${value}`)
     .with({type: {type: 'null'}}, () => cmd`NULL`)
     .with(
-      {type: {type: 'text'}},
+      {type: {type: 'string'}},
       ({value}) => cmd`'${value.split("'").join("''")}'`
     )
     .exhaustive();

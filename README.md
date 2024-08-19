@@ -7,23 +7,19 @@ Query SQL database through an array-like API.
 
 ## Features
 
-✅ Expressive AND declarative query builder  
+✅ Expressive AND high-level query builder  
 ✅ TypeScript support  
-✅ Supports many databases out of the box:  
+✅ SQL databases:  
   ✅ PostgreSQL  
   ✅ SQLite  
   ✅ MySQL  
   ✅ MariaDB  
   ⬜ SQL Server  
   ⬜ Oracle  
-  ⬜ ClickHouse  
-  ⬜ CockroachDB  
-  ⬜ PlanetScale  
-  ⬜ Custom Connector  
 ✅ Navigation properties  
 ✅ Codegen free  
 ✅ Surprise free, all queries produce 100% SQL  
-✅ Raw SQL support  
+✅ Raw SQL  
 ⬜ Migrations  
 ⬜ Transactions
 
@@ -76,8 +72,8 @@ To execute query against a database you need a _connector_. There are many ready
 - PostgreSQL
   - [qustar-pg](https://www.npmjs.com/package/qustar-pg)
 - SQLite
+  - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3) (recommended)
   - [qustar-sqlite3](https://www.npmjs.com/package/qustar-sqlite3)
-  - [qustar-better-sqlite3](https://www.npmjs.com/package/qustar-better-sqlite3)
 - MySQL
   - [qustar-mysql2](https://www.npmjs.com/package/qustar-mysql2)
 - MariaDB
@@ -347,7 +343,7 @@ const users = Q.table({
     // non nullable Int32 column
     id: {type: 'i32'},
     // nullable text column
-    name: {type: 'text', nullable: true},
+    name: {type: 'string', nullable: true},
   },
 });
 ```
@@ -416,7 +412,7 @@ As you can see, you must call `Q.schema` to specify columns statically:
 ```ts
 const users = query: Q.sql`SELECT id, name FROM users`.schema({
   id: {type: 'i32'},
-  name: {type: 'text', nullable: true},
+  name: {type: 'string', nullable: true},
   // you can use 'ref' and 'back_ref' as well
 });
 ```

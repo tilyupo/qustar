@@ -31,7 +31,7 @@ export type LiteralValue = SingleLiteralValue | ArrayLiteralValue;
 
 export interface BooleanScalarType extends GenericScalarType<'boolean'> {}
 export interface NullScalarType extends GenericScalarType<'null'> {}
-export interface TextScalarType extends GenericScalarType<'text'> {}
+export interface StringScalarType extends GenericScalarType<'string'> {}
 export interface Int8ScalarType extends GenericScalarType<'i8'> {}
 export interface Int16ScalarType extends GenericScalarType<'i16'> {}
 export interface Int32ScalarType extends GenericScalarType<'i32'> {}
@@ -56,7 +56,8 @@ export interface I32Literal extends GenericLiteral<Int32ScalarType, number> {}
 export interface I64Literal extends GenericLiteral<Int64ScalarType, number> {}
 export interface F32Literal extends GenericLiteral<Float32ScalarType, number> {}
 export interface F64Literal extends GenericLiteral<Float64ScalarType, number> {}
-export interface TextLiteral extends GenericLiteral<TextScalarType, string> {}
+export interface StringLiteral
+  extends GenericLiteral<StringScalarType, string> {}
 
 export type SingleLiteral =
   | BooleanLiteral
@@ -67,7 +68,7 @@ export type SingleLiteral =
   | I64Literal
   | F32Literal
   | F64Literal
-  | TextLiteral;
+  | StringLiteral;
 
 export type ArrayLiteral = InferArrayLiteral<SingleLiteral>;
 
@@ -106,7 +107,7 @@ export function inferSingleLiteral(value: SingleLiteralValue): SingleLiteral {
 
   if (typeof value === 'string') {
     return {
-      type: {type: 'text', nullable: false},
+      type: {type: 'string', nullable: false},
       value,
     };
   }

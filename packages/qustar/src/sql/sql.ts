@@ -283,7 +283,7 @@ export const constStrLiteral: LiteralSql = {
   type: 'literal',
   parameter: false,
   literal: {
-    type: {type: 'text', nullable: false},
+    type: {type: 'string', nullable: false},
     value: 'const',
   },
 };

@@ -169,7 +169,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *    name: 'users',
    *    schema: {
    *      id: 'i32',
-   *      name: {type: 'text', nullable: true},
+   *      name: {type: 'string', nullable: true},
    *    }
    *  })
    */

@@ -800,7 +800,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: {
-          type: 'text',
+          type: 'string',
           nullable,
         },
         expr: this,
@@ -809,7 +809,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: {
-          type: 'text',
+          type: 'string',
           nullable,
         },
         expr: this,
@@ -818,7 +818,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       return {
         type: 'scalar',
         scalarType: {
-          type: 'text',
+          type: 'string',
           nullable,
         },
         expr: this,
@@ -993,8 +993,8 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
         left.type === 'scalar' && right.type === 'scalar',
         'bit operations are supported only for numbers'
       );
-      assertNumericOrChar(left.scalarType);
-      assertNumericOrChar(right.scalarType);
+      assertNumericOrString(left.scalarType);
+      assertNumericOrString(right.scalarType);
 
       return {
         type: 'scalar',
@@ -1002,8 +1002,8 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
         scalarType: {
           // todo: handle promotion gracefully
           type:
-            isChar(left.scalarType) || isChar(right.scalarType)
-              ? 'text'
+            isString(left.scalarType) || isString(right.scalarType)
+              ? 'string'
               : 'f64',
           nullable: left.scalarType.nullable || right.scalarType.nullable,
         },
@@ -1413,9 +1413,9 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 }
 
-export function assertNumericOrChar(type: ScalarType): void {
+export function assertNumericOrString(type: ScalarType): void {
   assert(
-    isNumeric(type) || isChar(type),
+    isNumeric(type) || isString(type),
     'type is not numeric nor char: ' + type.type
   );
 }
@@ -1432,10 +1432,6 @@ export function isNumeric(type: ScalarType): boolean {
   return isFloat(type) || isInt(type) || type.type === 'null';
 }
 
-export function isChar(type: ScalarType): boolean {
-  return type.type === 'text' || type.type === 'null';
-}
-
 export function isInt(type: ScalarType): boolean {
   return (
     type.type === 'i8' ||
@@ -1447,7 +1443,7 @@ export function isInt(type: ScalarType): boolean {
 }
 
 export function isString(type: ScalarType): boolean {
-  return type.type === 'text' || type.type === 'null';
+  return type.type === 'string' || type.type === 'null';
 }
 
 export function assertInt(type: ScalarType): void {
