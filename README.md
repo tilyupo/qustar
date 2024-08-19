@@ -20,7 +20,7 @@ Query SQL database through an array-like API.
   - ⬜ CockroachDB
   - ⬜ Planetscale
 - ✅ Navigation properties
-- ✅ No codegen, works with plain TypeScript/JavaScript
+- ✅ No codegen required
 - ✅ All queries are translated into 100% SQL
 - ✅ Raw SQL support
 - ⬜ Migrations
