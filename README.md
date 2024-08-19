@@ -7,24 +7,24 @@ Query SQL database through an array-like API.
 
 ## Features
 
-- [x] High level query builder that doesn't limit you (seriously)
-- [x] Full TypeScript support
-- [x] Supports any database through a connector API:
-  - [x] PostgreSQL
-  - [x] SQLite
-  - [x] MySQL
-  - [x] MariaDB
-  - [ ] SQL Server
-  - [ ] Oracle
-  - [ ] Clickhouse
-  - [ ] CockroachDB
-  - [ ] Planetscale
-- [x] Navigation properties
-- [x] No codegen, works with plain TypeScript/JavaScript
-- [x] All queries are translated into 100% SQL
-- [x] Raw SQL support
-- [ ] Migrations
-- [ ] Transactions
+- ✅ High level query builder that doesn't limit you (seriously)
+- ✅ TypeScript support
+- ✅ Supports any database through a connector API:
+  - ✅ PostgreSQL
+  - ✅ SQLite
+  - ✅ MySQL
+  - ✅ MariaDB
+  - ⬜ SQL Server
+  - ⬜ Oracle
+  - ⬜ Clickhouse
+  - ⬜ CockroachDB
+  - ⬜ Planetscale
+- ✅ Navigation properties
+- ✅ No codegen, works with plain TypeScript/JavaScript
+- ✅ All queries are translated into 100% SQL
+- ✅ Raw SQL support
+- ⬜ Migrations
+- ⬜ Transactions
 
 ## Quick start
 
