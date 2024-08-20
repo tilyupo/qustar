@@ -142,16 +142,6 @@ try {
 
   await users.insert({id: 4, name: 'test'}).execute(connector);
 
-  const q: Query<any> = 1 as any;
-  q.map(x => ({
-    ...x,
-    author: x.$refs.author,
-    $refs: {
-      ...x.$refs,
-      doubleAuthor: x.$refs.author.$refs.author,
-    },
-  }));
-
   // await execute(users, {noOpt: false});
 } finally {
   await connector.close();

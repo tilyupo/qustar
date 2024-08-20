@@ -56,7 +56,7 @@ export function describeMap({
       testMap('title column', x => x.title, 'rust');
       testMap('expression', x => x.id.add(3), 5);
       testMap('author name', x => x.author.name, 'Dima');
-      testMap('author comments count', x => x.author.comments.count(), 2);
+      testMap('author comments count', x => x.author.comments.size(), 2);
       testMap(
         'object',
         x => ({

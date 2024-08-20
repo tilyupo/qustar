@@ -13,7 +13,7 @@ export function describePagination({describe, testFactory}: SuiteContext) {
               (q, [limit, offset]) => q.limit(limit, offset),
               posts.orderByAsc(x => x.id) as Query<Post>
             )
-            .select(x => x.id);
+            .map(x => x.id);
         }
       );
 

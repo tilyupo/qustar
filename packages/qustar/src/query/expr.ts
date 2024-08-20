@@ -96,39 +96,10 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<T> {
     return Expr.from(operand).not();
   }
-  static minus<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T>;
-  static minus<T extends Nullable<number>>(
+  static negate<T extends Nullable<number>>(
     operand: SingleScalarOperand<T>
-  ): Expr<T>;
-  static minus<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs?: SingleScalarOperand<T>
   ): Expr<T> {
-    if (rhs !== undefined) {
-      return Expr.from(lhs).minus(rhs);
-    } else {
-      return Expr.from(lhs).minus();
-    }
-  }
-  static plus<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T>;
-  static plus<T extends Nullable<number>>(
-    operand: SingleScalarOperand<T>
-  ): Expr<T>;
-  static plus<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs?: SingleScalarOperand<T>
-  ): Expr<T> {
-    if (rhs !== undefined) {
-      return Expr.from(lhs).plus(rhs);
-    } else {
-      return Expr.from(lhs).plus();
-    }
+    return Expr.from(operand).negate();
   }
 
   // binary
@@ -483,23 +454,8 @@ export abstract class Expr<T extends SingleLiteralValue> {
   bitwiseNot(): Expr<T> {
     return new UnaryExpr<T>('~', this);
   }
-  minus(): Expr<T>;
-  minus(rhs: SingleScalarOperand<T>): Expr<T>;
-  minus(rhs?: SingleScalarOperand<T>): Expr<T> {
-    if (rhs !== undefined) {
-      return new BinaryExpr<T>('-', this, Expr.from(rhs));
-    } else {
-      return new UnaryExpr<T>('-', this);
-    }
-  }
-  plus(): Expr<T>;
-  plus(rhs: SingleScalarOperand<T>): Expr<T>;
-  plus(rhs?: SingleScalarOperand<T>): Expr<T> {
-    if (rhs !== undefined) {
-      return new BinaryExpr<T>('+', this, Expr.from(rhs));
-    } else {
-      return new UnaryExpr<T>('+', this);
-    }
+  negate(): Expr<T> {
+    return new UnaryExpr<T>('-', this);
   }
 
   // binary
@@ -647,7 +603,7 @@ export abstract class Expr<T extends SingleLiteralValue> {
   }
   in<R extends Nullable<T>>(rhs: InferArray<R> | Query<R>): Expr<boolean> {
     if (rhs instanceof Query) {
-      return rhs.contains(this as Expr<R>) as Expr<boolean>;
+      return rhs.includes(this as Expr<R>) as Expr<boolean>;
     } else {
       return new BinaryExpr<boolean>('in', this, Expr.from(rhs));
     }

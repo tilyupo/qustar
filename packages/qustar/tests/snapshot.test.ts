@@ -34,8 +34,7 @@ describe('snapshot', () => {
     });
     expect(
       comments
-        .join({
-          type: 'inner',
+        .innerJoin({
           right: comments,
           select: (child, parent) => ({
             c: child.id,

@@ -411,19 +411,6 @@ export abstract class Query<T extends ValidValue<T>> {
   }
 
   /**
-   * Alias for {@link Query.filter}. Applies WHERE clause to the query.
-   *
-   * @param filter function that accepts {@link Handle} and returns boolean expression
-   * @returns query with filter applied
-   * @example
-   *  // filter users with age === 42
-   *  query.where(user => user.age.eq(42))
-   */
-  where(filter: FilterFn<T>): Query<T> {
-    return this.filter(filter);
-  }
-
-  /**
    * Applies a projection to the query. The projection, as every operation on a query,
    * will be translated to 100% SQL.
    * @param selector function that accepts {@link Handle} and returns a projection
@@ -443,25 +430,6 @@ export abstract class Query<T extends ValidValue<T>> {
 
     const mapping = inferProjection(result);
     return new MapQuery<any>(nextSource, mapping);
-  }
-
-  /**
-   * Alias for {@link Query.map}
-   *
-   * Applies a projection to the query. The projection, as every operation on a query,
-   * will be translated to 100% SQL.
-   * @param selector function that accepts {@link Handle} and returns a projection
-   * @returns query with projection applied
-   * @example
-   *  query.select(user => ({
-   *    id: user.id,
-   *    fullName: user.firstName.concat(' ', user.lastName),
-   *  }))
-   */
-  select<TMapping extends Mapping>(
-    selector: MapValueFn<T, TMapping>
-  ): Query<Expand<ConvertMappingToValue<TMapping>>> {
-    return this.map<any>(selector);
   }
 
   /**
@@ -529,36 +497,6 @@ export abstract class Query<T extends ValidValue<T>> {
   }
 
   /**
-   * Alias for {@link Query.orderByDesc}.
-   *
-   * Applies descending order to the query.
-   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
-   * @returns query with descending order applied
-   * @example
-   *  query.sortByAsc(user => user.age);
-   */
-  sortByDesc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>
-  ): Query<T> {
-    return this.orderByDesc(selector);
-  }
-
-  /**
-   * Alias for {@link Query.orderByAsc}.
-   *
-   * Applies ascending order to the query.
-   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
-   * @returns query with ascending order applied
-   * @example
-   *  query.sortByAsc(user => user.age);
-   */
-  sortByAsc<Scalar extends ScalarMapping>(
-    selector: MapScalarFn<T, Scalar>
-  ): Query<T> {
-    return this.orderByAsc(selector);
-  }
-
-  /**
    * Applies `JOIN` clause to the query. It's usually more convenient to use `innerJoin`, `leftJoin`, `rightJoin` instead of just this method.
    * @param options join operation options
    * @returns query with join applied
@@ -570,7 +508,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *    select: (post, user) => ({...post, author: user}),
    *  });
    */
-  join<Right extends ValidValue<Right>, Result extends Mapping>(
+  private join<Right extends ValidValue<Right>, Result extends Mapping>(
     options: JoinOptionsPublic<T, Right, Result>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     const left = new QuerySource({type: 'query', query: this});
@@ -687,21 +625,6 @@ export abstract class Query<T extends ValidValue<T>> {
     });
   }
 
-  /**
-   * Alias for {@link Query.flatMap}.
-   *
-   * Maps every item of a query to many (possible zero) items.
-   * @param selector function that accepts {@link Handle} and returns a query
-   * @returns query that consists of concatenated result of all subqueries
-   * @example
-   *  const allPosts = usersQuery.selectMany(user =>
-   *    postsQuery.filter(post => post.authorId.eq(user.id))
-   *  );
-   */
-  selectMany<Result = any>(selector: MapQueryFn<T, Result>): Query<Result> {
-    return this.flatMap(selector);
-  }
-
   private combine(options: CombineOptions<T>): Query<T> {
     return new CombineQuery(
       new QuerySource({type: 'query', query: this}),
@@ -795,30 +718,6 @@ export abstract class Query<T extends ValidValue<T>> {
   }
 
   /**
-   * Alias for {@link Query.unique}.
-   *
-   * Applies `DISTINCT` keyword to the query.
-   * @returns query with only distinct values in it
-   * @example
-   *  users.map(user => user.name).distinct();
-   */
-  distinct(): Query<T> {
-    return this.unique();
-  }
-
-  /**
-   * Alias for {@link Query.unique}.
-   *
-   * Applies `DISTINCT` keyword to the query.
-   * @returns query with only distinct values in it
-   * @example
-   *  users.map(user => user.name).uniq();
-   */
-  uniq(): Query<T> {
-    return this.unique();
-  }
-
-  /**
    * Limits number of items that query can return.
    * @param limit number of items to query
    * @param offset number of items to skip
@@ -853,47 +752,18 @@ export abstract class Query<T extends ValidValue<T>> {
     if (end !== undefined) {
       return this.limit(end - (start ?? 0), start);
     } else {
-      return this.skip(start ?? 0);
+      return this.drop(start ?? 0);
     }
   }
 
   /**
-   * Alias for {@link Query.limit}
-   *
-   * Limits number of items that query can return.
-   * @param count number of items to query
-   * @param skip number of items to skip
-   * @returns query with at most `count` number of items
-   * @example
-   *  posts.orderByDesc(post => = post.createdAt).take(10);
-   * @example
-   *  posts.orderByDesc(post => = post.createdAt).take(5, 15);
-   */
-  take(count: number, skip?: number): Query<T> {
-    return this.limit(count, skip);
-  }
-
-  /**
-   * Drops first `offset` number of items.
-   * @param offset number of items to skip from the original query
-   * @returns query without first `offset` number of items
-   * @example
-   *  users.drop(10);
-   */
-  drop(count: number): Query<T> {
-    return this.skip(count);
-  }
-
-  /**
-   * Alias for {@link Query.drop}
-   *
    * Skips first `count` number of items.
    * @param count number of items to skip from the original query
    * @returns query without first `count` number of items
    * @example
-   *  users.skip(10);
+   *  users.drop(10);
    */
-  skip(count: number): Query<T> {
+  drop(count: number): Query<T> {
     // SQL doesn't allow to use OFFSET without LIMIT
     return new PaginationQuery(
       new QuerySource({type: 'query', query: this}),
@@ -904,6 +774,13 @@ export abstract class Query<T extends ValidValue<T>> {
 
   // terminators
 
+  /**
+   * Returns a query that contains the maximum of all selected values using {@link selector}
+   *
+   * @example
+   *  // maximum age
+   *  query.max(user => user.age);
+   */
   max<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
@@ -912,6 +789,13 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('max', this.map(selector));
   }
 
+  /**
+   * Returns a query that contains the minimum of all selected values using {@link selector}
+   *
+   * @example
+   *  // minimum age
+   *  query.min(user => user.age);
+   */
   min<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
@@ -920,6 +804,13 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('min', this.map(selector));
   }
 
+  /**
+   * Returns a query that contains the average of all selected values using {@link selector}
+   *
+   * @example
+   *  // mean age
+   *  query.mean(user => user.age);
+   */
   mean<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
@@ -928,22 +819,13 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('mean', this.map(selector));
   }
 
-  avg<Scalar extends NumericMapping>(
-    selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<
-    ConvertScalarMappingToScalarValue<Scalar>
-  > | null> {
-    return this.mean(selector);
-  }
-
-  average<Scalar extends NumericMapping>(
-    selector: MapScalarFn<T, Scalar>
-  ): QueryTerminatorExpr<Expand<
-    ConvertScalarMappingToScalarValue<Scalar>
-  > | null> {
-    return this.mean(selector);
-  }
-
+  /**
+   * Returns a query that contains the sum of all selected values using {@link selector}
+   *
+   * @example
+   *  // total salary
+   *  query.average(user => user.salary);
+   */
   sum<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
@@ -952,6 +834,13 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('sum', this.map(selector));
   }
 
+  /**
+   * Returns a query that contains the first of all selected values using {@link selector}
+   *
+   * @example
+   *  // oldest user id
+   *  query.orderByDesc(user => user.age).first(user => user.id);
+   */
   first<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
@@ -960,7 +849,14 @@ export abstract class Query<T extends ValidValue<T>> {
     return new QueryTerminatorExpr('first', this.map(selector));
   }
 
-  contains<R extends Nullable<T>>(
+  /**
+   * Returns a query that contains true if value exists in the original query, false otherwise
+   *
+   * @example
+   *  // 18 years old user exists
+   *  query.map(user => user.age).includes(18);
+   */
+  includes<R extends Nullable<T>>(
     value: SingleScalarOperand<R & SingleLiteralValue>
   ): QueryTerminatorExpr<boolean> {
     return new QueryTerminatorExpr(
@@ -969,28 +865,46 @@ export abstract class Query<T extends ValidValue<T>> {
     );
   }
 
-  some(): QueryTerminatorExpr<boolean> {
-    return new QueryTerminatorExpr('some', this);
+  /**
+   * Returns a query that contains true if some record satisfies condition {@link filter}, false otherwise.
+   * If filter not provided, will return true if query contains at least one row, false otherwise.
+   *
+   * @example
+   *  // 18 years old user exists
+   *  query.some(user => user.age.eq(18));
+   *
+   * @example
+   *  // query is not empty
+   *  query.some();
+   */
+  some(filter?: FilterFn<T>): QueryTerminatorExpr<boolean> {
+    if (filter) {
+      return new QueryTerminatorExpr('some', this.filter(filter));
+    } else {
+      return new QueryTerminatorExpr('some', this);
+    }
   }
 
-  any(): QueryTerminatorExpr<boolean> {
-    return this.some();
-  }
-
+  /**
+   * Returns true if query has no matching rows, false otherwise.
+   *
+   * @example
+   *  // no users 18 years old
+   *  query.filter(user => user.age.eq(18)).empty()
+   */
   empty(): QueryTerminatorExpr<boolean> {
     return new QueryTerminatorExpr('empty', this);
   }
 
+  /**
+   * Returns number of matching rows in the query.
+   *
+   * @example
+   *  // number of users 18 years old
+   *  query.filter(user => user.age.eq(18)).size();
+   */
   size(): QueryTerminatorExpr<number> {
     return new QueryTerminatorExpr('size', this);
-  }
-
-  count(): QueryTerminatorExpr<number> {
-    return this.size();
-  }
-
-  length(): QueryTerminatorExpr<number> {
-    return this.size();
   }
 }
 
@@ -1307,6 +1221,15 @@ export class OrderByQuery<T extends ValidValue<T>> extends Query<T> {
     return visitor.orderBy(this);
   }
 
+  /**
+   * Applies `ORDER BY ..., <expr> ASC` clause. This function applies a secondary order for records with matching primary order.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with descending order applied
+   * @example
+   *  query
+   *    .orderByDesc(user => user.age)
+   *    .thenByDesc(user => user.height);
+   */
   thenByAsc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
@@ -1316,6 +1239,15 @@ export class OrderByQuery<T extends ValidValue<T>> extends Query<T> {
     });
   }
 
+  /**
+   * Applies `ORDER BY ..., <expr> DESC` clause. This function applies a secondary order for records with matching primary order.
+   * @param selector function that accepts {@link Handle} and returns an expression that will be used to order the query by
+   * @returns query with descending order applied
+   * @example
+   *  query
+   *    .orderByDesc(user => user.age)
+   *    .thenByDesc(user => user.height);
+   */
   thenByDesc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
@@ -1441,6 +1373,12 @@ export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
     );
   }
 
+  /**
+   * Deletes rows from the table that match the filter.
+   *
+   * @example
+   *  users.delete(user => user.id.eq(42));
+   */
   delete(filter: FilterFn<DeriveEntity<TSchema>>): DeleteStmt<TSchema> {
     return new DeleteStmt(
       this.table,
@@ -1449,10 +1387,28 @@ export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
     );
   }
 
-  insert(...rows: DeriveInsertEntity<TSchema>[]): InsertStmt<TSchema> {
-    return new InsertStmt(this.table, rows);
+  /**
+   * Inserts one or more rows into the table.
+   *
+   * @example
+   *  users.insert({name: 'Bob', age: 18});
+   */
+  insert(
+    row: DeriveInsertEntity<TSchema>,
+    ...rest: DeriveInsertEntity<TSchema>[]
+  ): InsertStmt<TSchema> {
+    return new InsertStmt(this.table, [row, ...rest]);
   }
 
+  /**
+   * Updates all rows in the table that match the filter.
+   *
+   * @example
+   *  users.update({
+   *    filter: user => user.id.eq(42),
+   *    set: user => ({name: 'Tom', age: user.age.add(1)}),
+   *  });
+   */
   update(options: UpdateOptions<DeriveEntity<TSchema>>): UpdateStmt<TSchema> {
     return new UpdateStmt(
       this.table,
@@ -1462,6 +1418,14 @@ export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
     );
   }
 
+  /**
+   * Applies WHERE clause to the query.
+   * @param filter function that accepts {@link Handle} and returns boolean expression
+   * @returns query with filter applied
+   * @example
+   *  // filter users with age === 42
+   *  query.filter(user => user.age.eq(42))
+   */
   filter(filter: FilterFn<DeriveEntity<TSchema>>): TableFilterQuery<TSchema> {
     const source = new QuerySource({type: 'query', query: this});
     const handle = createHandle(source);
@@ -1482,6 +1446,14 @@ export class TableFilterQuery<
     super(source, filterExpr);
   }
 
+  /**
+   * Applies WHERE clause to the query.
+   * @param filter function that accepts {@link Handle} and returns boolean expression
+   * @returns query with filter applied
+   * @example
+   *  // filter users with age === 42
+   *  query.filter(user => user.age.eq(42))
+   */
   filter(filter: FilterFn<DeriveEntity<TSchema>>): TableFilterQuery<TSchema> {
     const handle = createHandle(this.source);
     const filterExpr = Expr.from(filter(handle));
@@ -1493,10 +1465,24 @@ export class TableFilterQuery<
     );
   }
 
+  /**
+   * Deletes rows from the table that match the filter.
+   *
+   * @example
+   *  users.filter(user => user.id.eq(42)).delete();
+   */
   delete(): DeleteStmt<TSchema> {
     return new DeleteStmt(this.table, this.source, this.filterExpr);
   }
 
+  /**
+   * Updates all rows in the table that match the filter.
+   *
+   * @example
+   *  users
+   *    .filter(user => user.id.eq(42))
+   *    .update(user => ({name: 'Tom', age: user.age.add(1)}));
+   */
   update(updateFn: UpdateFn<DeriveEntity<TSchema>>): UpdateStmt<TSchema> {
     return new UpdateStmt(
       this.table,
@@ -1518,6 +1504,16 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
 
   abstract visit<T>(visitor: StmtVisitor<T>): T;
 
+  /**
+   * Renders the query into SQL. PostgreSQL, MySQL and SQLite dialects are supported. For
+   * other dialects consider writing your own rendering function. An example can be found
+   * at [github](https://github.com/tilyupo/qustar/blob/4af9e814efd781d44989fa96fbff03f5ebdc07b9/packages/qustar/src/render/sql.ts#L70).
+   * @param dialect describes what built-in SQL dialect to use for {@link Query} rendering
+   * @param options additional options that affect query rendering process
+   * @returns SQL command that can be used to query a database
+   * @example
+   *  const command = query.render('sqlite', { parameters: true });
+   */
   render(dialect: Dialect, options?: RenderOptions): SqlCommand {
     const compiled = compileStmt(this, {parameters: false, ...options});
     // todo: add optimization
@@ -1529,6 +1525,12 @@ export abstract class Stmt<TSchema extends EntityDescriptor> {
       .exhaustive();
   }
 
+  /**
+   * Runs the query using the connector.
+   * @param connector database connector that will be used to run the query
+   * @example
+   *  await users.insert({name: 'Bob', age: 18}).execute(connector);
+   */
   async execute(connector: Connector): Promise<void> {
     const compilationResult = compileStmt(this, {parameters: false});
     const command = connector.render(compilationResult);

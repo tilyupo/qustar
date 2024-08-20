@@ -6,8 +6,7 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
     describe('join', () => {
       test('inner', async () => {
         const query = posts
-          .join({
-            type: 'inner',
+          .innerJoin({
             right: users,
             select: (post, user) => ({title: post.title, name: user.name}),
             condition: (post, user) => post.author_id.eq(user.id),
@@ -24,8 +23,7 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
 
       test('left', async () => {
         const query = comments
-          .join({
-            type: 'left',
+          .leftJoin({
             right: comments,
             select: (child, parent) => parent.id,
             condition: (child, parent) => child.parent_id.eq(parent.id),
@@ -38,8 +36,7 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
 
       test('right', async () => {
         const query = comments
-          .join({
-            type: 'right',
+          .rightJoin({
             right: comments,
             select: child => child.id,
             condition: (child, parent) => child.parent_id.eq(parent.id),

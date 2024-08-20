@@ -1523,7 +1523,7 @@ function compileFirstTerminator(
   query: Query<any>,
   ctx: CompilationContext
 ): QueryCompilationResult {
-  const {sql, joins} = _compileQuery(query.take(1), ctx);
+  const {sql, joins} = _compileQuery(query.limit(1), ctx);
   assert(sql.type === 'select');
 
   return {

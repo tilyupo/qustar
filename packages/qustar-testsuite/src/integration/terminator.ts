@@ -29,45 +29,41 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
         testTerm('author.id', posts => posts.min(x => x.author.id), 1);
       });
 
-      (['size', 'length', 'count'] as const).forEach(method =>
-        describe(method, () => {
-          testTerm('id', posts => posts[method](), 6);
-          testTerm(
-            'id (with order)',
-            posts => posts.orderByAsc(x => x.id)[method](),
-            6
-          );
-          testTerm('title', posts => posts.limit(2)[method](), 2);
-          testTerm(
-            'comments',
-            posts => posts.flatMap(x => x.comments)[method](),
-            4,
-            {
-              optOnly: true,
-            }
-          );
-        })
-      );
+      describe('size', () => {
+        testTerm('id', posts => posts.size(), 6);
+        testTerm(
+          'id (with order)',
+          posts => posts.orderByAsc(x => x.id).size(),
+          6
+        );
+        testTerm('title', posts => posts.limit(2).size(), 2);
+        testTerm(
+          'comments',
+          posts => posts.flatMap(x => x.comments).size(),
+          4,
+          {
+            optOnly: true,
+          }
+        );
+      });
 
-      (['mean', 'avg', 'average'] as const).forEach(method =>
-        describe(method, () => {
-          testTerm(
-            'id',
-            posts => posts[method](x => x.id),
-            (1 + 2 + 3 + 4 + 5 + 6) / 6
-          );
-          testTerm(
-            'id (with order)',
-            posts => posts.orderByAsc(x => x.id)[method](x => x.id),
-            (1 + 2 + 3 + 4 + 5 + 6) / 6
-          );
-          testTerm(
-            'author.id',
-            posts => posts[method](x => x.author.id.mul(3).div(2)),
-            ((1 + 1 + 1 + 2 + 2 + 3) * 3) / 2 / 6
-          );
-        })
-      );
+      describe('mean', () => {
+        testTerm(
+          'id',
+          posts => posts.mean(x => x.id),
+          (1 + 2 + 3 + 4 + 5 + 6) / 6
+        );
+        testTerm(
+          'id (with order)',
+          posts => posts.orderByAsc(x => x.id).mean(x => x.id),
+          (1 + 2 + 3 + 4 + 5 + 6) / 6
+        );
+        testTerm(
+          'author.id',
+          posts => posts.mean(x => x.author.id.mul(3).div(2)),
+          ((1 + 1 + 1 + 2 + 2 + 3) * 3) / 2 / 6
+        );
+      });
 
       describe('sum', () => {
         testTerm('id', posts => posts.sum(x => x.id), 1 + 2 + 3 + 4 + 5 + 6);

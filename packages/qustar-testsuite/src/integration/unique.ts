@@ -9,7 +9,7 @@ export function describeUnique({describe, testFactory}: SuiteContext) {
       const testUnique = testFactory(
         (mapper: MapValueFn<Post, ScalarMapping>) => {
           return posts
-            .select(mapper)
+            .map(mapper)
             .unique()
             .orderByAsc(x => x);
         }

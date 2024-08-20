@@ -16,7 +16,7 @@ export function describeOrder({
           return posts
             .orderByAsc(orderBy)
             .limit(3)
-            .select(x => x.title);
+            .map(x => x.title);
         }
       );
 
@@ -47,7 +47,7 @@ export function describeOrder({
       });
 
       test('order by select', async () => {
-        const query = posts.map(x => x.comments.count()).orderByAsc(x => x);
+        const query = posts.map(x => x.comments.size()).orderByAsc(x => x);
 
         await expectQuery(query, [0, 0, 0, 0, 1, 3]);
       });

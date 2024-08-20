@@ -188,13 +188,11 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
     });
 
     describe('unary', () => {
-      testExpr('+1 is 1', Expr.plus(1), 1);
-      testExpr('+(-1) is -1', Expr.plus(-1), -1);
-      testExpr('+null is null', Expr.plus(null), null);
-
-      testExpr('-1 is -1', Expr.minus(1), -1);
-      testExpr('-(-1) is 1', Expr.minus(-1), 1);
-      testExpr('-null is null', Expr.minus(null), null, {optOnly: true});
+      testExpr('-1 is -1', Expr.negate(1), -1);
+      testExpr('-(-1) is 1', Expr.negate(-1), 1);
+      testExpr('-null is null', Expr.negate(null), null, {
+        optOnly: true,
+      });
 
       testExpr('!true is false', Expr.not(true), false);
       testExpr('!false is true', Expr.not(false), true);

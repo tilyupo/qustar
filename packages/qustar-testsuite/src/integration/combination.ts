@@ -9,8 +9,8 @@ export function describeCombination({
   describe('query', async () => {
     describe('combination', () => {
       test('string union all', async () => {
-        const lhs = users.select(x => x.name);
-        const rhs = posts.select(x => x.title);
+        const lhs = users.map(x => x.name);
+        const rhs = posts.map(x => x.title);
         const query = lhs
           .unionAll(rhs)
           .orderByAsc(x => x)
@@ -20,8 +20,8 @@ export function describeCombination({
       });
 
       test('object union all', async () => {
-        const lhs = users.select(x => ({id: x.id, name: x.name}));
-        const rhs = posts.select(x => ({id: x.id, name: x.title}));
+        const lhs = users.map(x => ({id: x.id, name: x.name}));
+        const rhs = posts.map(x => ({id: x.id, name: x.title}));
         const query = lhs
           .unionAll(rhs)
           .orderByAsc(x => x.name)
@@ -35,16 +35,16 @@ export function describeCombination({
       });
 
       test('concat (asc, desc)', async () => {
-        const lhs = users.select(x => x.id).orderByAsc(x => x);
-        const rhs = posts.select(x => x.id).orderByDesc(x => x);
+        const lhs = users.map(x => x.id).orderByAsc(x => x);
+        const rhs = posts.map(x => x.id).orderByDesc(x => x);
         const query = lhs.concat(rhs);
 
         await expectQuery(query, [1, 2, 3, 6, 5, 4, 3, 2, 1]);
       });
 
       test('concat (desc, asc)', async () => {
-        const lhs = users.select(x => x.id).orderByDesc(x => x);
-        const rhs = posts.select(x => x.id).orderByAsc(x => x);
+        const lhs = users.map(x => x.id).orderByDesc(x => x);
+        const rhs = posts.map(x => x.id).orderByAsc(x => x);
         const query = lhs.concat(rhs);
 
         await expectQuery(query, [3, 2, 1, 1, 2, 3, 4, 5, 6]);

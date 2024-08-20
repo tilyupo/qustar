@@ -28,11 +28,11 @@ export function describeFilter({
         'C#',
       ]);
       testFilter('author id', x => x.author.id.eq(2), ['Ruby', 'C++']);
-      testFilter(
-        'author comments count',
-        x => x.author.comments.count().eq(1),
-        ['Ruby', 'C++', 'Python']
-      );
+      testFilter('author comments count', x => x.author.comments.size().eq(1), [
+        'Ruby',
+        'C++',
+        'Python',
+      ]);
 
       test("comment parent text != 'never'", async () => {
         const query = comments
