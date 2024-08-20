@@ -50,17 +50,17 @@ export function describeTerminator({describe, testFactory}: SuiteContext) {
       describe('mean', () => {
         testTerm(
           'id',
-          posts => posts.mean(x => x.id),
+          posts => posts.average(x => x.id),
           (1 + 2 + 3 + 4 + 5 + 6) / 6
         );
         testTerm(
           'id (with order)',
-          posts => posts.orderByAsc(x => x.id).mean(x => x.id),
+          posts => posts.orderByAsc(x => x.id).average(x => x.id),
           (1 + 2 + 3 + 4 + 5 + 6) / 6
         );
         testTerm(
           'author.id',
-          posts => posts.mean(x => x.author.id.mul(3).div(2)),
+          posts => posts.average(x => x.author.id.mul(3).div(2)),
           ((1 + 1 + 1 + 2 + 2 + 3) * 3) / 2 / 6
         );
       });

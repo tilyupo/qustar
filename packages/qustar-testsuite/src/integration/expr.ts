@@ -28,94 +28,51 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       testExpr('2 + null is null', Expr.add(2, null), null);
       testExpr('null + 2 is null', Expr.add(null, 2), null);
 
-      (['sub', 'subtract'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('2 - 4 is -2', Expr[method](2, 4), -2);
-          testExpr('2.2 - 4 is -1.8', Expr[method](2.4, 4), -1.6);
-          testExpr('2 - null is null', Expr[method](2, null), null);
-          testExpr('null - 2 is null', Expr[method](null, 2), null);
+      describe('sub', () => {
+        testExpr('2 - 4 is -2', Expr.sub(2, 4), -2);
+        testExpr('2.2 - 4 is -1.8', Expr.sub(2.4, 4), -1.6);
+        testExpr('2 - null is null', Expr.sub(2, null), null);
+        testExpr('null - 2 is null', Expr.sub(null, 2), null);
+      });
+
+      describe('mul', () => {
+        testExpr('2 * 4 is 8', Expr.mul(2, 4), 8);
+        testExpr('2 * 4.2 is 8.4', Expr.mul(2, 4.2), 8.4);
+        testExpr('2 * null is null', Expr.mul(2, null), null);
+        testExpr('null * 2 is null', Expr.mul(null, 2), null);
+      });
+
+      describe('div', () => {
+        testExpr('2 / 2 is 1', Expr.div(2, 2), 1);
+        testExpr('7 / 2 is 3', Expr.div(7, 2), 3.5);
+        testExpr('7.5 / 2 is 3.75', Expr.div(7.5, 2), 3.75);
+        testExpr('null / 2 is null', Expr.div(null, 2), null);
+        testExpr('7.2 / null is null', Expr.div(7.2, null), null);
+      });
+
+      describe('eq', () => {
+        testExpr('2 == 2 is true', Expr.eq(2, 2), true);
+        testExpr('2 == 5 is false', Expr.eq(2, 5), false);
+        testExpr('2 == null is false', Expr.eq(2, null), false);
+        testExpr('null == 2 is false', Expr.eq(null, 2), false);
+        testExpr('null == null is true', Expr.eq(null, null), true, {
+          optOnly: true,
         });
       });
 
-      (['mul', 'multiply'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('2 * 4 is 8', Expr[method](2, 4), 8);
-          testExpr('2 * 4.2 is 8.4', Expr[method](2, 4.2), 8.4);
-          testExpr('2 * null is null', Expr[method](2, null), null);
-          testExpr('null * 2 is null', Expr[method](null, 2), null);
+      describe('ne', () => {
+        testExpr('2 != 5 is true', Expr.ne(2, 5), true);
+        testExpr('2 != 2 is false', Expr.ne(2, 2), false);
+        testExpr('2 != null is true', Expr.ne(2, null), true, {
+          optOnly: true,
+        });
+        testExpr("null != 'foo' is true", Expr.ne(null, 'foo'), true, {
+          optOnly: true,
+        });
+        testExpr('null != null is false', Expr.ne(null, null), false, {
+          optOnly: true,
         });
       });
-
-      (['div', 'divide'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('2 / 2 is 1', Expr[method](2, 2), 1);
-          testExpr('7 / 2 is 3', Expr[method](7, 2), 3.5);
-          testExpr('7.5 / 2 is 3.75', Expr[method](7.5, 2), 3.75);
-          testExpr('null / 2 is null', Expr[method](null, 2), null);
-          testExpr('7.2 / null is null', Expr[method](7.2, null), null);
-        });
-      });
-
-      (['eq', 'equals'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('2 == 2 is true', Expr[method](2, 2), true);
-          testExpr('2 == 5 is false', Expr[method](2, 5), false);
-          testExpr('2 == null is false', Expr[method](2, null), false);
-          testExpr('null == 2 is false', Expr[method](null, 2), false);
-          testExpr('null == null is true', Expr[method](null, null), true, {
-            optOnly: true,
-          });
-        });
-      });
-
-      (['ne', 'notEquals'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('2 != 5 is true', Expr[method](2, 5), true);
-          testExpr('2 != 2 is false', Expr[method](2, 2), false);
-          testExpr('2 != null is true', Expr[method](2, null), true, {
-            optOnly: true,
-          });
-          testExpr("null != 'foo' is true", Expr[method](null, 'foo'), true, {
-            optOnly: true,
-          });
-          testExpr('null != null is false', Expr[method](null, null), false, {
-            optOnly: true,
-          });
-        });
-      });
-
-      (['shl', 'shiftLeft'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('0 << 3 is 16', Expr[method](0, 3), 0);
-          testExpr('2 << 3 is 16', Expr[method](2, 3), 16);
-          testExpr('null << 3 is null', Expr[method](null, 3), null);
-          testExpr('2 << null is null', Expr[method](2, null), null);
-        });
-      });
-
-      (['shr', 'shiftRight'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('2 >> 1 is 1', Expr[method](2, 1), 1);
-          testExpr('7 >> 1 is 2', Expr[method](7, 1), 3);
-          testExpr('null >> 1 is null', Expr[method](null, 2), null);
-          testExpr('7 >> null is null', Expr[method](6, null), null);
-        });
-      });
-
-      testExpr('2 & 7 is 2', Expr.bitwiseAnd(2, 7), 2);
-      testExpr('3 & 5 is 1', Expr.bitwiseAnd(3, 5), 1);
-      testExpr('2 & null is null', Expr.bitwiseAnd(2, null), null);
-      testExpr('null & 5 is null', Expr.bitwiseAnd(null, 5), null);
-
-      testExpr('2 | 1 is 3', Expr.bitwiseOr(2, 1), 3);
-      testExpr('5 | 3 is 7', Expr.bitwiseOr(5, 3), 7);
-      testExpr('null | 1 is null', Expr.bitwiseOr(null, 1), null);
-      testExpr('5 | null is null', Expr.bitwiseOr(5, null), null);
-
-      testExpr('2 ^ 1 is 3', Expr.bitwiseXor(2, 1), 3);
-      testExpr('2 ^ 4 is 6', Expr.bitwiseXor(2, 4), 6);
-      testExpr('null ^ 1 is null', Expr.bitwiseXor(null, 1), null);
-      testExpr('2 ^ null is null', Expr.bitwiseXor(2, null), null);
 
       testExpr('true and true is true', Expr.and(true, true), true);
       testExpr('true and false is false', Expr.and(true, false), false);
@@ -137,44 +94,36 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       testExpr('null or false is false', Expr.or(null, false), false);
       testExpr('null or null is false', Expr.or(null, false), false);
 
-      (['gt', 'greaterThan'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('0 > 1 is false', Expr[method](0, 1), false);
-          testExpr('1 > 1 is false', Expr[method](1, 1), false);
-          testExpr('2 > 1 is true', Expr[method](2, 1), true);
-          testExpr('null > 1 is false', Expr[method](null, 1), false);
-          testExpr('2 > null is false', Expr[method](2, null), false);
-        });
+      describe('gt', () => {
+        testExpr('0 > 1 is false', Expr.gt(0, 1), false);
+        testExpr('1 > 1 is false', Expr.gt(1, 1), false);
+        testExpr('2 > 1 is true', Expr.gt(2, 1), true);
+        testExpr('null > 1 is false', Expr.gt(null, 1), false);
+        testExpr('2 > null is false', Expr.gt(2, null), false);
       });
 
-      (['lt', 'lessThan'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('0 < 1 is 0', Expr[method](0, 1), true);
-          testExpr('1 < 1 is 0', Expr[method](1, 1), false);
-          testExpr('2 < 1 is 0', Expr[method](2, 1), false);
-          testExpr('null < 1 is false', Expr[method](null, 1), false);
-          testExpr('2 < null is false', Expr[method](2, null), false);
-        });
+      describe('lt', () => {
+        testExpr('0 < 1 is 0', Expr.lt(0, 1), true);
+        testExpr('1 < 1 is 0', Expr.lt(1, 1), false);
+        testExpr('2 < 1 is 0', Expr.lt(2, 1), false);
+        testExpr('null < 1 is false', Expr.lt(null, 1), false);
+        testExpr('2 < null is false', Expr.lt(2, null), false);
       });
 
-      (['lte', 'lessThanOrEqualTo'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('0 <= 1 is 1', Expr[method](0, 1), true);
-          testExpr('1 <= 1 is 1', Expr[method](1, 1), true);
-          testExpr('2 <= 1 is 0', Expr[method](2, 1), false);
-          testExpr('null <= 1 is false', Expr[method](null, 1), false);
-          testExpr('2 <= null is false', Expr[method](2, null), false);
-        });
+      describe('lte', () => {
+        testExpr('0 <= 1 is 1', Expr.lte(0, 1), true);
+        testExpr('1 <= 1 is 1', Expr.lte(1, 1), true);
+        testExpr('2 <= 1 is 0', Expr.lte(2, 1), false);
+        testExpr('null <= 1 is false', Expr.lte(null, 1), false);
+        testExpr('2 <= null is false', Expr.lte(2, null), false);
       });
 
-      (['gte', 'greaterThanOrEqualTo'] as const).forEach(method => {
-        describe(method, () => {
-          testExpr('0 >= 1 is 1', Expr[method](0, 1), false);
-          testExpr('1 >= 1 is 1', Expr[method](1, 1), true);
-          testExpr('2 >= 1 is 0', Expr[method](2, 1), true);
-          testExpr('null >= 1 is false', Expr[method](null, 1), false);
-          testExpr('2 >= null is false', Expr[method](2, null), false);
-        });
+      describe('gte', () => {
+        testExpr('0 >= 1 is 1', Expr.gte(0, 1), false);
+        testExpr('1 >= 1 is 1', Expr.gte(1, 1), true);
+        testExpr('2 >= 1 is 0', Expr.gte(2, 1), true);
+        testExpr('null >= 1 is false', Expr.gte(null, 1), false);
+        testExpr('2 >= null is false', Expr.gte(2, null), false);
       });
 
       testExpr("'123' like '12%' is 1", Expr.like('123', '12%'), true);
@@ -197,10 +146,6 @@ export function describeExpr({expectQuery, test, describe}: SuiteContext) {
       testExpr('!true is false', Expr.not(true), false);
       testExpr('!false is true', Expr.not(false), true);
       testExpr('!null is true', Expr.not(null), true, {optOnly: true});
-
-      testExpr('~2 is -3', Expr.bitwiseNot(2), -3);
-      testExpr('~-12 is 11', Expr.bitwiseNot(-12), 11);
-      testExpr('~null is null', Expr.bitwiseNot(null), null, {optOnly: true});
     });
 
     describe('sql', () => {

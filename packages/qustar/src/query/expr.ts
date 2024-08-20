@@ -86,11 +86,6 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // unary
 
-  static bitwiseNot<T extends Nullable<number>>(
-    operand: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(operand).bitwiseNot();
-  }
   static not<T extends Nullable<boolean>>(
     operand: SingleScalarOperand<T>
   ): Expr<T> {
@@ -116,23 +111,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<T> {
     return Expr.from(lhs).sub(rhs);
   }
-  static subtract<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).subtract(rhs);
-  }
   static mul<T extends Nullable<number>>(
     lhs: SingleScalarOperand<T>,
     rhs: SingleScalarOperand<T>
   ): Expr<T> {
     return Expr.from(lhs).mul(rhs);
-  }
-  static multiply<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).multiply(rhs);
   }
   static div<T extends Nullable<number>>(
     lhs: SingleScalarOperand<T>,
@@ -140,65 +123,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<T> {
     return Expr.from(lhs).div(rhs);
   }
-  static divide<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).divide(rhs);
-  }
   static mod<T extends Nullable<number>>(
     lhs: SingleScalarOperand<T>,
     rhs: SingleScalarOperand<T>
   ): Expr<T> {
     return Expr.from(lhs).mod(rhs);
-  }
-  static modulus<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).modulus(rhs);
-  }
-  static shl<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).shl(rhs);
-  }
-  static shiftLeft<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).shiftLeft(rhs);
-  }
-  static shr<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).shr(rhs);
-  }
-  static shiftRight<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).shiftRight(rhs);
-  }
-  static bitwiseAnd<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).bitwiseAnd(rhs);
-  }
-  static bitwiseXor<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).bitwiseXor(rhs);
-  }
-  static bitwiseOr<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(lhs).bitwiseOr(rhs);
   }
   static or<T extends Nullable<boolean>>(
     lhs: SingleScalarOperand<T>,
@@ -218,29 +147,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<NullPropagate<T, boolean>> {
     return Expr.from(lhs).gt(rhs);
   }
-  static greaterThan<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<NullPropagate<T, boolean>> {
-    return Expr.from(lhs).greaterThan(rhs);
-  }
-  static ge<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<NullPropagate<T, boolean>> {
-    return Expr.from(lhs).ge(rhs);
-  }
   static gte<T extends Nullable<number>>(
     lhs: SingleScalarOperand<T>,
     rhs: SingleScalarOperand<T>
   ): Expr<NullPropagate<T, boolean>> {
     return Expr.from(lhs).gte(rhs);
-  }
-  static greaterThanOrEqualTo<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<NullPropagate<T, boolean>> {
-    return Expr.from(lhs).greaterThanOrEqualTo(rhs);
   }
   static lt<T extends Nullable<number>>(
     lhs: SingleScalarOperand<T>,
@@ -248,29 +159,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<NullPropagate<T, boolean>> {
     return Expr.from(lhs).lt(rhs);
   }
-  static lessThan<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<NullPropagate<T, boolean>> {
-    return Expr.from(lhs).lessThan(rhs);
-  }
-  static le<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<NullPropagate<T, boolean>> {
-    return Expr.from(lhs).le(rhs);
-  }
   static lte<T extends Nullable<number>>(
     lhs: SingleScalarOperand<T>,
     rhs: SingleScalarOperand<T>
   ): Expr<NullPropagate<T, boolean>> {
     return Expr.from(lhs).lte(rhs);
-  }
-  static lessThanOrEqualTo<T extends Nullable<number>>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<NullPropagate<T, boolean>> {
-    return Expr.from(lhs).lessThanOrEqualTo(rhs);
   }
   static eq<T extends SingleLiteralValue>(
     lhs: SingleScalarOperand<T>,
@@ -278,23 +171,11 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<boolean> {
     return Expr.from(lhs).eq(rhs);
   }
-  static equals<T extends SingleLiteralValue>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<boolean> {
-    return Expr.from(lhs).equals(rhs);
-  }
   static ne<T extends SingleLiteralValue>(
     lhs: SingleScalarOperand<T>,
     rhs: SingleScalarOperand<T>
   ): Expr<boolean> {
     return Expr.from(lhs).ne(rhs);
-  }
-  static notEquals<T extends SingleLiteralValue>(
-    lhs: SingleScalarOperand<T>,
-    rhs: SingleScalarOperand<T>
-  ): Expr<boolean> {
-    return Expr.from(lhs).notEquals(rhs);
   }
   static like<T extends SingleLiteralValue>(
     lhs: SingleScalarOperand<T>,
@@ -401,22 +282,10 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return Expr.from(operand).count();
   }
 
-  static avg<T extends Nullable<number>>(
-    operand: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(operand).avg();
-  }
-
   static average<T extends Nullable<number>>(
     operand: SingleScalarOperand<T>
   ): Expr<T> {
     return Expr.from(operand).average();
-  }
-
-  static mean<T extends Nullable<number>>(
-    operand: SingleScalarOperand<T>
-  ): Expr<T> {
-    return Expr.from(operand).mean();
   }
 
   static sum<T extends Nullable<number>>(
@@ -451,9 +320,6 @@ export abstract class Expr<T extends SingleLiteralValue> {
   not(): Expr<T> {
     return new UnaryExpr<T>('!', this);
   }
-  bitwiseNot(): Expr<T> {
-    return new UnaryExpr<T>('~', this);
-  }
   negate(): Expr<T> {
     return new UnaryExpr<T>('-', this);
   }
@@ -470,75 +336,20 @@ export abstract class Expr<T extends SingleLiteralValue> {
   ): Expr<NullPropagate<R, T>> {
     return new BinaryExpr<NullPropagate<R, T>>('-', this, Expr.from(rhs));
   }
-  subtract<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return this.sub(rhs);
-  }
   mul<R extends Nullable<T>>(
     rhs: SingleScalarOperand<R>
   ): Expr<NullPropagate<R, T>> {
     return new BinaryExpr<NullPropagate<R, T>>('*', this, Expr.from(rhs));
-  }
-  multiply<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return this.mul(rhs);
   }
   mod<R extends Nullable<T>>(
     rhs: SingleScalarOperand<R>
   ): Expr<NullPropagate<R, T>> {
     return new BinaryExpr<NullPropagate<R, T>>('%', this, Expr.from(rhs));
   }
-  modulus<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return this.mod(rhs);
-  }
   div<R extends Nullable<T>>(
     rhs: SingleScalarOperand<R>
   ): Expr<NullPropagate<R, T>> {
     return new BinaryExpr<NullPropagate<R, T>>('/', this, Expr.from(rhs));
-  }
-  divide<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return this.div(rhs);
-  }
-  shl<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return new BinaryExpr<NullPropagate<R, T>>('<<', this, Expr.from(rhs));
-  }
-  shiftLeft<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return this.shl(rhs);
-  }
-  shr<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return new BinaryExpr<NullPropagate<R, T>>('>>', this, Expr.from(rhs));
-  }
-  shiftRight<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return this.shr(rhs);
-  }
-  bitwiseAnd<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return new BinaryExpr<NullPropagate<R, T>>('&', this, Expr.from(rhs));
-  }
-  bitwiseXor<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return new BinaryExpr<NullPropagate<R, T>>('^', this, Expr.from(rhs));
-  }
-  bitwiseOr<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<NullPropagate<R, T>> {
-    return new BinaryExpr<NullPropagate<R, T>>('|', this, Expr.from(rhs));
   }
   or<R extends Nullable<T>>(
     rhs: SingleScalarOperand<R>
@@ -553,50 +364,20 @@ export abstract class Expr<T extends SingleLiteralValue> {
   gt<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
     return new BinaryExpr<boolean>('>', this, Expr.from(rhs));
   }
-  greaterThan<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<boolean> {
-    return this.gt(rhs);
-  }
-  ge<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return new BinaryExpr<boolean>('>=', this, Expr.from(rhs));
-  }
   gte<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return this.ge(rhs);
-  }
-  greaterThanOrEqualTo<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<boolean> {
-    return this.ge(rhs);
+    return new BinaryExpr<boolean>('>=', this, Expr.from(rhs));
   }
   lt<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
     return new BinaryExpr<boolean>('<', this, Expr.from(rhs));
   }
-  lessThan<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return this.lt(rhs);
-  }
-  le<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return new BinaryExpr<boolean>('<=', this, Expr.from(rhs));
-  }
   lte<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return this.le(rhs);
-  }
-  lessThanOrEqualTo<R extends Nullable<T>>(
-    rhs: SingleScalarOperand<R>
-  ): Expr<boolean> {
-    return this.le(rhs);
+    return new BinaryExpr<boolean>('<=', this, Expr.from(rhs));
   }
   eq<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
     return new BinaryExpr('==', this, Expr.from(rhs));
   }
-  equals<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return this.eq(rhs);
-  }
   ne<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
     return new BinaryExpr('!=', this, Expr.from(rhs));
-  }
-  notEquals<R extends Nullable<T>>(rhs: SingleScalarOperand<R>): Expr<boolean> {
-    return this.ne(rhs);
   }
   like<R extends Nullable<T>>(pattern: SingleScalarOperand<R>): Expr<boolean> {
     return new BinaryExpr<boolean>('like', this, Expr.from(pattern));
@@ -687,16 +468,8 @@ export abstract class Expr<T extends SingleLiteralValue> {
     return new FuncExpr('count', [this]);
   }
 
-  avg(): Expr<Nullable<T>> {
-    return new FuncExpr('avg', [this]);
-  }
-
   average(): Expr<Nullable<T>> {
-    return this.avg();
-  }
-
-  mean(): Expr<Nullable<T>> {
-    return this.avg();
+    return new FuncExpr('avg', [this]);
   }
 
   sum(): Expr<Nullable<T>> {

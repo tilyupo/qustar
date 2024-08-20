@@ -22,7 +22,7 @@ export function describeGroupBy({describe, testFactory}: SuiteContext) {
         testGroupBy('max', x => Expr.max(x), [3, 5, 6]);
         testGroupBy('min', x => Expr.min(x), [1, 4, 6]);
         testGroupBy('sum', x => Expr.sum(x), [6, 9, 6]);
-        testGroupBy('avg', x => Expr.avg(x), [2, 4.5, 6]);
+        testGroupBy('avg', x => Expr.average(x), [2, 4.5, 6]);
         testGroupBy('average', x => Expr.average(x), [2, 4.5, 6]);
       });
 
@@ -42,7 +42,6 @@ export function describeGroupBy({describe, testFactory}: SuiteContext) {
         testHaving('max', x => Expr.max(x).lt(5), [1]);
         testHaving('min', x => Expr.min(x).lt(5), [1, 2]);
         testHaving('sum', x => Expr.sum(x).gt(7), [2]);
-        testHaving('avg', x => Expr.avg(x).eq(2), [1]);
         testHaving('average', x => Expr.average(x).ne(4.5), [1, 3]);
       });
     });

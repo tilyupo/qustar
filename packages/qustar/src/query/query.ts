@@ -808,10 +808,10 @@ export abstract class Query<T extends ValidValue<T>> {
    * Returns a query that contains the average of all selected values using {@link selector}
    *
    * @example
-   *  // mean age
-   *  query.mean(user => user.age);
+   *  // average age
+   *  query.average(user => user.age);
    */
-  mean<Scalar extends NumericMapping>(
+  average<Scalar extends NumericMapping>(
     selector: MapScalarFn<T, Scalar>
   ): QueryTerminatorExpr<Expand<
     ConvertScalarMappingToScalarValue<Scalar>
