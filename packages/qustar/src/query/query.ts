@@ -30,13 +30,7 @@ import {
   ScalarMapping,
   ValidValue,
 } from '../types/query.js';
-import {
-  arrayEqual,
-  assert,
-  assertNever,
-  deduplicateFirstWins,
-  startsWith,
-} from '../utils.js';
+import {assert, assertNever, dedupeFirstWins} from '../utils.js';
 import {CompilationOptions, compileQuery, compileStmt} from './compiler.js';
 import {
   Expr,
@@ -47,12 +41,13 @@ import {
 } from './expr.js';
 import {
   ObjectProjection,
+  ObjectProjectionProp,
   Projection,
-  PropPath,
-  PropProjection,
+  RefProjection,
   ScalarProjection,
 } from './projection.js';
-import {BackRef, ForwardRef, Ref, Schema, SqlTemplate} from './schema.js';
+import {BackRef, ForwardRef, Schema, SqlTemplate} from './schema.js';
+import {QueryShape} from './shape.js';
 
 export type Dialect = 'sqlite' | 'postgresql' | 'mysql';
 export type JoinType = 'inner' | 'left' | 'right';
@@ -95,18 +90,27 @@ export interface CombineOptions<T> {
 }
 
 function schemaProjection(root: QuerySource, schema: Schema): Projection {
-  return {
-    type: 'object',
-    props: schema.fields.map(
-      (x): PropProjection => ({
-        path: [x.name],
-        scalarType: x.scalarType,
-        expr: new LocatorExpr(root, [[x.name]], false),
-      })
-    ),
-    refs: schema.refs,
+  return new ObjectProjection({
+    props: schema.fields
+      .map(
+        (x): ObjectProjectionProp => ({
+          name: x.name,
+          projection: new ScalarProjection({
+            scalarType: x.scalarType,
+            expr: new LocatorExpr(root, [x.name], false),
+          }),
+        })
+      )
+      .concat(
+        schema.refs.map(
+          (ref): ObjectProjectionProp => ({
+            name: ref.name,
+            projection: new RefProjection(ref),
+          })
+        )
+      ),
     nullable: false,
-  };
+  });
 }
 
 export class QuerySource {
@@ -216,10 +220,14 @@ export abstract class Query<T extends ValidValue<T>> {
     return query;
   }
 
+  public readonly shape: QueryShape;
+
   constructor(
     public readonly source: QuerySource,
     public readonly projection: Projection
-  ) {}
+  ) {
+    this.shape = new QueryShape(this.projection.shape());
+  }
 
   /**
    * Implementation of the visitor pattern for {@link Query}
@@ -909,38 +917,79 @@ export abstract class Query<T extends ValidValue<T>> {
 }
 
 function proxyProjection(source: QuerySource): Projection {
-  return match(source.projection)
-    .with({type: 'object'}, x => proxyObjectProjection(source, x))
-    .with({type: 'scalar'}, x => proxyScalarProjection(source, x))
-    .exhaustive();
+  return source.projection.visit<Projection>({
+    object: projection =>
+      proxyObjectProjection({
+        source,
+        projection,
+        basePath: [],
+        nullable: false,
+      }),
+    scalar: projection =>
+      proxyScalarProjection({
+        source,
+        projection,
+        basePath: [],
+        nullable: false,
+      }),
+    ref: projection => proxyRefProjection(projection),
+  });
 }
 
-function proxyScalarProjection(
-  source: QuerySource,
-  sourceProj: ScalarProjection
-): ScalarProjection {
-  return {
-    type: 'scalar',
-    scalarType: sourceProj.scalarType,
-    expr: new LocatorExpr(source, [], false),
-  };
+interface ProxyProjectionOptions<TProjection extends Projection> {
+  source: QuerySource;
+  projection: TProjection;
+  basePath: string[];
+  nullable: boolean;
 }
 
-function proxyObjectProjection(
-  source: QuerySource,
-  sourceProj: ObjectProjection
-): ObjectProjection {
-  return {
-    type: 'object',
-    props: sourceProj.props.map(prop => ({
-      type: 'single',
-      expr: new LocatorExpr(source, [prop.path], false),
-      path: prop.path,
-      scalarType: prop.scalarType,
-    })),
-    refs: sourceProj.refs,
-    nullable: sourceProj.nullable,
-  };
+function proxyScalarProjection({
+  source,
+  projection,
+  basePath,
+  nullable,
+}: ProxyProjectionOptions<ScalarProjection>): ScalarProjection {
+  return new ScalarProjection({
+    scalarType: projection.scalarType,
+    expr: new LocatorExpr(source, basePath, nullable),
+  });
+}
+
+function proxyObjectProjection({
+  source,
+  projection,
+  basePath,
+  nullable,
+}: ProxyProjectionOptions<ObjectProjection>): ObjectProjection {
+  return new ObjectProjection({
+    props: projection.props.map(
+      (prop): ObjectProjectionProp => ({
+        name: prop.name,
+        projection: prop.projection.visit<Projection>({
+          scalar: scalarProj =>
+            proxyScalarProjection({
+              source,
+              projection: scalarProj,
+              basePath: [...basePath, prop.name],
+              nullable: projection.nullable || nullable,
+            }),
+          object: objProj =>
+            proxyObjectProjection({
+              source,
+              projection: objProj,
+              basePath: [...basePath, prop.name],
+              nullable: projection.nullable || nullable,
+            }),
+          ref: refProj => proxyRefProjection(refProj),
+        }),
+      })
+    ),
+    nullable: projection.nullable,
+  });
+}
+
+function proxyRefProjection(projection: RefProjection): RefProjection {
+  return projection;
 }
 
 export class FilterQuery<T extends ValidValue<T>> extends Query<T> {
@@ -973,90 +1022,80 @@ export function createHandle(
 ): any {
   const locator =
     root instanceof LocatorExpr ? root : new LocatorExpr(root, [], optional);
-  const proj = locator.projection();
-  if (proj.type === 'object') {
-    return createObjectHandle(locator, proj, []);
-  } else if (proj.type === 'scalar') {
-    return locator;
-  }
 
-  return assertNever(proj, 'unknown query projection type');
+  return locator.projection().visit({
+    object: proj => createObjectHandle(locator, proj),
+    ref: proj => createRefHandle(locator, proj),
+    scalar: proj => createScalarHandle(locator, proj),
+  });
 }
 
-const SPREAD_PLACEHOLDER_PREFIX = '__orm_private_spread_placeholder_';
-let magicCounter = 0;
-function createSpreadPlaceholder() {
-  magicCounter += 1;
-  return `${SPREAD_PLACEHOLDER_PREFIX}${magicCounter}`;
+function createScalarHandle(
+  locator: LocatorExpr<any>,
+  _proj: ScalarProjection
+) {
+  return locator;
+}
+
+function createObjectLikeHandle(
+  locator: LocatorExpr<any>,
+  props: readonly ObjectProjectionProp[],
+  ctor: new (locator: LocatorExpr<any>) => any
+): any {
+  const handle = new ctor(locator);
+
+  // todo: don't allow projection to have both ref and prop with the same name
+  for (const prop of props) {
+    Object.defineProperty(handle, prop.name, {
+      enumerable: true,
+      get: () => createHandle(locator.push(prop.name)),
+    });
+  }
+
+  // todo: add a proxy that will throw on access to an unknown prop
+  return Object.freeze(handle);
+}
+
+class ObjectHandle {
+  constructor(public __orm_locator: LocatorExpr<any>) {}
 }
 
 function createObjectHandle(
   locator: LocatorExpr<any>,
-  proj: ObjectProjection,
-  prefix: PropPath
+  proj: ObjectProjection
 ): any {
-  const spreadPlaceholder = createSpreadPlaceholder();
-  const base: any = {};
-  base[spreadPlaceholder] = locator;
-  return new Proxy(base, {
-    get(_, prop) {
-      if (typeof prop === 'symbol') {
-        throw new Error('can not use symbol as handle property');
-      }
-
-      if (prop === spreadPlaceholder) {
-        return locator;
-      }
-
-      for (const ref of proj.refs) {
-        if (arrayEqual(ref.path, [...prefix, prop])) {
-          return createRefHandle(locator, ref);
-        }
-      }
-
-      for (const path of [
-        ...proj.refs.map(x => x.path),
-        ...proj.props.map(x => x.path),
-      ]) {
-        if (startsWith(path.slice(0, -1), [...prefix, prop])) {
-          return createObjectHandle(locator, proj, [...prefix, prop]);
-        }
-      }
-
-      // todo: throw if no prop with that name
-      return createPropHandle(locator, [...prefix, prop]);
-    },
-  });
+  return createObjectLikeHandle(locator, proj.props, ObjectHandle);
 }
 
-function createPropHandle(locator: LocatorExpr<any>, path: PropPath): any {
-  return locator.push(path);
+function createRefHandle(locator: LocatorExpr<any>, proj: RefProjection): any {
+  return match(proj.ref)
+    .with({type: 'forward_ref'}, ref => createForwardRefHandle(locator, ref))
+    .with({type: 'back_ref'}, ref => createBackRefHandle(locator, ref))
+    .exhaustive();
 }
 
-function createRefHandle(locator: LocatorExpr<any>, ref: Ref): any {
-  if (ref.type === 'forward_ref') {
-    return createParentRefHandle(locator, ref);
-  } else if (ref.type === 'back_ref') {
-    return createChildrenRefHandle(locator, ref);
-  }
-
-  return assertNever(ref, 'unknown ref type');
-}
-
-export function createChildrenRefHandle(
-  parent: LocatorExpr<any>,
-  ref: BackRef
-) {
+export function createBackRefHandle(parent: LocatorExpr<any>, ref: BackRef) {
   return FilterQuery.create(ref.child(), child =>
     ref.condition(createHandle(parent), child)
   );
 }
 
-function createParentRefHandle(
+class RefHandle {
+  constructor(public __orm_locator: LocatorExpr<any>) {}
+}
+
+function createForwardRefHandle(
   locator: LocatorExpr<any>,
   ref: ForwardRef
 ): any {
-  return createHandle(locator.push(ref.path));
+  const refTarget = ref.parent();
+  const refTargetProj = refTarget.projection;
+
+  return refTargetProj.visit({
+    scalar: proj => createScalarHandle(locator, proj),
+    ref: proj => createRefHandle(locator, proj),
+    object: proj => createObjectLikeHandle(locator, proj.props, RefHandle),
+  });
 }
 
 function inferProjection(value: Mapping, depth = 0): Projection {
@@ -1080,86 +1119,58 @@ function inferProjection(value: Mapping, depth = 0): Projection {
     }
 
     if (value instanceof Query) {
-      throw new Error('query selection is not supported');
+      throw new Error('query projection is not supported');
     }
 
-    // no more options, it must be a nested object projection
+    // no more options, it must be an object projection
 
     if (depth > 1024) {
       throw new Error('nested projection is too deep');
     }
 
-    const props: PropProjection[] = [];
-    const refs: Ref[] = [];
+    if (value instanceof ObjectHandle) {
+      const valueProj = value.__orm_locator.projection();
 
-    // reverse because in SQL first column wins, in JS using spread operator last wins
-    const keys = Object.keys(value).reverse();
-    for (const key of keys) {
-      const propValue = (value as any)[key];
-      if (key.startsWith(SPREAD_PLACEHOLDER_PREFIX)) {
-        const locator: LocatorExpr<any> = propValue;
-        const locatorProj = locator.projection();
-        assert(
-          locatorProj.type !== 'scalar',
-          'invalid wildcard projection for scalar'
-        );
-        for (const prop of locatorProj.props) {
-          props.push({
-            expr: locator.push(prop.path),
-            path: prop.path,
-            scalarType: prop.scalarType,
-          });
-        }
+      assert(
+        valueProj instanceof ObjectProjection,
+        'object handle must be an object projection'
+      );
 
-        refs.push(...locatorProj.refs);
-      } else {
-        if (propValue === undefined) continue;
-
-        const propProj = inferProjection(propValue, depth + 1);
-
-        if (propProj.type === 'object') {
-          for (const nestedProp of propProj.props) {
-            props.push({
-              path: [key, ...nestedProp.path],
-              expr: nestedProp.expr,
-              scalarType: nestedProp.scalarType,
-            });
-          }
-
-          for (const nestedRef of propProj.refs) {
-            refs.push({
-              ...nestedRef,
-              path: [key, ...nestedRef.path],
-              condition: (parent, child) =>
-                nestedRef.condition(
-                  parent,
-                  new Proxy(child, {
-                    get: (_, prop) => child[key][prop],
-                  })
-                ),
-            });
-          }
-        } else {
-          assert(
-            propProj.scalarType.type !== 'array',
-            'cannot project to an array type'
-          );
-
-          props.push({
-            path: [key],
-            scalarType: propProj.scalarType,
-            expr: propProj.expr,
-          });
-        }
-      }
+      return valueProj;
     }
 
-    return {
-      type: 'object',
-      props: deduplicateFirstWins(props, (a, b) => arrayEqual(a.path, b.path)),
-      refs: deduplicateFirstWins(refs, (a, b) => arrayEqual(a.path, b.path)),
+    if (value instanceof RefHandle) {
+      const valueProj = value.__orm_locator.projection();
+
+      assert(
+        valueProj instanceof RefProjection,
+        'ref handle must be a ref projection'
+      );
+
+      return valueProj;
+    }
+
+    const props: ObjectProjectionProp[] = [];
+
+    // reverse because in JS spread operator last wins
+    const propNames = Object.keys(value).reverse();
+    for (const propName of propNames) {
+      const propValue = (value as any)[propName];
+
+      if (propValue === undefined) continue;
+
+      const propProj = inferProjection(propValue, depth + 1);
+
+      props.push({
+        name: propName,
+        projection: propProj,
+      });
+    }
+
+    return new ObjectProjection({
+      props: dedupeFirstWins(props, (a, b) => a.name === b.name),
       nullable: false,
-    };
+    });
   }
 
   return assertNever(value, 'unsupported selection');

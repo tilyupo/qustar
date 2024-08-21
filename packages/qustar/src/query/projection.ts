@@ -1,28 +1,89 @@
-import {ScalarType, SingleScalarType} from '../literal.js';
+import {match} from 'ts-pattern';
+import {ScalarType} from '../literal.js';
 import {Expr} from './expr.js';
 import {Ref} from './schema.js';
+import {ObjectShape, Shape} from './shape.js';
 
-export type Projection = ScalarProjection | ObjectProjection;
-
-export type PropPath = string[];
-
-export interface GenericProjection<TType extends string> {
-  readonly type: TType;
+export interface ProjectionVisitor<T> {
+  scalar(projection: ScalarProjection): T;
+  object(projection: ObjectProjection): T;
+  ref(projection: RefProjection): T;
 }
 
-export interface ScalarProjection extends GenericProjection<'scalar'> {
+export abstract class Projection {
+  abstract visit<T>(visitor: ProjectionVisitor<T>): T;
+
+  abstract shape(): Shape;
+}
+
+export interface ScalarProjectionOptions {
   readonly scalarType: ScalarType;
   readonly expr: Expr<any>;
 }
 
-export interface PropProjection {
-  readonly expr: Expr<any>;
-  readonly path: PropPath;
-  readonly scalarType: SingleScalarType;
+export class ScalarProjection extends Projection {
+  constructor(public readonly expr: Expr<any>) {
+    super();
+  }
+
+  visit<T>(visitor: ProjectionVisitor<T>): T {
+    return visitor.scalar(this);
+  }
+
+  shape(): Shape {
+    return this.expr.shape();
+  }
 }
 
-export interface ObjectProjection extends GenericProjection<'object'> {
-  readonly props: readonly PropProjection[];
-  readonly refs: readonly Ref[];
+export class RefProjection extends Projection {
+  constructor(public readonly ref: Ref) {
+    super();
+  }
+
+  visit<T>(visitor: ProjectionVisitor<T>): T {
+    return visitor.ref(this);
+  }
+
+  shape(): Shape {
+    return match(this.ref)
+      .with({type: 'forward_ref'}, ref => ref.parent().shape.valueShape)
+      .with({type: 'back_ref'}, ref => ref.child().shape)
+      .exhaustive();
+  }
+}
+
+export interface ObjectProjectionOptions {
+  readonly props: readonly ObjectProjectionProp[];
   readonly nullable: boolean;
+}
+
+export class ObjectProjection extends Projection {
+  readonly props: readonly ObjectProjectionProp[];
+  readonly nullable: boolean;
+
+  constructor({props, nullable}: ObjectProjectionOptions) {
+    super();
+
+    this.props = props;
+    this.nullable = nullable;
+  }
+
+  visit<T>(visitor: ProjectionVisitor<T>): T {
+    return visitor.object(this);
+  }
+
+  shape(): Shape {
+    return new ObjectShape({
+      nullable: this.nullable,
+      props: this.props.map(prop => ({
+        name: prop.name,
+        shape: () => prop.projection.shape(),
+      })),
+    });
+  }
+}
+
+export interface ObjectProjectionProp {
+  readonly name: string;
+  readonly projection: Projection;
 }

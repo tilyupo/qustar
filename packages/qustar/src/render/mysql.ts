@@ -7,7 +7,6 @@ export function renderMysql(sql: Sql): SqlCommand {
     float32Type: 'FLOAT',
     int32Type: 'SIGNED',
     textType: 'CHAR',
-    xor: '^',
     castToIntAfterBitwiseNot: true,
     emulateArrayLiteralParam: true,
     escapeId(id: string): string {

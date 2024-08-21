@@ -10,6 +10,7 @@ import {
   Literal,
   ScalarType,
   SingleLiteralValue,
+  StringScalarType,
 } from '../literal.js';
 import {renderMysql} from '../render/mysql.js';
 import {renderPostgresql} from '../render/postgresql.js';
@@ -18,9 +19,10 @@ import {optimize} from '../sql/optimizer.js';
 import {Assert, Equal} from '../types/query.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {compileQuery} from './compiler.js';
-import {Projection, PropPath, ScalarProjection} from './projection.js';
+import {Projection, ScalarProjection} from './projection.js';
 import {Dialect, Query, QuerySource, RenderOptions} from './query.js';
 import {SqlTemplate} from './schema.js';
+import {ScalarShape, Shape} from './shape.js';
 
 // expr
 
@@ -314,6 +316,10 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   abstract projection(): Projection;
 
+  // shape
+
+  abstract shape(): Shape;
+
   // unary
 
   // T extends boolean | null
@@ -512,98 +518,78 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
     return visitor.func(this);
   }
 
-  projection(): Projection {
-    const argProjections = this.args.map(x => x.projection());
+  shape(): Shape {
+    const argShapes = this.args.map(x => x.shape());
     assert(
-      argProjections.every(x => x.type === 'scalar'),
+      argShapes.every(x => x instanceof ScalarShape),
       'invalid func args, scalars required'
     );
-    const nullable = argProjections.some(
-      x => x.type !== 'scalar' || x.scalarType.nullable
+    const nullable = argShapes.some(
+      // safety: checked above that all args are of ScalarProjection type
+      x => (x as ScalarShape).type.nullable
     );
     if (
       this.func === 'substring' ||
       this.func === 'lower' ||
       this.func === 'upper'
     ) {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'string',
-          nullable,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'string',
+        nullable,
+      });
     } else if (this.func === 'concat') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'string',
-          nullable,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'string',
+        nullable,
+      });
     } else if (this.func === 'to_string') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'string',
-          nullable,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'string',
+        nullable,
+      });
     } else if (this.func === 'to_float32') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'f32',
-          nullable,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'f32',
+        nullable,
+      });
     } else if (this.func === 'to_int32') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'i32',
-          nullable,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'i32',
+        nullable,
+      });
     } else if (this.func === 'count') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'i64',
-          nullable: false,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'i64',
+        nullable: false,
+      });
     } else if (
       this.func === 'avg' ||
       this.func === 'max' ||
       this.func === 'min' ||
       this.func === 'sum'
     ) {
-      const firstArgProj = argProjections[0];
-      assert(firstArgProj.type === 'scalar', 'checked above that scalar');
-      return {
-        type: 'scalar',
-        scalarType: firstArgProj.scalarType,
-        expr: this,
-      };
+      const firstArgProj = argShapes[0];
+      assert(firstArgProj instanceof ScalarShape, 'checked above that scalar');
+      assert(
+        firstArgProj.type.type !== 'array',
+        'can not use array for aggregation'
+      );
+      return new ScalarShape({
+        type: firstArgProj.type.type,
+        nullable: true,
+      });
     } else if (this.func === 'length') {
-      const firstArgProj = argProjections[0];
-      assert(firstArgProj.type === 'scalar', 'checked above that scalar');
-      assertString(firstArgProj.scalarType);
-      return {
-        type: 'scalar',
-        scalarType: {type: 'i32', nullable},
-        expr: this,
-      };
+      const firstArgProj = argShapes[0];
+      assert(firstArgProj instanceof ScalarShape, 'checked above that scalar');
+      assertString(firstArgProj.type);
+      return new ScalarShape({type: 'i32', nullable});
     }
 
     return assertNever(this.func, 'invalid func: ' + this.func);
+  }
+
+  projection(): Projection {
+    return new ScalarProjection(this);
   }
 }
 
@@ -612,11 +598,6 @@ export type BinaryOp =
   | '-'
   | '*'
   | '/'
-  | '<<'
-  | '>>'
-  | '&'
-  | '|'
-  | '^'
   | 'or'
   | 'and'
   | '>'
@@ -660,83 +641,50 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    const left = this.lhs.projection();
-    const right = this.rhs.projection();
+    return new ScalarProjection(this);
+  }
+
+  shape(): Shape {
+    const left = this.lhs.shape();
+    const right = this.rhs.shape();
 
     // for those we want to handle nulls differently
     // we will translate == to is+== pair for nullable
     if (this.op === '!=' || this.op === '==') {
-      return {
-        type: 'scalar',
-        expr: this,
-        scalarType: {
-          type: 'boolean',
-          nullable: false,
-        },
-      };
+      return new ScalarShape({
+        type: 'boolean',
+        nullable: false,
+      });
     } else if (binaryOpIsLogical(this.op)) {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarShape && right instanceof ScalarShape,
         'logical operations are supported only for scalars'
       );
 
       if (this.op === 'in') {
         assert(
-          right.scalarType.type === 'array',
+          right.type.type === 'array',
           'in can only operate in array to the right of it'
         );
       }
 
-      return {
-        type: 'scalar',
-        expr: this,
-        scalarType: {
-          type: 'boolean',
-          nullable: left.scalarType.nullable || right.scalarType.nullable,
-        },
-      };
-    } else if (
-      this.op === '&' ||
-      this.op === '|' ||
-      this.op === '^' ||
-      this.op === '<<' ||
-      this.op === '>>'
-    ) {
-      assert(
-        left.type === 'scalar' && right.type === 'scalar',
-        'bit operations are supported only for integers'
-      );
-      assertInt(left.scalarType);
-      assertInt(right.scalarType);
-
-      return {
-        type: 'scalar',
-        expr: this,
-        scalarType: {
-          type: 'i64',
-          nullable: left.scalarType.nullable || right.scalarType.nullable,
-        },
-      };
+      return new ScalarShape({
+        type: 'boolean',
+        nullable: left.type.nullable || right.type.nullable,
+      });
     } else if (this.op === '+') {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarShape && right instanceof ScalarShape,
         'bit operations are supported only for numbers'
       );
-      assertNumericOrString(left.scalarType);
-      assertNumericOrString(right.scalarType);
+      assertNumericOrString(left.type);
+      assertNumericOrString(right.type);
 
-      return {
-        type: 'scalar',
-        expr: this,
-        scalarType: {
-          // todo: handle promotion gracefully
-          type:
-            isString(left.scalarType) || isString(right.scalarType)
-              ? 'string'
-              : 'f64',
-          nullable: left.scalarType.nullable || right.scalarType.nullable,
-        },
-      };
+      return new ScalarShape({
+        // todo: handle promotion gracefully
+        type: isString(left.type) || isString(right.type) ? 'string' : 'f64',
+        nullable: left.type.nullable || right.type.nullable,
+      });
     } else if (
       this.op === '-' ||
       this.op === '*' ||
@@ -744,27 +692,23 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
       this.op === '%'
     ) {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarShape && right instanceof ScalarShape,
         'bit operations are supported only for numbers'
       );
-      assertNumeric(left.scalarType);
+      assertNumeric(left.type);
 
-      return {
-        type: 'scalar',
-        expr: this,
-        scalarType: {
-          // todo: handle promotion gracefully
-          type: 'f64',
-          nullable: left.scalarType.nullable || right.scalarType.nullable,
-        },
-      };
+      return new ScalarShape({
+        // todo: handle promotion gracefully
+        type: 'f64',
+        nullable: left.type.nullable || right.type.nullable,
+      });
     }
 
     return assertNever(this.op, 'invalid op: ' + this.op);
   }
 }
 
-export type UnaryOp = '!' | '-' | '+' | '~';
+export type UnaryOp = '!' | '-' | '+';
 
 export class UnaryExpr<T extends SingleLiteralValue> extends Expr<T> {
   constructor(
@@ -779,26 +723,24 @@ export class UnaryExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    const innerProj = this.inner.projection();
+    return new ScalarProjection(this);
+  }
 
-    if (innerProj.type === 'object') {
-      throw new Error('unary operation can only be applied to scalars');
-    } else if (innerProj.type === 'scalar') {
-      if (this.op === '!') {
-        return {
-          type: 'scalar',
-          expr: this,
-          scalarType: {
-            type: 'boolean',
-            nullable: false,
-          },
-        };
-      } else {
-        return {...innerProj, expr: this};
-      }
+  shape(): Shape {
+    if (this.op === '!') {
+      return new ScalarShape({
+        type: 'boolean',
+        nullable: false,
+      });
+    } else {
+      const innerShape = this.inner.shape();
+      assert(
+        innerShape instanceof ScalarShape,
+        'unary expr can only be applied to a scalar'
+      );
+
+      return innerShape;
     }
-
-    return assertNever(innerProj, 'invalid inner projection: ' + innerProj);
   }
 }
 
@@ -823,26 +765,37 @@ export class CaseExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
+    return new ScalarProjection(this);
+  }
+
+  shape(): Shape {
     // todo: same as with binary, we should handle type conversion/promotion
     // we probably should also assert that types are compatible
 
     // asserted in ctor that at least one when is present, so safe
-    const innerProj = this.whens[0].result.projection();
+    const resultShapes = this.whens
+      .map(x => x.result.shape())
+      .concat([this.fallback.shape()]);
 
-    if (innerProj.type === 'object') {
-      throw new Error('case expression can only operate on scalars');
-    } else if (innerProj.type === 'scalar') {
-      return {...innerProj, expr: this};
-    }
+    assert(
+      resultShapes.every(resultShape => resultShape instanceof ScalarShape),
+      'case expression can only operate on scalars'
+    );
 
-    return assertNever(innerProj, 'invalid inner projection: ' + innerProj);
+    // safety: assert above checks that all shapes in resultShapes are scalar
+    const scalarShapes = resultShapes as ScalarShape[];
+
+    return new ScalarShape({
+      ...scalarShapes[0].type,
+      nullable: scalarShapes.some(x => x.type.nullable),
+    });
   }
 }
 
 export class LocatorExpr<T extends SingleLiteralValue> extends Expr<T> {
   constructor(
     public readonly root: QuerySource,
-    public readonly path: readonly PropPath[],
+    public readonly path: string[],
     private readonly nullable: boolean
   ) {
     super();
@@ -852,7 +805,7 @@ export class LocatorExpr<T extends SingleLiteralValue> extends Expr<T> {
     return visitor.locator(this);
   }
 
-  push(...parts: PropPath[]): LocatorExpr<any> {
+  push(...parts: string[]): LocatorExpr<any> {
     return new LocatorExpr(this.root, [...this.path, ...parts], this.nullable);
   }
 
@@ -1179,6 +1132,8 @@ export function assertInt(type: ScalarType): void {
   assert(isInt(type), 'type is not integer: ' + type.type);
 }
 
-export function assertString(type: ScalarType): void {
+export function assertString(
+  type: ScalarType
+): asserts type is StringScalarType {
   assert(isString(type), 'type is not string: ' + type.type);
 }

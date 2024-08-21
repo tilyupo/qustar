@@ -54,8 +54,6 @@ export interface SqlRenderingOptions {
   pretty?: boolean;
   emulateArrayLiteralParam?: boolean;
   castToIntAfterBitwiseNot?: boolean;
-  emulateXor?: boolean;
-  xor: '^' | '#' | (string & {});
   emulateBoolean?: boolean;
   escapeId: (id: string) => string;
   placeholder: (index: number, literal: Literal) => string;
@@ -221,10 +219,6 @@ function renderBinary(sql: BinarySql, ctx: RenderingContext): SqlCommand {
   const lhs = renderWrap(sql.lhs, ctx);
   const rhs = renderWrap(sql.rhs, ctx);
 
-  if (sql.op === '^' && ctx.options.emulateXor) {
-    return cmd`(~(${lhs}&${rhs}))&(${lhs}|${rhs})`;
-  }
-
   const op = match(sql.op)
     .with('and', () => 'AND')
     .with('or', () => 'OR')
@@ -241,11 +235,6 @@ function renderBinary(sql: BinarySql, ctx: RenderingContext): SqlCommand {
     .with('-', () => '-')
     .with('/', () => '/')
     .with('%', () => '%')
-    .with('|', () => '|')
-    .with('&', () => '&')
-    .with('^', () => ctx.options.xor)
-    .with('<<', () => '<<')
-    .with('>>', () => '>>')
     .exhaustive();
 
   return cmd`${lhs} ${op} ${rhs}`;

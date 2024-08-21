@@ -9,7 +9,6 @@ export function renderPostgresql(sql: Sql): SqlCommand {
     float32Type: 'REAL',
     int32Type: 'INT',
     textType: 'TEXT',
-    xor: '#',
     emulateArrayLiteralParam: true,
     escapeId(id: string): string {
       return `"${id.split('"').join('""')}"`;

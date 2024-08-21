@@ -272,7 +272,7 @@ export function isNumberString(value: string) {
   return /^(-|\+)?[0-9]+(\.[0-9]+)?$/.test(value);
 }
 
-export function deduplicateFirstWins<T>(
+export function dedupeFirstWins<T>(
   arr: readonly T[],
   eq: (a: T, b: T) => boolean
 ) {

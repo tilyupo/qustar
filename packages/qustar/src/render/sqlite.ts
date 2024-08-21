@@ -7,10 +7,8 @@ export function renderSqlite(sql: Sql): SqlCommand {
     float32Type: 'REAL',
     int32Type: 'INT',
     textType: 'TEXT',
-    xor: '^',
     emulateBoolean: true,
     emulateArrayLiteralParam: true,
-    emulateXor: true,
     escapeId(id: string): string {
       return `"${id.split('"').join('""')}"`;
     },

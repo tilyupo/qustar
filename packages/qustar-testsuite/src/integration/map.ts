@@ -87,13 +87,13 @@ export function describeMap({
       );
 
       testMap(
-        'nested ref',
+        'nested object',
         x => ({one: {id: x.id, title: x.title}, two: x.author}),
         {one: {id: 2, title: 'rust'}, two: {id: 1, name: 'Dima'}}
       );
 
       testMap(
-        'nested nested ref',
+        'nested nested object',
         x => ({one: {id: x.id, lvl1: {lvl2: {lvl3: 1}}}}),
         {one: {id: 2, lvl1: {lvl2: {lvl3: 1}}}}
       );

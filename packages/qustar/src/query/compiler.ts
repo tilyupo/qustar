@@ -567,14 +567,9 @@ function compileMapQuery(
 }
 
 function extractUserColumnNames(sql: QuerySql): string[] {
-  return match(sql)
-    .with({type: 'combination'}, extractUserColumnNames)
-    .with({type: 'select'}, selectSql =>
-      selectSql.columns
-        .map(x => x.as)
-        .filter(x => !x.startsWith(SYSTEM_ORDERING_COLUMN_PREFIX))
-    )
-    .exhaustive();
+  return extractColumnNames(sql).filter(
+    x => !x.startsWith(SYSTEM_COLUMN_PREFIX)
+  );
 }
 
 function assertColumnListTheSame(a: string[], b: string[]) {
@@ -615,8 +610,8 @@ function compileCombineQuery(
   const lhs = _compileQuery(lhsQuery, ctx);
   const rhs = _compileQuery(rhsQuery, ctx);
   const joins = [...lhs.joins, ...rhs.joins];
-  const lhsColumns = extractColumnNames(lhs.sql);
-  const rhsColumns = extractColumnNames(rhs.sql);
+  const lhsColumns = extractUserColumnNames(lhs.sql);
+  const rhsColumns = extractUserColumnNames(rhs.sql);
   assertColumnListTheSame(lhsColumns, rhsColumns);
 
   if (query.options.type === 'concat') {

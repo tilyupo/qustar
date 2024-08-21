@@ -5,7 +5,6 @@ import {
 } from '../literal.js';
 import {JoinFilterFn} from '../types/query.js';
 import {SingleScalarOperand} from './expr.js';
-import {PropPath} from './projection.js';
 import {Query} from './query.js';
 
 export interface Field {
@@ -44,11 +43,12 @@ export namespace SqlTemplate {
 
 export interface GenericRef<TType extends string> {
   readonly type: TType;
+  // todo: remove old comment below, for now refactoring is in progress
   // ref is always defined at root (so path length always
   // equals to one) but when using wildcard projections it
   // can migrate to a nested object. In that case condition
   // should be called with nested object as a handle
-  readonly path: PropPath;
+  readonly name: string;
 
   readonly child: () => Query<any>;
   readonly parent: () => Query<any>;

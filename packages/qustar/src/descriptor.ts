@@ -212,7 +212,7 @@ export function toSchema(
             parent: x.type.options.references,
             nullable: x.nullable,
             condition: (a, b) => x.type.options.condition(b, a),
-            path: [x.name],
+            name: x.name,
           })
         ),
       ...descriptors
@@ -230,7 +230,7 @@ export function toSchema(
             nullable: false,
             parent: table,
             condition: x.type.options.condition,
-            path: [x.name],
+            name: x.name,
           })
         ),
     ],
