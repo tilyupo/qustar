@@ -34,6 +34,19 @@ export function describeJoin({describe, expectQuery, test}: SuiteContext) {
         await expectQuery(query, [null, null, 5, 5]);
       });
 
+      test('left', async () => {
+        const query = posts
+          .leftJoin({
+            right: users,
+            condition: (post, user) => post.id.eq(user.id),
+            select: (post, user) => ({post, user}),
+          })
+          .orderByAsc(x => x.post.id)
+          .thenByAsc(x => x.user.id);
+
+        await expectQuery(query, []);
+      });
+
       test('right', async () => {
         const query = comments
           .rightJoin({

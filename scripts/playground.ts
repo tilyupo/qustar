@@ -134,15 +134,15 @@ try {
     },
   });
 
-  const x = await posts.map(x => x).fetch(connector);
-  const y = await posts.map(x => ({...x, author: x.author})).fetch(connector);
+  const query = posts.innerJoin({
+    right: users,
+    condition: (post, user) => post.id.eq(user.id),
+    select: (post, user) => ({post, user}),
+  });
 
-  console.log('x:', x);
-  console.log('y:', y);
+  console.log(query.projection.props);
 
-  await users.insert({id: 4, name: 'test'}).execute(connector);
-
-  // await execute(users, {noOpt: false});
+  execute(query);
 } finally {
   await connector.close();
 }

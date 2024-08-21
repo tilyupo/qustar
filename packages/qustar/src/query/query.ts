@@ -545,7 +545,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *  });
    */
   leftJoin<Right extends ValidValue<Right>, Result extends Mapping>(
-    options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
+    options: Omit<JoinOptionsPublic<T, Right | null, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     return this.join({
       ...options,
@@ -585,7 +585,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *  });
    */
   rightJoin<Right extends ValidValue<Right>, Result extends Mapping>(
-    options: Omit<JoinOptionsPublic<T, Right, Result>, 'type'>
+    options: Omit<JoinOptionsPublic<T | null, Right, Result>, 'type'>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
     return this.join({
       ...options,
@@ -996,38 +996,37 @@ function createObjectHandle(
   prefix: PropPath
 ): any {
   const spreadPlaceholder = createSpreadPlaceholder();
-  return new Proxy(
-    {[spreadPlaceholder]: locator},
-    {
-      get(_, prop) {
-        if (typeof prop === 'symbol') {
-          throw new Error('can not use symbol as handle property');
-        }
+  const base: any = {};
+  base[spreadPlaceholder] = locator;
+  return new Proxy(base, {
+    get(_, prop) {
+      if (typeof prop === 'symbol') {
+        throw new Error('can not use symbol as handle property');
+      }
 
-        if (prop === spreadPlaceholder) {
-          return locator;
-        }
+      if (prop === spreadPlaceholder) {
+        return locator;
+      }
 
-        for (const ref of proj.refs) {
-          if (arrayEqual(ref.path, [...prefix, prop])) {
-            return createRefHandle(locator, ref);
-          }
+      for (const ref of proj.refs) {
+        if (arrayEqual(ref.path, [...prefix, prop])) {
+          return createRefHandle(locator, ref);
         }
+      }
 
-        for (const path of [
-          ...proj.refs.map(x => x.path),
-          ...proj.props.map(x => x.path),
-        ]) {
-          if (startsWith(path.slice(0, -1), [...prefix, prop])) {
-            return createObjectHandle(locator, proj, [...prefix, prop]);
-          }
+      for (const path of [
+        ...proj.refs.map(x => x.path),
+        ...proj.props.map(x => x.path),
+      ]) {
+        if (startsWith(path.slice(0, -1), [...prefix, prop])) {
+          return createObjectHandle(locator, proj, [...prefix, prop]);
         }
+      }
 
-        // todo: throw if no prop with that name
-        return createPropHandle(locator, [...prefix, prop]);
-      },
-    }
-  );
+      // todo: throw if no prop with that name
+      return createPropHandle(locator, [...prefix, prop]);
+    },
+  });
 }
 
 function createPropHandle(locator: LocatorExpr<any>, path: PropPath): any {
