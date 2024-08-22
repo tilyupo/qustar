@@ -17,12 +17,12 @@ import {renderPostgresql} from '../render/postgresql.js';
 import {renderSqlite} from '../render/sqlite.js';
 import {optimize} from '../sql/optimizer.js';
 import {Assert, Equal} from '../types/query.js';
-import {arrayEqual, assert, assertNever} from '../utils.js';
+import {assert, assertNever} from '../utils.js';
 import {compileQuery} from './compiler.js';
-import {Projection, ScalarProjection} from './projection.js';
+import {ExprProjection, Projection} from './projection.js';
 import {Dialect, Query, QuerySource, RenderOptions} from './query.js';
 import {SqlTemplate} from './schema.js';
-import {ScalarShape, Shape} from './shape.js';
+import {ObjectShape, QueryShape, ScalarShape, Shape} from './shape.js';
 
 // expr
 
@@ -589,7 +589,7 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return new ScalarProjection(this);
+    return new ExprProjection(this);
   }
 }
 
@@ -641,7 +641,7 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return new ScalarProjection(this);
+    return new ExprProjection(this);
   }
 
   shape(): Shape {
@@ -723,7 +723,7 @@ export class UnaryExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return new ScalarProjection(this);
+    return new ExprProjection(this);
   }
 
   shape(): Shape {
@@ -765,7 +765,7 @@ export class CaseExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return new ScalarProjection(this);
+    return new ExprProjection(this);
   }
 
   shape(): Shape {
@@ -818,79 +818,67 @@ export class LocatorExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    let proj: Projection = match(this.root.projection)
-      .with({type: 'object'}, x => ({
-        ...x,
-        nullable: x.nullable || this.nullable,
-      }))
-      .with({type: 'scalar'}, x => ({
-        ...x,
-        scalarType: {
-          ...x.scalarType,
-          nullable: x.scalarType.nullable || this.nullable,
-        },
-      }))
-      .exhaustive();
+    return new ExprProjection(this);
+  }
 
-    let currentPath: readonly PropPath[] = [];
+  shape(): Shape {
+    let currentShape = this.root.shape.valueShape.visit<Shape>({
+      object: x =>
+        new ObjectShape({
+          ...x,
+          nullable: x.nullable || this.nullable,
+        }),
+      scalar: x =>
+        new ScalarShape({
+          ...x.type,
+          nullable: x.type.nullable || this.nullable,
+        }),
+      query: x =>
+        new QueryShape({
+          valueShape: x.valueShape,
+          nullable: x.nullable || this.nullable,
+        }),
+    });
+
+    let currentPath: readonly string[] = [];
     for (const part of this.path) {
       currentPath = [...currentPath, part];
 
-      if (proj.type === 'scalar') {
-        throw new Error('cannot use path on scalar: ' + proj.type);
-      } else if (proj.type === 'object') {
-        const ref = proj.refs.find(x => arrayEqual(x.path, part));
-        if (ref) {
-          proj = match(ref?.parent().projection)
-            .with(
-              {type: 'scalar'},
-              (x): Projection => ({
-                ...x,
-                scalarType: {
-                  ...x.scalarType,
-                  nullable: x.scalarType.nullable || ref.nullable,
-                },
-              })
-            )
-            .with(
-              {type: 'object'},
-              (x): Projection => ({
-                ...x,
-                nullable: x.nullable || ref.nullable,
-              })
-            )
-            .exhaustive();
-        } else {
-          const prop = proj.props.find(x => arrayEqual(x.path, part));
+      currentShape = currentShape.visit({
+        scalar: () => {
+          throw new Error('cannot use path on scalar: ' + part);
+        },
+        query: () => {
+          throw new Error('cannot use path on query: ' + part);
+        },
+        object: shape => {
+          const prop = shape.props.find(x => x.name === part);
           if (prop) {
-            proj = {
-              type: 'scalar',
-              scalarType: {
-                ...prop.scalarType,
-                nullable: proj.nullable || prop.scalarType.nullable,
-              },
-              expr: prop.expr,
-            };
+            return prop.shape().visit<Shape>({
+              scalar: x =>
+                new ScalarShape({
+                  ...x.type,
+                  nullable: x.nullable || currentShape.nullable,
+                }),
+              object: x =>
+                new ObjectShape({
+                  props: x.props,
+                  nullable: x.nullable || currentShape.nullable,
+                }),
+              query: x =>
+                new QueryShape({
+                  nullable: x.nullable || currentShape.nullable,
+                  valueShape: x.valueShape,
+                }),
+            });
           } else {
             throw new Error('invalid projection prop: ' + part);
           }
-        }
-      } else {
-        assertNever(proj, 'invalid projection: ' + proj);
-      }
+        },
+      });
     }
 
-    return match(proj)
-      .with({type: 'object'}, x => x)
-      .with(
-        {type: 'scalar'},
-        (x): ScalarProjection => ({
-          type: 'scalar',
-          expr: this,
-          scalarType: x.scalarType,
-        })
-      )
-      .exhaustive();
+    return currentShape;
   }
 }
 
@@ -904,7 +892,11 @@ export class LiteralExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return {type: 'scalar', scalarType: this.literal.type, expr: this};
+    return new ExprProjection(this);
+  }
+
+  shape(): Shape {
+    return new ScalarShape(this.literal.type);
   }
 }
 
@@ -921,11 +913,11 @@ export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return {
-      type: 'scalar',
-      expr: this,
-      scalarType: this.scalarType,
-    };
+    return new ExprProjection(this);
+  }
+
+  shape(): Shape {
+    return new ScalarShape(this.scalarType);
   }
 }
 
@@ -1037,55 +1029,43 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
+    return new ExprProjection(this);
+  }
+
+  shape(): Shape {
     if (
       this.terminator === 'sum' ||
       this.terminator === 'mean' ||
       this.terminator === 'max' ||
       this.terminator === 'min'
     ) {
-      const queryProj = this.query.projection;
+      const queryValueShape = this.query.shape.valueShape;
       assert(
-        queryProj.type === 'scalar',
-        'query projection is not scalar: ' + queryProj.type
+        queryValueShape instanceof ScalarShape,
+        'query projection is not scalar: ' + queryValueShape.constructor.name
       );
-      assertNumeric(queryProj.scalarType);
-      return {
-        type: 'scalar',
-        scalarType: {
-          ...queryProj.scalarType,
-          nullable: true,
-        },
-        expr: this,
-      };
+      assertNumeric(queryValueShape.type);
+      return new ScalarShape({
+        ...queryValueShape.type,
+        nullable: true,
+      });
     } else if (this.terminator === 'empty' || this.terminator === 'some') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'boolean',
-          nullable: false,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'boolean',
+        nullable: false,
+      });
     } else if (this.terminator === 'size') {
-      return {
-        type: 'scalar',
-        scalarType: {
-          type: 'i64',
-          nullable: false,
-        },
-        expr: this,
-      };
+      return new ScalarShape({
+        type: 'i64',
+        nullable: false,
+      });
     } else if (this.terminator === 'first') {
-      const queryProj = this.query.projection;
+      const queryValueShape = this.query.shape.valueShape;
       assert(
-        queryProj.type === 'scalar',
-        'query projection is not scalar: ' + queryProj.type
+        queryValueShape instanceof ScalarShape,
+        'query projection is not scalar: ' + queryValueShape.constructor.name
       );
-      return {
-        type: 'scalar',
-        scalarType: queryProj.scalarType,
-        expr: this,
-      };
+      return new ScalarShape(queryValueShape.type);
     }
 
     return assertNever(

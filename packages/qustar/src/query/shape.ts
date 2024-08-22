@@ -7,12 +7,14 @@ export interface ShapeVisitor<T> {
 }
 
 export abstract class Shape {
+  constructor(public readonly nullable: boolean) {}
+
   abstract visit<T>(visitor: ShapeVisitor<T>): T;
 }
 
 export class ScalarShape extends Shape {
   constructor(public readonly type: ScalarType) {
-    super();
+    super(type.nullable);
   }
 
   visit<T>(visitor: ShapeVisitor<T>): T {
@@ -32,12 +34,10 @@ export interface ObjectShapeOptions {
 
 export class ObjectShape extends Shape {
   public readonly props: readonly ObjectShapeProp[];
-  public nullable: boolean;
   constructor({props, nullable}: ObjectShapeOptions) {
-    super();
+    super(nullable);
 
     this.props = props;
-    this.nullable = nullable;
   }
 
   visit<T>(visitor: ShapeVisitor<T>): T {
@@ -45,9 +45,18 @@ export class ObjectShape extends Shape {
   }
 }
 
+export interface QueryShapeOptions {
+  readonly valueShape: Shape;
+  readonly nullable: boolean;
+}
+
 export class QueryShape extends Shape {
-  constructor(public readonly valueShape: Shape) {
-    super();
+  public readonly valueShape: Shape;
+
+  constructor({valueShape, nullable}: QueryShapeOptions) {
+    super(nullable);
+
+    this.valueShape = valueShape;
   }
 
   visit<T>(visitor: ShapeVisitor<T>): T {

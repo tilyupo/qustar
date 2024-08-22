@@ -1,11 +1,10 @@
 import {match} from 'ts-pattern';
-import {ScalarType} from '../literal.js';
 import {Expr} from './expr.js';
 import {Ref} from './schema.js';
 import {ObjectShape, Shape} from './shape.js';
 
 export interface ProjectionVisitor<T> {
-  scalar(projection: ScalarProjection): T;
+  expr(projection: ExprProjection): T;
   object(projection: ObjectProjection): T;
   ref(projection: RefProjection): T;
 }
@@ -16,18 +15,13 @@ export abstract class Projection {
   abstract shape(): Shape;
 }
 
-export interface ScalarProjectionOptions {
-  readonly scalarType: ScalarType;
-  readonly expr: Expr<any>;
-}
-
-export class ScalarProjection extends Projection {
+export class ExprProjection extends Projection {
   constructor(public readonly expr: Expr<any>) {
     super();
   }
 
   visit<T>(visitor: ProjectionVisitor<T>): T {
-    return visitor.scalar(this);
+    return visitor.expr(this);
   }
 
   shape(): Shape {

@@ -40,11 +40,11 @@ import {
   SingleScalarOperand,
 } from './expr.js';
 import {
+  ExprProjection,
   ObjectProjection,
   ObjectProjectionProp,
   Projection,
   RefProjection,
-  ScalarProjection,
 } from './projection.js';
 import {BackRef, ForwardRef, Schema, SqlTemplate} from './schema.js';
 import {QueryShape} from './shape.js';
@@ -95,10 +95,9 @@ function schemaProjection(root: QuerySource, schema: Schema): Projection {
       .map(
         (x): ObjectProjectionProp => ({
           name: x.name,
-          projection: new ScalarProjection({
-            scalarType: x.scalarType,
-            expr: new LocatorExpr(root, [x.name], false),
-          }),
+          projection: new ExprProjection(
+            new LocatorExpr(root, [x.name], false)
+          ),
         })
       )
       .concat(
@@ -115,6 +114,7 @@ function schemaProjection(root: QuerySource, schema: Schema): Projection {
 
 export class QuerySource {
   public readonly projection: Projection;
+  public readonly shape: QueryShape;
 
   constructor(
     public readonly inner:
@@ -134,6 +134,10 @@ export class QuerySource {
       .with({type: 'query'}, ({query}) => query.projection)
       .with({type: 'sql'}, ({schema}) => schemaProjection(this, schema))
       .exhaustive();
+
+    this.shape = new QueryShape({
+      valueShape: this.projection.shape(),
+    });
   }
 }
 
@@ -226,7 +230,9 @@ export abstract class Query<T extends ValidValue<T>> {
     public readonly source: QuerySource,
     public readonly projection: Projection
   ) {
-    this.shape = new QueryShape(this.projection.shape());
+    this.shape = new QueryShape({
+      valueShape: this.projection.shape(),
+    });
   }
 
   /**
@@ -925,7 +931,7 @@ function proxyProjection(source: QuerySource): Projection {
         basePath: [],
         nullable: false,
       }),
-    scalar: projection =>
+    expr: projection =>
       proxyScalarProjection({
         source,
         projection,
@@ -945,14 +951,10 @@ interface ProxyProjectionOptions<TProjection extends Projection> {
 
 function proxyScalarProjection({
   source,
-  projection,
   basePath,
   nullable,
-}: ProxyProjectionOptions<ScalarProjection>): ScalarProjection {
-  return new ScalarProjection({
-    scalarType: projection.scalarType,
-    expr: new LocatorExpr(source, basePath, nullable),
-  });
+}: ProxyProjectionOptions<ExprProjection>): ExprProjection {
+  return new ExprProjection(new LocatorExpr(source, basePath, nullable));
 }
 
 function proxyObjectProjection({
@@ -966,7 +968,7 @@ function proxyObjectProjection({
       (prop): ObjectProjectionProp => ({
         name: prop.name,
         projection: prop.projection.visit<Projection>({
-          scalar: scalarProj =>
+          expr: scalarProj =>
             proxyScalarProjection({
               source,
               projection: scalarProj,
@@ -1026,14 +1028,11 @@ export function createHandle(
   return locator.projection().visit({
     object: proj => createObjectHandle(locator, proj),
     ref: proj => createRefHandle(locator, proj),
-    scalar: proj => createScalarHandle(locator, proj),
+    expr: proj => createScalarHandle(locator, proj),
   });
 }
 
-function createScalarHandle(
-  locator: LocatorExpr<any>,
-  _proj: ScalarProjection
-) {
+function createScalarHandle(locator: LocatorExpr<any>, _proj: ExprProjection) {
   return locator;
 }
 
@@ -1092,7 +1091,7 @@ function createForwardRefHandle(
   const refTargetProj = refTarget.projection;
 
   return refTargetProj.visit({
-    scalar: proj => createScalarHandle(locator, proj),
+    expr: proj => createScalarHandle(locator, proj),
     ref: proj => createRefHandle(locator, proj),
     object: proj => createObjectLikeHandle(locator, proj.props, RefHandle),
   });

@@ -32,7 +32,7 @@ import {
   UnaryExpr,
   binaryOpIsLogical,
 } from './expr.js';
-import {ObjectProjection, PropPath, ScalarProjection} from './projection.js';
+import {ExprProjection, ObjectProjection, PropPath} from './projection.js';
 import {
   CombineQuery,
   DeleteStmt,
@@ -379,7 +379,7 @@ function propagateOrdering(source: SqlSource): OrderPropagation {
 }
 
 function compileScalarProjection(
-  proj: ScalarProjection,
+  proj: ExprProjection,
   query: Query<any>,
   ctx: CompilationContext,
   preserveOrder: boolean

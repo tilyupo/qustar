@@ -32,6 +32,7 @@ features:
       - use round in sqlite instead of cast for float -> int
   - use = ANY($1::int[]) instead of emulating array literal in PostgreSQL
   - allow to derive schema at runtime using a connector
+  - add select into
 
 tech:
   - refactor combine query compiler
@@ -76,6 +77,7 @@ sql optimizer:
   - relax limit opt constraint
   - remove useless joins after optimization
   - optimize non inner joins
+  - optimizer doesn't work with raw sql
 
 release:
   - check all `new Error`
