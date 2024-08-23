@@ -44,6 +44,7 @@ import {
   ObjectProjection,
   ObjectProjectionProp,
   Projection,
+  QueryProjection,
   RefProjection,
 } from './projection.js';
 import {BackRef, ForwardRef, Schema, SqlTemplate} from './schema.js';
@@ -939,6 +940,7 @@ function proxyProjection(source: QuerySource): Projection {
         nullable: false,
       }),
     ref: projection => proxyRefProjection(projection),
+    query: projection => proxyQueryProjection(projection),
   });
 }
 
@@ -983,6 +985,7 @@ function proxyObjectProjection({
               nullable: projection.nullable || nullable,
             }),
           ref: refProj => proxyRefProjection(refProj),
+          query: queryProj => proxyQueryProjection(queryProj),
         }),
       })
     ),
@@ -991,6 +994,12 @@ function proxyObjectProjection({
 }
 
 function proxyRefProjection(projection: RefProjection): RefProjection {
+  throw 'rewrite ref';
+  return projection;
+}
+
+function proxyQueryProjection(projection: QueryProjection): QueryProjection {
+  throw 'rewrite query';
   return projection;
 }
 
@@ -1029,6 +1038,7 @@ export function createHandle(
     object: proj => createObjectHandle(locator, proj),
     ref: proj => createRefHandle(locator, proj),
     expr: proj => createScalarHandle(locator, proj),
+    query: proj => createQueryHandle(locator, proj),
   });
 }
 
@@ -1073,6 +1083,14 @@ function createRefHandle(locator: LocatorExpr<any>, proj: RefProjection): any {
     .exhaustive();
 }
 
+function createQueryHandle(
+  _locator: LocatorExpr<any>,
+  proj: QueryProjection
+): any {
+  // todo: is it right?
+  return proj.query;
+}
+
 export function createBackRefHandle(parent: LocatorExpr<any>, ref: BackRef) {
   return FilterQuery.create(ref.child(), child =>
     ref.condition(createHandle(parent), child)
@@ -1094,6 +1112,7 @@ function createForwardRefHandle(
     expr: proj => createScalarHandle(locator, proj),
     ref: proj => createRefHandle(locator, proj),
     object: proj => createObjectLikeHandle(locator, proj.props, RefHandle),
+    query: proj => createQueryHandle(locator, proj),
   });
 }
 

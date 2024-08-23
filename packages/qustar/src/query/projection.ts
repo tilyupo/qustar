@@ -1,12 +1,13 @@
-import {match} from 'ts-pattern';
 import {Expr} from './expr.js';
-import {Ref} from './schema.js';
+import {Query} from './query.js';
+import {ForwardRef} from './schema.js';
 import {ObjectShape, Shape} from './shape.js';
 
 export interface ProjectionVisitor<T> {
   expr(projection: ExprProjection): T;
   object(projection: ObjectProjection): T;
   ref(projection: RefProjection): T;
+  query(projection: QueryProjection): T;
 }
 
 export abstract class Projection {
@@ -30,7 +31,7 @@ export class ExprProjection extends Projection {
 }
 
 export class RefProjection extends Projection {
-  constructor(public readonly ref: Ref) {
+  constructor(public readonly ref: ForwardRef) {
     super();
   }
 
@@ -39,10 +40,7 @@ export class RefProjection extends Projection {
   }
 
   shape(): Shape {
-    return match(this.ref)
-      .with({type: 'forward_ref'}, ref => ref.parent().shape.valueShape)
-      .with({type: 'back_ref'}, ref => ref.child().shape)
-      .exhaustive();
+    return this.ref.parent().shape.valueShape;
   }
 }
 
@@ -80,4 +78,28 @@ export class ObjectProjection extends Projection {
 export interface ObjectProjectionProp {
   readonly name: string;
   readonly projection: Projection;
+}
+
+export interface QueryProjectionOptions {
+  readonly query: Query<any>;
+  readonly nullable: boolean;
+}
+
+export class QueryProjection extends Projection {
+  public readonly query: Query<any>;
+  readonly nullable: boolean;
+
+  constructor({query, nullable}: QueryProjectionOptions) {
+    super();
+    this.query = query;
+    this.nullable = nullable;
+  }
+
+  visit<T>(visitor: ProjectionVisitor<T>): T {
+    return visitor.query(this);
+  }
+
+  shape(): Shape {
+    return this.query.shape;
+  }
 }
