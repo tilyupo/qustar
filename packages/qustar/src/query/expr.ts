@@ -314,7 +314,9 @@ export abstract class Expr<T extends SingleLiteralValue> {
 
   // projection
 
-  abstract projection(): Projection;
+  projection(): Projection {
+    return new ExprProjection(this);
+  }
 
   // shape
 
@@ -587,10 +589,6 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
 
     return assertNever(this.func, 'invalid func: ' + this.func);
   }
-
-  projection(): Projection {
-    return new ExprProjection(this);
-  }
 }
 
 export type BinaryOp =
@@ -638,10 +636,6 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
 
   visit<V>(visitor: ExprVisitor<V>): V {
     return visitor.binary(this);
-  }
-
-  projection(): Projection {
-    return new ExprProjection(this);
   }
 
   shape(): Shape {
@@ -722,10 +716,6 @@ export class UnaryExpr<T extends SingleLiteralValue> extends Expr<T> {
     return visitor.unary(this);
   }
 
-  projection(): Projection {
-    return new ExprProjection(this);
-  }
-
   shape(): Shape {
     if (this.op === '!') {
       return new ScalarShape({
@@ -762,10 +752,6 @@ export class CaseExpr<T extends SingleLiteralValue> extends Expr<T> {
 
   visit<T>(visitor: ExprVisitor<T>): T {
     return visitor.case(this);
-  }
-
-  projection(): Projection {
-    return new ExprProjection(this);
   }
 
   shape(): Shape {
@@ -817,12 +803,8 @@ export class LocatorExpr<T extends SingleLiteralValue> extends Expr<T> {
     return this.truncate(this.path.length - 1);
   }
 
-  projection(): Projection {
-    return new ExprProjection(this);
-  }
-
   shape(): Shape {
-    let currentShape = this.root.shape.valueShape.visit<Shape>({
+    let currentShape = this.root.shape().valueShape.visit<Shape>({
       object: x =>
         new ObjectShape({
           ...x,
@@ -891,10 +873,6 @@ export class LiteralExpr<T extends SingleLiteralValue> extends Expr<T> {
     return visitor.literal(this);
   }
 
-  projection(): Projection {
-    return new ExprProjection(this);
-  }
-
   shape(): Shape {
     return new ScalarShape(this.literal.type);
   }
@@ -910,10 +888,6 @@ export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
 
   visit<V>(visitor: ExprVisitor<V>): V {
     return visitor.sql(this);
-  }
-
-  projection(): Projection {
-    return new ExprProjection(this);
   }
 
   shape(): Shape {
@@ -1026,10 +1000,6 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
 
   visit<T>(visitor: ExprVisitor<T>): T {
     return visitor.queryTerminator(this);
-  }
-
-  projection(): Projection {
-    return new ExprProjection(this);
   }
 
   shape(): Shape {

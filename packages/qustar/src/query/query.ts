@@ -40,14 +40,15 @@ import {
   SingleScalarOperand,
 } from './expr.js';
 import {
+  BackRefProjection,
   ExprProjection,
+  ForwardRefProjection,
   ObjectProjection,
   ObjectProjectionProp,
   Projection,
   QueryProjection,
-  RefProjection,
 } from './projection.js';
-import {BackRef, ForwardRef, Schema, SqlTemplate} from './schema.js';
+import {BackRef, Schema, SqlTemplate} from './schema.js';
 import {QueryShape} from './shape.js';
 
 export type Dialect = 'sqlite' | 'postgresql' | 'mysql';
@@ -113,32 +114,135 @@ function schemaProjection(root: QuerySource, schema: Schema): Projection {
   });
 }
 
-export class QuerySource {
-  public readonly projection: Projection;
-  public readonly shape: QueryShape;
+// public readonly inner:
+// | {readonly type: 'table'; readonly name: string; readonly schema: Schema}
+// | {
+//     readonly type: 'query';
+//     readonly query: Query<any>;
+//   }
+// | {
+//     readonly type: 'sql';
+//     readonly sql: SqlTemplate;
+//     readonly schema: Schema;
+//   }
 
+// this.projection = match(this.inner)
+// .with({type: 'table'}, ({schema}) => schemaProjection(this, schema))
+// .with({type: 'query'}, ({query}) => query.projection)
+// .with({type: 'sql'}, ({schema}) => schemaProjection(this, schema))
+// .exhaustive();
+
+// this.shape = new QueryShape({
+// valueShape: this.projection.shape(),
+// });
+
+export interface QuerySourceVisitor<T> {
+  table(source: TableQuerySource): T;
+  query(source: QueryQuerySource): T;
+  sql(source: SqlQuerySource): T;
+  backRef(source: BackRefQuerySource): T;
+}
+
+export abstract class QuerySource {
+  constructor() {}
+
+  abstract visit<T>(visitor: QuerySourceVisitor<T>): T;
+
+  abstract projection(): Projection;
+
+  abstract shape(): QueryShape;
+}
+
+export class TableQuerySource extends QuerySource {
   constructor(
-    public readonly inner:
-      | {readonly type: 'table'; readonly name: string; readonly schema: Schema}
-      | {
-          readonly type: 'query';
-          readonly query: Query<any>;
-        }
-      | {
-          readonly type: 'sql';
-          readonly sql: SqlTemplate;
-          readonly schema: Schema;
-        }
+    public readonly name: string,
+    public readonly schema: Schema
   ) {
-    this.projection = match(this.inner)
-      .with({type: 'table'}, ({schema}) => schemaProjection(this, schema))
-      .with({type: 'query'}, ({query}) => query.projection)
-      .with({type: 'sql'}, ({schema}) => schemaProjection(this, schema))
-      .exhaustive();
+    super();
+  }
 
-    this.shape = new QueryShape({
-      valueShape: this.projection.shape(),
+  projection(): Projection {
+    return schemaProjection(this, this.schema);
+  }
+
+  shape(): QueryShape {
+    return new QueryShape({
+      valueShape: this.projection().shape(),
+      nullable: false,
     });
+  }
+
+  visit<T>(visitor: QuerySourceVisitor<T>): T {
+    return visitor.table(this);
+  }
+}
+
+export class QueryQuerySource extends QuerySource {
+  constructor(public readonly query: Query<any>) {
+    super();
+  }
+
+  projection(): Projection {
+    return this.query.projection;
+  }
+
+  shape(): QueryShape {
+    return new QueryShape({
+      valueShape: this.projection().shape(),
+      nullable: false,
+    });
+  }
+
+  visit<T>(visitor: QuerySourceVisitor<T>): T {
+    return visitor.query(this);
+  }
+}
+
+export class SqlQuerySource extends QuerySource {
+  constructor(
+    public readonly sql: SqlTemplate,
+    public readonly schema: Schema
+  ) {
+    super();
+  }
+
+  projection(): Projection {
+    return schemaProjection(this, this.schema);
+  }
+
+  shape(): QueryShape {
+    return new QueryShape({
+      valueShape: this.projection().shape(),
+      nullable: false,
+    });
+  }
+
+  visit<T>(visitor: QuerySourceVisitor<T>): T {
+    return visitor.sql(this);
+  }
+}
+
+export class BackRefQuerySource extends QuerySource {
+  constructor(
+    public readonly ref: BackRef,
+    public readonly nullable: boolean
+  ) {
+    super();
+  }
+
+  projection(): Projection {
+    return this.ref.child().projection;
+  }
+
+  shape(): QueryShape {
+    return new QueryShape({
+      nullable: this.nullable,
+      valueShape: this.projection().shape(),
+    });
+  }
+
+  visit<T>(visitor: QuerySourceVisitor<T>): T {
+    return visitor.backRef(this);
   }
 }
 
@@ -216,11 +320,10 @@ export abstract class Query<T extends ValidValue<T>> {
     schema: TSchema;
   }): Query<DeriveEntity<TSchema>> {
     const query = new ProxyQuery(
-      new QuerySource({
-        type: 'sql',
-        sql: SqlTemplate.derive(options.sql),
-        schema: toSchema(() => query, options.schema),
-      })
+      new SqlQuerySource(
+        SqlTemplate.derive(options.sql),
+        toSchema(() => query, options.schema)
+      )
     );
     return query;
   }
@@ -233,6 +336,7 @@ export abstract class Query<T extends ValidValue<T>> {
   ) {
     this.shape = new QueryShape({
       valueShape: this.projection.shape(),
+      nullable: this.source.shape().nullable,
     });
   }
 
@@ -395,7 +499,7 @@ export abstract class Query<T extends ValidValue<T>> {
     select,
     having,
   }: GroupByOptions<T, Result>): Query<Expand<ConvertMappingToValue<Result>>> {
-    const nextSource = new QuerySource({type: 'query', query: this});
+    const nextSource = new QueryQuerySource(this);
     const handle = createHandle(nextSource);
 
     const projection = inferProjection(select(handle));
@@ -439,7 +543,7 @@ export abstract class Query<T extends ValidValue<T>> {
   map<Result extends Mapping>(
     selector: MapValueFn<T, Result>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
-    const nextSource = new QuerySource({type: 'query', query: this});
+    const nextSource = new QueryQuerySource(this);
     const handle = createHandle(nextSource);
     const result = selector(handle);
 
@@ -457,11 +561,10 @@ export abstract class Query<T extends ValidValue<T>> {
   orderByAsc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
-    return OrderByQuery.create(
-      new QuerySource({type: 'query', query: this}),
-      [],
-      {selector, options: {asc: true}}
-    );
+    return OrderByQuery.create(new QueryQuerySource(this), [], {
+      selector,
+      options: {asc: true},
+    });
   }
 
   /**
@@ -474,11 +577,10 @@ export abstract class Query<T extends ValidValue<T>> {
   orderByDesc<Scalar extends ScalarMapping>(
     selector: MapScalarFn<T, Scalar>
   ): OrderByQuery<T> {
-    return OrderByQuery.create(
-      new QuerySource({type: 'query', query: this}),
-      [],
-      {selector, options: {desc: true}}
-    );
+    return OrderByQuery.create(new QueryQuerySource(this), [], {
+      selector,
+      options: {desc: true},
+    });
   }
 
   /**
@@ -526,11 +628,8 @@ export abstract class Query<T extends ValidValue<T>> {
   private join<Right extends ValidValue<Right>, Result extends Mapping>(
     options: JoinOptionsPublic<T, Right, Result>
   ): Query<Expand<ConvertMappingToValue<Result>>> {
-    const left = new QuerySource({type: 'query', query: this});
-    const right = new QuerySource({
-      type: 'query',
-      query: options.right,
-    });
+    const left = new QueryQuerySource(this);
+    const right = new QueryQuerySource(options.right);
 
     const leftProjHandle = createHandle(left, options.type === 'right');
     const rightProjHandle = createHandle(right, options.type === 'left');
@@ -618,10 +717,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *  );
    */
   flatMap<Result = any>(selector: MapQueryFn<T, Result>): Query<Result> {
-    const nextSource: QuerySource = new QuerySource({
-      type: 'query',
-      query: this,
-    });
+    const nextSource: QuerySource = new QueryQuerySource(this);
     const leftHandle = createHandle(nextSource);
     const target = selector(leftHandle);
 
@@ -629,7 +725,7 @@ export abstract class Query<T extends ValidValue<T>> {
       throw new Error('flatMap can only map to a query');
     }
 
-    const right = new QuerySource({type: 'query', query: target});
+    const right = new QueryQuerySource(target);
     const rightHandle = createHandle(right);
 
     return new FlatMapQuery(nextSource, {
@@ -641,10 +737,7 @@ export abstract class Query<T extends ValidValue<T>> {
   }
 
   private combine(options: CombineOptions<T>): Query<T> {
-    return new CombineQuery(
-      new QuerySource({type: 'query', query: this}),
-      options
-    );
+    return new CombineQuery(new QueryQuerySource(this), options);
   }
 
   /**
@@ -729,7 +822,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *  users.map(user => user.name).unique();
    */
   unique(): Query<T> {
-    return new UniqueQuery(new QuerySource({type: 'query', query: this}));
+    return new UniqueQuery(new QueryQuerySource(this));
   }
 
   /**
@@ -743,11 +836,7 @@ export abstract class Query<T extends ValidValue<T>> {
    *  posts.orderByDesc(post => = post.createdAt).limit(5, 15);
    */
   limit(limit: number, offset?: number): Query<T> {
-    return new PaginationQuery(
-      new QuerySource({type: 'query', query: this}),
-      limit,
-      offset
-    );
+    return new PaginationQuery(new QueryQuerySource(this), limit, offset);
   }
 
   /**
@@ -781,7 +870,7 @@ export abstract class Query<T extends ValidValue<T>> {
   drop(count: number): Query<T> {
     // SQL doesn't allow to use OFFSET without LIMIT
     return new PaginationQuery(
-      new QuerySource({type: 'query', query: this}),
+      new QueryQuerySource(this),
       1_000_000_000_000_000,
       count
     );
@@ -924,7 +1013,7 @@ export abstract class Query<T extends ValidValue<T>> {
 }
 
 function proxyProjection(source: QuerySource): Projection {
-  return source.projection.visit<Projection>({
+  return source.projection().visit<Projection>({
     object: projection =>
       proxyObjectProjection({
         source,
@@ -939,7 +1028,8 @@ function proxyProjection(source: QuerySource): Projection {
         basePath: [],
         nullable: false,
       }),
-    ref: projection => proxyRefProjection(projection),
+    forwardRef: refProj => proxyForwardRefProjection(refProj),
+    backRef: refProj => proxyBackRefProjection(refProj),
     query: projection => proxyQueryProjection(projection),
   });
 }
@@ -984,7 +1074,8 @@ function proxyObjectProjection({
               basePath: [...basePath, prop.name],
               nullable: projection.nullable || nullable,
             }),
-          ref: refProj => proxyRefProjection(refProj),
+          forwardRef: refProj => proxyForwardRefProjection(refProj),
+          backRef: refProj => proxyBackRefProjection(refProj),
           query: queryProj => proxyQueryProjection(queryProj),
         }),
       })
@@ -993,7 +1084,16 @@ function proxyObjectProjection({
   });
 }
 
-function proxyRefProjection(projection: RefProjection): RefProjection {
+function proxyForwardRefProjection(
+  projection: ForwardRefProjection
+): ForwardRefProjection {
+  throw 'rewrite ref';
+  return projection;
+}
+
+function proxyBackRefProjection(
+  projection: BackRefProjection
+): BackRefProjection {
   throw 'rewrite ref';
   return projection;
 }
@@ -1008,7 +1108,7 @@ export class FilterQuery<T extends ValidValue<T>> extends Query<T> {
     query: Query<T>,
     filter: FilterFn<T>
   ): Query<T> {
-    const source = new QuerySource({type: 'query', query});
+    const source = new QueryQuerySource(query);
     const handle = createHandle(source);
     const filterExpr = Expr.from(filter(handle));
 
@@ -1036,7 +1136,8 @@ export function createHandle(
 
   return locator.projection().visit({
     object: proj => createObjectHandle(locator, proj),
-    ref: proj => createRefHandle(locator, proj),
+    forwardRef: proj => createForwardRefHandle(locator, proj),
+    backRef: proj => createBackRefHandle(locator, proj),
     expr: proj => createScalarHandle(locator, proj),
     query: proj => createQueryHandle(locator, proj),
   });
@@ -1076,13 +1177,6 @@ function createObjectHandle(
   return createObjectLikeHandle(locator, proj.props, ObjectHandle);
 }
 
-function createRefHandle(locator: LocatorExpr<any>, proj: RefProjection): any {
-  return match(proj.ref)
-    .with({type: 'forward_ref'}, ref => createForwardRefHandle(locator, ref))
-    .with({type: 'back_ref'}, ref => createBackRefHandle(locator, ref))
-    .exhaustive();
-}
-
 function createQueryHandle(
   _locator: LocatorExpr<any>,
   proj: QueryProjection
@@ -1091,27 +1185,34 @@ function createQueryHandle(
   return proj.query;
 }
 
-export function createBackRefHandle(parent: LocatorExpr<any>, ref: BackRef) {
+export function createBackRefHandle(
+  parent: LocatorExpr<any>,
+  {ref}: BackRefProjection
+) {
+  throw 'todo';
   return FilterQuery.create(ref.child(), child =>
     ref.condition(createHandle(parent), child)
   );
 }
 
-class RefHandle {
+class ForwardRefHandle {
   constructor(public __orm_locator: LocatorExpr<any>) {}
 }
 
 function createForwardRefHandle(
   locator: LocatorExpr<any>,
-  ref: ForwardRef
+  {ref}: ForwardRefProjection
 ): any {
+  throw 'todo';
   const refTarget = ref.parent();
   const refTargetProj = refTarget.projection;
 
   return refTargetProj.visit({
     expr: proj => createScalarHandle(locator, proj),
-    ref: proj => createRefHandle(locator, proj),
-    object: proj => createObjectLikeHandle(locator, proj.props, RefHandle),
+    forwardRef: proj => createForwardRefHandle(locator, proj),
+    backRef: proj => createBackRefHandle(locator, proj),
+    object: proj =>
+      createObjectLikeHandle(locator, proj.props, ForwardRefHandle),
     query: proj => createQueryHandle(locator, proj),
   });
 }
@@ -1157,11 +1258,11 @@ function inferProjection(value: Mapping, depth = 0): Projection {
       return valueProj;
     }
 
-    if (value instanceof RefHandle) {
+    if (value instanceof ForwardRefHandle) {
       const valueProj = value.__orm_locator.projection();
 
       assert(
-        valueProj instanceof RefProjection,
+        valueProj instanceof ForwardRefProjection,
         'ref handle must be a ref projection'
       );
 
@@ -1455,7 +1556,7 @@ export class TableQuery<TSchema extends EntityDescriptor> extends ProxyQuery<
    *  query.filter(user => user.age.eq(42))
    */
   filter(filter: FilterFn<DeriveEntity<TSchema>>): TableFilterQuery<TSchema> {
-    const source = new QuerySource({type: 'query', query: this});
+    const source = new QueryQuerySource(this);
     const handle = createHandle(source);
     const filterExpr = Expr.from(filter(handle));
 
