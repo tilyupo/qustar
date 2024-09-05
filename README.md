@@ -198,7 +198,7 @@ const userInfo = users
   }));
 ```
 
-#### .orderByDesc(selector), .orderByDescAsc(selector)
+#### .orderByDesc(selector), .orderByAsc(selector)
 
 ```ts
 const users = users
