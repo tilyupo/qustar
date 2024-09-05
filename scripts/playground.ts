@@ -112,7 +112,7 @@ try {
   const users = Q.table({
     name: 'users',
     schema: {
-      id: Q.i32(),
+      id: Q.i32().generated(),
       name: Q.string(),
     },
   });
@@ -135,6 +135,18 @@ try {
   // });
 
   const query = users.map(user => user.id).includes(1);
+
+  // insert
+  await users.insert({name: 'User'}).execute(connector);
+
+  // update
+  await users
+    .filter(user => user.id.eq(42))
+    .update(user => ({id: user.id.add(1)}))
+    .execute(connector);
+
+  // delete
+  await users.delete(user => user.id.eq(42)).execute(connector);
 
   execute(query);
 } finally {

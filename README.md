@@ -41,7 +41,8 @@ import {Q} from 'qustar';
 const users = Q.table({
   name: 'users',
   schema: {
-    id: Q.i32(), // 32 bit integer
+    // generated is not required during insert
+    id: Q.i32().generated(), // 32 bit integer
     firstName: Q.string(), // any text
     lastName: Q.string(),
     age: Q.i32().null(), // nullable integer
@@ -85,6 +86,22 @@ ORDER BY
   ("s1"."createdAt") DESC
 LIMIT
   3
+```
+
+Insert/update/delete:
+
+```ts
+// insert
+await users.insert({firstName: 'New', lastName: 'User'}).execute(connector);
+
+// update
+await users
+  .filter(user => user.id.eq(42))
+  .update(user => ({age: user.age.add(1)}))
+  .execute(connector);
+
+// delete
+await users.delete(user => user.id.eq(42)).execute(connector);
 ```
 
 ## Supported database drivers
