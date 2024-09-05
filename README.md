@@ -237,7 +237,6 @@ Qustar supports `.innerJoin`, `.leftJoin`, `.rightJoin` and `.fullJoin`:
 const bobPosts = posts
   .innerJoin({
     right: users,
-    // condition is optional
     condition: (post, user) => post.authorId.eq(user.id),
     select: (post, author) => ({
       text: post.text,
