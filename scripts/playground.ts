@@ -117,30 +117,24 @@ try {
     },
   });
 
-  const posts = Q.table({
-    name: 'posts',
-    schema: {
-      id: Q.i32(),
-      title: Q.string(),
-      author_id: Q.i32(),
-      author: Q.ref({
-        references: () => users,
-        condition: (post, user) => post.author_id.eq(user.id),
-      }),
-      authors: Q.backRef({
-        references: () => users,
-        condition: (post, user) => post.author_id.eq(user.id),
-      }),
-    },
-  });
+  // const posts = Q.table({
+  //   name: 'posts',
+  //   schema: {
+  //     id: Q.i32(),
+  //     title: Q.string(),
+  //     author_id: Q.i32(),
+  //     author: Q.ref({
+  //       references: () => users,
+  //       condition: (post, user) => post.author_id.eq(user.id),
+  //     }),
+  //     authors: Q.backRef({
+  //       references: () => users,
+  //       condition: (post, user) => post.author_id.eq(user.id),
+  //     }),
+  //   },
+  // });
 
-  const query = posts.innerJoin({
-    right: users,
-    condition: (post, user) => post.id.eq(user.id),
-    select: (post, user) => ({post, user}),
-  });
-
-  console.log(query.projection.props);
+  const query = users.map(user => user.id).includes(1);
 
   execute(query);
 } finally {

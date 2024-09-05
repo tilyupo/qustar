@@ -65,6 +65,28 @@ const connector = new PgConnector('postgresql://qustar:passwd@localhost:5432');
 console.log('users:', await query.fetch(connector));
 ```
 
+Output:
+
+```
+{ age: 54, name: 'Linus Torvalds' }
+{ age: 29, name: 'Clark Kent' }
+{ age: 18, name: 'John Smith' }
+```
+
+The query above will be translated to:
+
+```sql
+SELECT
+  "s1"."age",
+  concat("s1"."firstName", ' ', "s1"."lastName") AS "name"
+FROM
+  users AS "s1"
+ORDER BY
+  ("s1"."createdAt") DESC
+LIMIT
+  3
+```
+
 ## Supported database drivers
 
 To execute query against a database you need a _connector_. There are many ready to use connectors that wrap existing NodeJS drivers:
@@ -93,8 +115,8 @@ import {Q} from 'qustar';
 const users = Q.table({
   name: 'users',
   schema: {
-    id: 'i32',
-    age: {type: 'i32', nullable: true},
+    id: Q.i32(),
+    age: Q.i32().null(),
     // ...
   },
 });
@@ -134,7 +156,7 @@ Now lets talk about queries and expressions.
 #### .filter(condition)
 
 ```ts
-const adults = Q.table('users')
+const adults = users
   // users with age >= 18
   .filter(user => /* any expression */ user.age.gte(18));
 ```
@@ -142,13 +164,13 @@ const adults = Q.table('users')
 #### .map(mapper)
 
 ```ts
-const userIds = Q.table('users').map(user => user.id);
+const userIds = users.map(user => user.id);
 
-const user = Q.table('users')
+const user = users
   // you can map to an object
   .map(user => ({id: user.id, name: user.name}));
 
-const userInfo = Q.table('users')
+const userInfo = users
   // you can map to nested objects
   .map(user => ({
     id: user.id,
@@ -162,7 +184,7 @@ const userInfo = Q.table('users')
 #### .orderByDesc(selector), .orderByDescAsc(selector)
 
 ```ts
-const users = Q.table('users')
+const users = users
   // order by age in ascending order
   .orderByAsc(user => user.age)
   // then order by name in descending order
@@ -172,7 +194,7 @@ const users = Q.table('users')
 #### .drop(count), Query.limit(count)
 
 ```ts
-const users = Q.table('users')
+const users = users
   .orderByAsc(user => user.id)
   // skip first ten users
   .drop(10)
@@ -185,7 +207,7 @@ const users = Q.table('users')
 You can also use `.slice` method to achieve the same:
 
 ```ts
-const users = Q.table('users')
+const users = users
   // start = 10, end = 15
   .slice(10, 15);
 ```
@@ -195,9 +217,9 @@ const users = Q.table('users')
 Qustar supports `.innerJoin`, `.leftJoin`, `.rightJoin` and `.fullJoin`:
 
 ```ts
-const bobPosts = Q.table('posts')
+const bobPosts = posts
   .innerJoin({
-    right: Q.table('users'),
+    right: users,
     // condition is optional
     condition: (post, user) => post.authorId.eq(user.id),
     select: (post, author) => ({
@@ -208,44 +230,18 @@ const bobPosts = Q.table('posts')
   .filter(({author}) => author.like('bob%'));
 ```
 
-Qustar also supports refs to avoid writing joins manually each time you need a related entity:
-
-```ts
-const posts = Q.table({
-  name: 'posts',
-  // we don't want to specify all table columns in this example, only the ref
-  additionalProperties: true,
-  schema: {
-    author: {
-      type: 'ref',
-      // post can't exist without an author
-      required: true,
-      references: () => Q.table('users'),
-      condition: (post, user) => post.authorId.eq(user.id),
-    },
-  },
-});
-
-// qustar will join users table automatically based on the condition above
-const bobPosts = posts.filter(post => post.author.name.like('bob%'));
-```
-
-Here we used query [schema](#schema). We will talk more about schema later.
-
 #### .unique()
 
 You can select distinct rows using `.unique` method:
 
 ```ts
-const names = Q.table('users')
-  .map(user => user.name)
-  .unique();
+const names = users.map(user => user.name).unique();
 ```
 
 #### .groupBy(options)
 
 ```ts
-const stats = Q.table('users').groupBy({
+const stats = users.groupBy({
   by: user => user.age,
   select: user => ({
     age: user.age,
@@ -258,8 +254,8 @@ const stats = Q.table('users').groupBy({
 #### .union(query)
 
 ```ts
-const studentNames = Q.table('students').map(student => student.name);
-const teacherNames = Q.table('teachers').map(teacher => teacher.name);
+const studentNames = students.map(student => student.name);
+const teacherNames = teachers.map(teacher => teacher.name);
 
 const uniqueNames = studentNames.union(teacherNames);
 ```
@@ -267,8 +263,8 @@ const uniqueNames = studentNames.union(teacherNames);
 #### .unionAll(query)
 
 ```ts
-const studentNames = Q.table('students').map(student => student.name);
-const teacherNames = Q.table('teachers').map(teacher => teacher.name);
+const studentNames = students.map(student => student.name);
+const teacherNames = teachers.map(teacher => teacher.name);
 
 const peopleCount = studentNames.unionAll(teacherNames).count();
 ```
@@ -276,8 +272,8 @@ const peopleCount = studentNames.unionAll(teacherNames).count();
 #### .concat(query)
 
 ```ts
-const studentNames = Q.table('students').map(student => student.name);
-const teacherNames = Q.table('teachers').map(teacher => teacher.name);
+const studentNames = students.map(student => student.name);
+const teacherNames = teachers.map(teacher => teacher.name);
 
 // concat preserves original ordering
 const allNames = studentNames.concat(teacherNames);
@@ -286,8 +282,8 @@ const allNames = studentNames.concat(teacherNames);
 #### .intersect(query)
 
 ```ts
-const studentNames = Q.table('students').map(student => student.name);
-const teacherNames = Q.table('teachers').map(teacher => teacher.name);
+const studentNames = students.map(student => student.name);
+const teacherNames = teachers.map(teacher => teacher.name);
 
 const studentAndTeacherNames = studentNames.intersect(teacherNames);
 ```
@@ -295,8 +291,8 @@ const studentAndTeacherNames = studentNames.intersect(teacherNames);
 #### .except(query)
 
 ```ts
-const studentNames = Q.table('students').map(student => student.name);
-const teacherNames = Q.table('teachers').map(teacher => teacher.name);
+const studentNames = students.map(student => student.name);
+const teacherNames = teachers.map(teacher => teacher.name);
 
 const studentOnlyNames = studentNames.except(teacherNames);
 ```
@@ -304,68 +300,20 @@ const studentOnlyNames = studentNames.except(teacherNames);
 #### .flatMap(mapper)
 
 ```ts
-const postsWithAuthor = Q.table('users').flatMap(user =>
-  Q.table('posts')
+const postsWithAuthor = users.flatMap(user =>
+  posts
     .filter(post => post.authorId.eq(user.id))
     .map(post => ({text: post.text, author: user.name}))
 );
 ```
 
-Qustar also supports `back_ref` properties:
+#### .includes(value)
 
 ```ts
-const users = Q.table({
-  name: 'users',
-  // we don't want to specify all table columns in this example
-  additionalProperties: true,
-  schema: {
-    posts: {
-      type: 'back_ref',
-      references: () => Q.table('posts'),
-      condition: (user, post) => user.id.eq(post.authorId),
-    },
-  },
-});
-
-const postsWithAuthor = users.flatMap(user =>
-  user.posts.map(post => ({text: post.text, author: user.name}))
-);
+const userExists = users.map(user => user.id).includes(42);
 ```
 
 #### Schema
-
-Qustar requires you to define the schema statically:
-
-```ts
-const users = Q.table({
-  name: 'users',
-  schema: {
-    // non nullable Int32 column
-    id: {type: 'i32'},
-    // nullable text column
-    name: {type: 'string', nullable: true},
-  },
-});
-```
-
-Knowing schema ahead of time allows qustar to make some optimizations to improve resulting query. Defining query schema statically also enables you to put an entity into a nested field:
-
-```ts
-const posts = Q.table('posts')
-  .innerJoin({
-    // users table from the above example
-    right: users,
-    condition: (post, user) => post.authorId.eq(user.id),
-    // notice that we put the whole user entity under the author property
-    select: (post, user) => ({...post, author: user}),
-  })
-  // do something with the result
-  .orderByAsc(({author}) => author.name);
-```
-
-Why do we need to know schema ahead of time to put an entity as a nested field? This is because of the SQL limitations. When we don't know all columns of the table, we have to use SQL wildcard `*` operator to select all columns. The operator can't add a prefix to selected columns. This means that some column names might overlap and we can't do anything about it. That is why we need to know all columns that need to be projected inside a nested object.
-
-In the example above we can use `{...post}`, because it's used at the top level (SQL wildcard works at the top level as well). `{nested: {...post}}` wouldn't work.
 
 The list of supported column types:
 
@@ -386,9 +334,16 @@ The list of supported column types:
 You can use raw SQL like so:
 
 ```ts
-const users = Q.sql`SELECT * from users`
+import {Q, sql} from 'qustar';
+
+const users = Q.rawQuery({
+  sql: sql`SELECT * from users`,
   // we must specify schema so qustar knows how to compose a query
-  .schema({id: 'i32', age: 'i32'})
+  schema: {
+    id: Q.i32(),
+    age: Q.i32().null(),
+  },
+})
   .filter(user => user.age.lte(25))
   .map(user => user.id);
 ```
@@ -396,25 +351,39 @@ const users = Q.sql`SELECT * from users`
 You can also use aliases in a nested query like so:
 
 ```ts
-const postIds = Q.table('users').flatMap(user =>
-  Q.sql`
-    SELECT
-      id
-    FROM
-      posts p
-    WHERE p.authorId = ${user.id}'
-  `.schema({id: 'i32'})
+const postIds = users.flatMap(user =>
+  Q.rawQuery({
+    sql: sql`
+      SELECT
+        id
+      FROM
+        posts p
+      WHERE p.authorId = ${user.id}'
+    })`,
+    schema: {
+      id: Q.i32(),
+    },
+  });
 );
 ```
 
-As you can see, you must call `Q.schema` to specify columns statically:
+You can use `Q.rawExpr` for raw SQL in a part of an operation:
 
 ```ts
-const users = query: Q.sql`SELECT id, name FROM users`.schema({
-  id: {type: 'i32'},
-  name: {type: 'string', nullable: true},
-  // you can use 'ref' and 'back_ref' as well
-});
+const halfIds = users.map(user => ({
+  halfId: Q.rawExpr({sql: sql`CAST(${user.id} as REAL) / 2`, schema: Q.f32()}),
+  name: user.name,
+}));
+```
+
+The query above will be translated to:
+
+```sql
+SELECT
+  "s1"."name",
+  (CAST(("s1"."id") as REAL) / 2) AS "halfId"
+FROM
+  users AS "s1"
 ```
 
 ## License
