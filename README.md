@@ -67,7 +67,7 @@ console.log('users:', await query.fetch(connector));
 
 Output:
 
-```
+```js
 { age: 54, name: 'Linus Torvalds' }
 { age: 29, name: 'Clark Kent' }
 { age: 18, name: 'John Smith' }
@@ -325,7 +325,7 @@ The list of supported column types:
 - **i64**: 64 bit integer
 - **f32**: 32 bit floating point number
 - **f64**: 64 bit floating point number
-- **text**: variable length string
+- **string**: variable length string
 
 [//]: '#' 'todo: add ref/back_ref docs'
 
