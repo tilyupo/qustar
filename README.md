@@ -334,7 +334,6 @@ const userExists = users.map(user => user.id).includes(42);
 The list of supported column types:
 
 - **boolean**: true or false
-- **null**: NULL
 - **i8**: 8 bit integer
 - **i16**: 16 bit integer
 - **i32**: 32 bit integer
