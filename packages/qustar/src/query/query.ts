@@ -95,8 +95,7 @@ export interface CombineOptions<T> {
 }
 
 function schemaProjection(root: QuerySource, schema: Schema): Projection {
-  return {
-    type: 'object',
+  return new ObjectProjection({
     props: schema.fields.map(
       (x): PropProjection => ({
         path: [x.name],
@@ -106,7 +105,7 @@ function schemaProjection(root: QuerySource, schema: Schema): Projection {
     ),
     refs: schema.refs,
     nullable: false,
-  };
+  });
 }
 
 export class QuerySource {
@@ -909,29 +908,27 @@ export abstract class Query<T extends ValidValue<T>> {
 }
 
 function proxyProjection(source: QuerySource): Projection {
-  return match(source.projection)
-    .with({type: 'object'}, x => proxyObjectProjection(source, x))
-    .with({type: 'scalar'}, x => proxyScalarProjection(source, x))
-    .exhaustive();
+  return source.projection.visit<Projection>({
+    object: x => proxyObjectProjection(source, x),
+    scalar: x => proxyScalarProjection(source, x),
+  });
 }
 
 function proxyScalarProjection(
   source: QuerySource,
   sourceProj: ScalarProjection
 ): ScalarProjection {
-  return {
-    type: 'scalar',
+  return new ScalarProjection({
     scalarType: sourceProj.scalarType,
     expr: new LocatorExpr(source, [], false),
-  };
+  });
 }
 
 function proxyObjectProjection(
   source: QuerySource,
   sourceProj: ObjectProjection
 ): ObjectProjection {
-  return {
-    type: 'object',
+  return new ObjectProjection({
     props: sourceProj.props.map(prop => ({
       type: 'single',
       expr: new LocatorExpr(source, [prop.path], false),
@@ -940,7 +937,7 @@ function proxyObjectProjection(
     })),
     refs: sourceProj.refs,
     nullable: sourceProj.nullable,
-  };
+  });
 }
 
 export class FilterQuery<T extends ValidValue<T>> extends Query<T> {
@@ -974,13 +971,11 @@ export function createHandle(
   const locator =
     root instanceof LocatorExpr ? root : new LocatorExpr(root, [], optional);
   const proj = locator.projection();
-  if (proj.type === 'object') {
-    return createObjectHandle(locator, proj, []);
-  } else if (proj.type === 'scalar') {
-    return locator;
-  }
 
-  return assertNever(proj, 'unknown query projection type');
+  return proj.visit({
+    object: x => createObjectHandle(locator, x, []),
+    scalar: () => locator,
+  });
 }
 
 const SPREAD_PLACEHOLDER_PREFIX = '__orm_private_spread_placeholder_';
@@ -1100,8 +1095,8 @@ function inferProjection(value: Mapping, depth = 0): Projection {
         const locator: LocatorExpr<any> = propValue;
         const locatorProj = locator.projection();
         assert(
-          locatorProj.type !== 'scalar',
-          'invalid wildcard projection for scalar'
+          locatorProj instanceof ObjectProjection,
+          'wildcard projection is supported only for objects'
         );
         for (const prop of locatorProj.props) {
           props.push({
@@ -1115,51 +1110,51 @@ function inferProjection(value: Mapping, depth = 0): Projection {
       } else {
         if (propValue === undefined) continue;
 
-        const propProj = inferProjection(propValue, depth + 1);
+        inferProjection(propValue, depth + 1).visit({
+          object: propProj => {
+            for (const nestedProp of propProj.props) {
+              props.push({
+                path: [key, ...nestedProp.path],
+                expr: nestedProp.expr,
+                scalarType: nestedProp.scalarType,
+              });
+            }
 
-        if (propProj.type === 'object') {
-          for (const nestedProp of propProj.props) {
+            for (const nestedRef of propProj.refs) {
+              refs.push({
+                ...nestedRef,
+                path: [key, ...nestedRef.path],
+                condition: (parent, child) =>
+                  nestedRef.condition(
+                    parent,
+                    new Proxy(child, {
+                      get: (_, prop) => child[key][prop],
+                    })
+                  ),
+              });
+            }
+          },
+          scalar: propProj => {
+            assert(
+              propProj.scalarType.type !== 'array',
+              'cannot project to an array type'
+            );
+
             props.push({
-              path: [key, ...nestedProp.path],
-              expr: nestedProp.expr,
-              scalarType: nestedProp.scalarType,
+              path: [key],
+              scalarType: propProj.scalarType,
+              expr: propProj.expr,
             });
-          }
-
-          for (const nestedRef of propProj.refs) {
-            refs.push({
-              ...nestedRef,
-              path: [key, ...nestedRef.path],
-              condition: (parent, child) =>
-                nestedRef.condition(
-                  parent,
-                  new Proxy(child, {
-                    get: (_, prop) => child[key][prop],
-                  })
-                ),
-            });
-          }
-        } else {
-          assert(
-            propProj.scalarType.type !== 'array',
-            'cannot project to an array type'
-          );
-
-          props.push({
-            path: [key],
-            scalarType: propProj.scalarType,
-            expr: propProj.expr,
-          });
-        }
+          },
+        });
       }
     }
 
-    return {
-      type: 'object',
+    return new ObjectProjection({
       props: deduplicateFirstWins(props, (a, b) => arrayEqual(a.path, b.path)),
       refs: deduplicateFirstWins(refs, (a, b) => arrayEqual(a.path, b.path)),
       nullable: false,
-    };
+    });
   }
 
   return assertNever(value, 'unsupported selection');

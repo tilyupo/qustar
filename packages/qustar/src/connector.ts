@@ -1,4 +1,3 @@
-import {match} from 'ts-pattern';
 import {LiteralValue, ScalarType} from './literal.js';
 import {
   SCALAR_COLUMN_ALIAS,
@@ -95,10 +94,7 @@ export function materialize(row: any | null, projection: Projection): any {
   assert(row !== undefined, 'invalid row: ' + row);
 
   if (row === null) {
-    if (
-      (projection.type === 'scalar' && projection.scalarType.nullable) ||
-      (projection.type === 'object' && projection.nullable)
-    ) {
+    if (projection.nullable) {
       return null;
     } else {
       throw new Error('got null for non-nullable row');
@@ -164,13 +160,13 @@ export function materialize(row: any | null, projection: Projection): any {
     return value;
   }
 
-  return match(projection)
-    .with({type: 'scalar'}, scalar => {
+  return projection.visit({
+    scalar: scalar => {
       const value = row[SCALAR_COLUMN_ALIAS];
 
       return materializeScalar(value, scalar.scalarType);
-    })
-    .with({type: 'object'}, object => {
+    },
+    object: object => {
       const result: Record<string, any> = {};
       for (const [path, value] of deepEntries(row)) {
         const propProj = object.props.find(x => arrayEqual(x.path, path));
@@ -179,8 +175,8 @@ export function materialize(row: any | null, projection: Projection): any {
       }
 
       return result;
-    })
-    .exhaustive();
+    },
+  });
 }
 
 export function cmd(

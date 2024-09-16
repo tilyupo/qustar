@@ -18,7 +18,12 @@ import {optimize} from '../sql/optimizer.js';
 import {Assert, Equal} from '../types/query.js';
 import {arrayEqual, assert, assertNever} from '../utils.js';
 import {compileQuery} from './compiler.js';
-import {Projection, PropPath, ScalarProjection} from './projection.js';
+import {
+  ObjectProjection,
+  Projection,
+  PropPath,
+  ScalarProjection,
+} from './projection.js';
 import {Dialect, Query, QuerySource, RenderOptions} from './query.js';
 import {SqlTemplate} from './schema.js';
 
@@ -513,72 +518,67 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    const argProjections = this.args.map(x => x.projection());
-    assert(
-      argProjections.every(x => x.type === 'scalar'),
-      'invalid func args, scalars required'
-    );
-    const nullable = argProjections.some(
-      x => x.type !== 'scalar' || x.scalarType.nullable
-    );
+    const argProjections = this.args.map(x => {
+      const proj = x.projection();
+      if (!(proj instanceof ScalarProjection)) {
+        throw new Error('invalid func args, scalars required');
+      }
+
+      return proj;
+    });
+    const nullable = argProjections.some(x => x.scalarType.nullable);
     if (
       this.func === 'substring' ||
       this.func === 'lower' ||
       this.func === 'upper'
     ) {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'string',
           nullable,
         },
         expr: this,
-      };
+      });
     } else if (this.func === 'concat') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'string',
           nullable,
         },
         expr: this,
-      };
+      });
     } else if (this.func === 'to_string') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'string',
           nullable,
         },
         expr: this,
-      };
+      });
     } else if (this.func === 'to_float32') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'f32',
           nullable,
         },
         expr: this,
-      };
+      });
     } else if (this.func === 'to_int32') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'i32',
           nullable,
         },
         expr: this,
-      };
+      });
     } else if (this.func === 'count') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'i64',
           nullable: false,
         },
         expr: this,
-      };
+      });
     } else if (
       this.func === 'avg' ||
       this.func === 'max' ||
@@ -586,21 +586,17 @@ export class FuncExpr<T extends SingleLiteralValue> extends Expr<T> {
       this.func === 'sum'
     ) {
       const firstArgProj = argProjections[0];
-      assert(firstArgProj.type === 'scalar', 'checked above that scalar');
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: firstArgProj.scalarType,
         expr: this,
-      };
+      });
     } else if (this.func === 'length') {
       const firstArgProj = argProjections[0];
-      assert(firstArgProj.type === 'scalar', 'checked above that scalar');
       assertString(firstArgProj.scalarType);
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {type: 'i32', nullable},
         expr: this,
-      };
+      });
     }
 
     return assertNever(this.func, 'invalid func: ' + this.func);
@@ -666,17 +662,16 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
     // for those we want to handle nulls differently
     // we will translate == to is+== pair for nullable
     if (this.op === '!=' || this.op === '==') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         expr: this,
         scalarType: {
           type: 'boolean',
           nullable: false,
         },
-      };
+      });
     } else if (binaryOpIsLogical(this.op)) {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarProjection && right instanceof ScalarProjection,
         'logical operations are supported only for scalars'
       );
 
@@ -687,14 +682,13 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
         );
       }
 
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         expr: this,
         scalarType: {
           type: 'boolean',
           nullable: left.scalarType.nullable || right.scalarType.nullable,
         },
-      };
+      });
     } else if (
       this.op === '&' ||
       this.op === '|' ||
@@ -703,30 +697,28 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
       this.op === '>>'
     ) {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarProjection && right instanceof ScalarProjection,
         'bit operations are supported only for integers'
       );
       assertInt(left.scalarType);
       assertInt(right.scalarType);
 
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         expr: this,
         scalarType: {
           type: 'i64',
           nullable: left.scalarType.nullable || right.scalarType.nullable,
         },
-      };
+      });
     } else if (this.op === '+') {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarProjection && right instanceof ScalarProjection,
         'bit operations are supported only for numbers'
       );
       assertNumericOrString(left.scalarType);
       assertNumericOrString(right.scalarType);
 
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         expr: this,
         scalarType: {
           // todo: handle promotion gracefully
@@ -736,7 +728,7 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
               : 'f64',
           nullable: left.scalarType.nullable || right.scalarType.nullable,
         },
-      };
+      });
     } else if (
       this.op === '-' ||
       this.op === '*' ||
@@ -744,20 +736,19 @@ export class BinaryExpr<T extends SingleLiteralValue> extends Expr<T> {
       this.op === '%'
     ) {
       assert(
-        left.type === 'scalar' && right.type === 'scalar',
+        left instanceof ScalarProjection && right instanceof ScalarProjection,
         'bit operations are supported only for numbers'
       );
       assertNumeric(left.scalarType);
 
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         expr: this,
         scalarType: {
           // todo: handle promotion gracefully
           type: 'f64',
           nullable: left.scalarType.nullable || right.scalarType.nullable,
         },
-      };
+      });
     }
 
     return assertNever(this.op, 'invalid op: ' + this.op);
@@ -779,26 +770,24 @@ export class UnaryExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    const innerProj = this.inner.projection();
-
-    if (innerProj.type === 'object') {
-      throw new Error('unary operation can only be applied to scalars');
-    } else if (innerProj.type === 'scalar') {
-      if (this.op === '!') {
-        return {
-          type: 'scalar',
-          expr: this,
-          scalarType: {
-            type: 'boolean',
-            nullable: false,
-          },
-        };
-      } else {
-        return {...innerProj, expr: this};
-      }
-    }
-
-    return assertNever(innerProj, 'invalid inner projection: ' + innerProj);
+    return this.inner.projection().visit<Projection>({
+      object: () => {
+        throw new Error('unary operation can only be applied to scalars');
+      },
+      scalar: innerProj => {
+        if (this.op === '!') {
+          return new ScalarProjection({
+            expr: this,
+            scalarType: {
+              type: 'boolean',
+              nullable: false,
+            },
+          });
+        } else {
+          return new ScalarProjection({...innerProj, expr: this});
+        }
+      },
+    });
   }
 }
 
@@ -827,15 +816,12 @@ export class CaseExpr<T extends SingleLiteralValue> extends Expr<T> {
     // we probably should also assert that types are compatible
 
     // asserted in ctor that at least one when is present, so safe
-    const innerProj = this.whens[0].result.projection();
-
-    if (innerProj.type === 'object') {
-      throw new Error('case expression can only operate on scalars');
-    } else if (innerProj.type === 'scalar') {
-      return {...innerProj, expr: this};
-    }
-
-    return assertNever(innerProj, 'invalid inner projection: ' + innerProj);
+    return this.whens[0].result.projection().visit<Projection>({
+      object: () => {
+        throw new Error('case expression can only operate on scalars');
+      },
+      scalar: innerProj => new ScalarProjection({...innerProj, expr: this}),
+    });
   }
 }
 
@@ -865,79 +851,74 @@ export class LocatorExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    let proj: Projection = match(this.root.projection)
-      .with({type: 'object'}, x => ({
-        ...x,
-        nullable: x.nullable || this.nullable,
-      }))
-      .with({type: 'scalar'}, x => ({
-        ...x,
-        scalarType: {
-          ...x.scalarType,
-          nullable: x.scalarType.nullable || this.nullable,
-        },
-      }))
-      .exhaustive();
+    let proj = this.root.projection.visit<Projection>({
+      object: x =>
+        new ObjectProjection({
+          ...x,
+          nullable: x.nullable || this.nullable,
+        }),
+      scalar: x =>
+        new ScalarProjection({
+          ...x,
+          scalarType: {
+            ...x.scalarType,
+            nullable: x.scalarType.nullable || this.nullable,
+          },
+        }),
+    });
 
     let currentPath: readonly PropPath[] = [];
     for (const part of this.path) {
       currentPath = [...currentPath, part];
 
-      if (proj.type === 'scalar') {
-        throw new Error('cannot use path on scalar: ' + proj.type);
-      } else if (proj.type === 'object') {
-        const ref = proj.refs.find(x => arrayEqual(x.path, part));
-        if (ref) {
-          proj = match(ref?.parent().projection)
-            .with(
-              {type: 'scalar'},
-              (x): Projection => ({
-                ...x,
-                scalarType: {
-                  ...x.scalarType,
-                  nullable: x.scalarType.nullable || ref.nullable,
-                },
-              })
-            )
-            .with(
-              {type: 'object'},
-              (x): Projection => ({
-                ...x,
-                nullable: x.nullable || ref.nullable,
-              })
-            )
-            .exhaustive();
-        } else {
-          const prop = proj.props.find(x => arrayEqual(x.path, part));
-          if (prop) {
-            proj = {
-              type: 'scalar',
-              scalarType: {
-                ...prop.scalarType,
-                nullable: proj.nullable || prop.scalarType.nullable,
-              },
-              expr: prop.expr,
-            };
+      proj.visit({
+        scalar: () => {
+          throw new Error('cannot use path on scalar');
+        },
+        object: objProj => {
+          const ref = objProj.refs.find(x => arrayEqual(x.path, part));
+          if (ref) {
+            proj = ref.parent().projection.visit<Projection>({
+              scalar: x =>
+                new ScalarProjection({
+                  ...x,
+                  scalarType: {
+                    ...x.scalarType,
+                    nullable: x.scalarType.nullable || ref.nullable,
+                  },
+                }),
+              object: x =>
+                new ObjectProjection({
+                  ...x,
+                  nullable: x.nullable || ref.nullable,
+                }),
+            });
           } else {
-            throw new Error('invalid projection prop: ' + part);
+            const prop = objProj.props.find(x => arrayEqual(x.path, part));
+            if (prop) {
+              proj = new ScalarProjection({
+                scalarType: {
+                  ...prop.scalarType,
+                  nullable: objProj.nullable || prop.scalarType.nullable,
+                },
+                expr: prop.expr,
+              });
+            } else {
+              throw new Error('invalid projection prop: ' + part);
+            }
           }
-        }
-      } else {
-        assertNever(proj, 'invalid projection: ' + proj);
-      }
+        },
+      });
     }
 
-    return match(proj)
-      .with({type: 'object'}, x => x)
-      .with(
-        {type: 'scalar'},
-        (x): ScalarProjection => ({
-          type: 'scalar',
+    return proj.visit<Projection>({
+      object: x => x,
+      scalar: x =>
+        new ScalarProjection({
           expr: this,
           scalarType: x.scalarType,
-        })
-      )
-      .exhaustive();
+        }),
+    });
   }
 }
 
@@ -951,7 +932,7 @@ export class LiteralExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return {type: 'scalar', scalarType: this.literal.type, expr: this};
+    return new ScalarProjection({scalarType: this.literal.type, expr: this});
   }
 }
 
@@ -968,11 +949,10 @@ export class SqlExpr<T extends SingleLiteralValue> extends Expr<T> {
   }
 
   projection(): Projection {
-    return {
-      type: 'scalar',
+    return new ScalarProjection({
       expr: this,
       scalarType: this.scalarType,
-    };
+    });
   }
 }
 
@@ -1092,47 +1072,43 @@ export class QueryTerminatorExpr<T extends SingleLiteralValue> extends Expr<T> {
     ) {
       const queryProj = this.query.projection;
       assert(
-        queryProj.type === 'scalar',
-        'query projection is not scalar: ' + queryProj.type
+        queryProj instanceof ScalarProjection,
+        'query projection is not scalar'
       );
       assertNumeric(queryProj.scalarType);
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           ...queryProj.scalarType,
           nullable: true,
         },
         expr: this,
-      };
+      });
     } else if (this.terminator === 'empty' || this.terminator === 'some') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'boolean',
           nullable: false,
         },
         expr: this,
-      };
+      });
     } else if (this.terminator === 'size') {
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: {
           type: 'i64',
           nullable: false,
         },
         expr: this,
-      };
+      });
     } else if (this.terminator === 'first') {
       const queryProj = this.query.projection;
       assert(
-        queryProj.type === 'scalar',
-        'query projection is not scalar: ' + queryProj.type
+        queryProj instanceof ScalarProjection,
+        'query projection is not scalar'
       );
-      return {
-        type: 'scalar',
+      return new ScalarProjection({
         scalarType: queryProj.scalarType,
         expr: this,
-      };
+      });
     }
 
     return assertNever(

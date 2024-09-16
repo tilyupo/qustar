@@ -306,15 +306,10 @@ function compileProjection(
   ctx: CompilationContext,
   preserveOrder = true
 ): CompilationResult<SelectSql> {
-  const proj = query.projection;
-  return match(proj)
-    .with({type: 'scalar'}, x =>
-      compileScalarProjection(x, query, ctx, preserveOrder)
-    )
-    .with({type: 'object'}, x =>
-      compileObjectProjection(x, query, ctx, preserveOrder)
-    )
-    .exhaustive();
+  return query.projection.visit({
+    scalar: x => compileScalarProjection(x, query, ctx, preserveOrder),
+    object: x => compileObjectProjection(x, query, ctx, preserveOrder),
+  });
 }
 
 export function isSystemColumn(name: string) {
@@ -909,7 +904,7 @@ function compileBinaryExpr(
   const rhsProj = expr.rhs.projection();
 
   assert(
-    lhsProj.type === 'scalar' && rhsProj.type === 'scalar',
+    lhsProj instanceof ScalarProjection && rhsProj instanceof ScalarProjection,
     'binary operators can only be applied to scalar values'
   );
 
@@ -1084,7 +1079,7 @@ function compileUnaryExpr(
 
   const proj = expr.inner.projection();
   assert(
-    proj.type === 'scalar',
+    proj instanceof ScalarProjection,
     'unary operations can only be applied to scalar values'
   );
 
@@ -1145,7 +1140,10 @@ function compileObjectLocatorExpr(
 
   const rootProj = locator.root.projection;
 
-  assert(rootProj.type === 'object', 'cannot locate item in scalar projection');
+  assert(
+    rootProj instanceof ObjectProjection,
+    'cannot locate item in scalar projection'
+  );
 
   let childAlias = locator.root;
   let rollingRefs = rootProj.refs;
@@ -1173,10 +1171,11 @@ function compileObjectLocatorExpr(
       condition: condition.sql,
     });
 
-    rollingRefs = match(ref.parent().projection)
-      .with({type: 'scalar'}, () => [])
-      .with({type: 'object'}, x => x.refs)
-      .exhaustive();
+    rollingRefs = ref.parent().projection.visit({
+      scalar: () => [],
+      object: x => x.refs,
+    });
+
     childAlias = parentAlias;
   }
 
@@ -1229,7 +1228,7 @@ function compileFuncExpr(
 
   if (expr.func === 'to_string') {
     const proj = expr.args[0].projection();
-    assert(proj.type === 'scalar');
+    assert(proj instanceof ScalarProjection);
     if (proj.scalarType.type === 'boolean') {
       return {
         sql: {
@@ -1363,7 +1362,7 @@ function compileAggregationTerminator(
   ctx: CompilationContext
 ): QueryCompilationResult {
   assert(
-    query.projection.type === 'scalar',
+    query.projection instanceof ScalarProjection,
     'terminator can only be applied to queries with scalar projections'
   );
   const {sql: querySql, joins} = _compileQuery(query, ctx);
