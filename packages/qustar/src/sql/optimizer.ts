@@ -168,10 +168,7 @@ function optimizeFilters(sql: SelectSql): SelectSql {
     limit: sql.limit,
     offset: sql.offset,
     type: sql.type,
-    orderBy: sql.orderBy?.map(x => ({
-      type: x.type,
-      expr: x.expr,
-    })),
+    orderBy: sql.orderBy?.map(x => ({type: x.type, expr: x.expr})),
     joins: sql.joins.map(x => ({
       type: x.type,
       lateral: x.lateral,
@@ -238,12 +235,7 @@ function combineConditions(
     return a;
   }
 
-  return {
-    type: 'binary',
-    op: 'and',
-    lhs: a,
-    rhs: b,
-  };
+  return {type: 'binary', op: 'and', lhs: a, rhs: b};
 }
 
 function remapLookupRefs(

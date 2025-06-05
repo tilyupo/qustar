@@ -219,11 +219,7 @@ function _compileQuery(
             (join): SelectSqlJoin => ({
               type: join.type,
               condition: join.condition,
-              right: {
-                type: 'query',
-                query: join.right,
-                as: join.rightAlias,
-              },
+              right: {type: 'query', query: join.right, as: join.rightAlias},
               lateral: false,
             })
           ),
@@ -237,10 +233,7 @@ function _compileQuery(
     return assertNever(sql, 'invalid sql');
   }
 
-  return {
-    sql: newResultSql,
-    joins: newResultJoins,
-  };
+  return {sql: newResultSql, joins: newResultJoins};
 }
 
 function compileQuerySource(
@@ -250,20 +243,12 @@ function compileQuerySource(
   if (source.inner.type === 'query') {
     const query = _compileQuery(source.inner.query, ctx);
     return {
-      sql: {
-        type: 'query',
-        as: ctx.getAlias(source),
-        query: query.sql,
-      },
+      sql: {type: 'query', as: ctx.getAlias(source), query: query.sql},
       joins: query.joins,
     };
   } else if (source.inner.type === 'table') {
     return {
-      sql: {
-        type: 'table',
-        as: ctx.getAlias(source),
-        table: source.inner.name,
-      },
+      sql: {type: 'table', as: ctx.getAlias(source), table: source.inner.name},
       joins: [],
     };
   } else if (source.inner.type === 'sql') {
@@ -334,10 +319,7 @@ interface OrderPropagation {
 // optimizer to work correctly because of the wildcard selection
 function propagateOrdering(source: SqlSource): OrderPropagation {
   if (source.type === 'table' || source.type === 'sql') {
-    return {
-      columns: [],
-      orderBy: undefined,
-    };
+    return {columns: [], orderBy: undefined};
   }
   return match(source.query)
     .with(
@@ -392,10 +374,7 @@ function compileScalarProjection(
       type: 'select',
       columns: [
         ...orderPropagation.columns,
-        {
-          expr: exprSql,
-          as: SCALAR_COLUMN_ALIAS,
-        },
+        {expr: exprSql, as: SCALAR_COLUMN_ALIAS},
       ],
       from,
       joins: [],
@@ -433,10 +412,7 @@ function compileObjectProjection(
 
   for (const prop of proj.props) {
     const expr = _compileExpr(prop.expr, ctx);
-    columns.push({
-      as: serializePropPath(prop.path),
-      expr: expr.sql,
-    });
+    columns.push({as: serializePropPath(prop.path), expr: expr.sql});
     joins.push(...expr.joins);
   }
 
@@ -473,13 +449,7 @@ function compileFilterQuery(
   );
   const joins = [...selectJoins, ...whereJoins];
 
-  return {
-    sql: {
-      ...selectSql,
-      where: whereSql,
-    },
-    joins,
-  };
+  return {sql: {...selectSql, where: whereSql}, joins};
 }
 
 function compileOrderByQuery(
@@ -492,10 +462,7 @@ function compileOrderByQuery(
   const orderBy: SqlOrderBy[] = [];
   for (const {options, expr} of query.terms) {
     const {sql: orderBySql, joins: orderJoins} = _compileExpr(expr, ctx);
-    orderBy.push({
-      type: options.desc ? 'desc' : 'asc',
-      expr: orderBySql,
-    });
+    orderBy.push({type: options.desc ? 'desc' : 'asc', expr: orderBySql});
     joins.push(...orderJoins);
   }
 
@@ -522,13 +489,7 @@ function compileUniqueQuery(
 ): QueryCompilationResult {
   const {sql: selectSql, joins} = compileProjection(query, ctx, false);
 
-  return {
-    sql: {
-      ...selectSql,
-      distinct: true,
-    },
-    joins,
-  };
+  return {sql: {...selectSql, distinct: true}, joins};
 }
 
 function compilePaginationQuery(
@@ -538,11 +499,7 @@ function compilePaginationQuery(
   const {sql: selectSql, joins} = compileProjection(query, ctx);
 
   return {
-    sql: {
-      ...selectSql,
-      limit: query.limit_,
-      offset: query.offset_,
-    },
+    sql: {...selectSql, limit: query.limit_, offset: query.offset_},
     joins,
   };
 }
@@ -619,21 +576,14 @@ function compileCombineQuery(
     const secondaryOrderCol = SYSTEM_COLUMN_PREFIX + '__concat_secondary_order';
 
     const addConcatOrder = (sql: QuerySql, primary: number): QuerySql => {
-      const source: SqlSource = {
-        type: 'query',
-        as: ctx.newAlias(),
-        query: sql,
-      };
+      const source: SqlSource = {type: 'query', as: ctx.newAlias(), query: sql};
       const {orderBy} = propagateOrdering(source);
       const primaryColumn: SelectSqlColumn = {
         as: primaryOrderCol,
         expr: {
           type: 'literal',
           parameter: false,
-          literal: {
-            type: {type: 'i32', nullable: false},
-            value: primary,
-          },
+          literal: {type: {type: 'i32', nullable: false}, value: primary},
         },
       };
 
@@ -644,10 +594,7 @@ function compileCombineQuery(
         as: columnName,
         expr: {
           type: 'lookup',
-          subject: {
-            type: 'alias',
-            name: source.as,
-          },
+          subject: {type: 'alias', name: source.as},
           prop: columnName,
         },
       }));
@@ -657,10 +604,7 @@ function compileCombineQuery(
           ...EMPTY_SELECT,
           columns: [
             primaryColumn,
-            {
-              as: secondaryOrderCol,
-              expr: {type: 'row_number', orderBy},
-            },
+            {as: secondaryOrderCol, expr: {type: 'row_number', orderBy}},
             ...sourceColumns,
           ],
           from: source,
@@ -670,10 +614,7 @@ function compileCombineQuery(
           ...EMPTY_SELECT,
           columns: [
             primaryColumn,
-            {
-              as: secondaryOrderCol,
-              expr: oneLiteral,
-            },
+            {as: secondaryOrderCol, expr: oneLiteral},
             ...sourceColumns,
           ],
           from: source,
@@ -805,14 +746,7 @@ function compileGroupByQuery(
     joins.push(...sql.joins);
   }
 
-  return {
-    sql: {
-      ...projection.sql,
-      groupBy,
-      having: having?.sql,
-    },
-    joins,
-  };
+  return {sql: {...projection.sql, groupBy, having: having?.sql}, joins};
 }
 
 function compileFlatMapQuery(
@@ -924,13 +858,7 @@ function compileBinaryExpr(
         naiveSql,
         {
           type: 'literal',
-          literal: {
-            type: {
-              type: 'boolean',
-              nullable: false,
-            },
-            value: false,
-          },
+          literal: {type: {type: 'boolean', nullable: false}, value: false},
           parameter: false,
         },
       ],
@@ -942,11 +870,7 @@ function compileBinaryExpr(
       sql: {
         type: 'binary',
         op: expr.op,
-        lhs: {
-          type: 'func',
-          func: 'to_float32',
-          args: [lhs.sql],
-        },
+        lhs: {type: 'func', func: 'to_float32', args: [lhs.sql]},
         rhs: rhs.sql,
       },
       joins: [...lhs.joins, ...rhs.joins],
@@ -958,16 +882,8 @@ function compileBinaryExpr(
       sql: {
         type: 'binary',
         op: expr.op,
-        lhs: {
-          type: 'func',
-          func: 'to_int32',
-          args: [lhs.sql],
-        },
-        rhs: {
-          type: 'func',
-          func: 'to_int32',
-          args: [rhs.sql],
-        },
+        lhs: {type: 'func', func: 'to_int32', args: [lhs.sql]},
+        rhs: {type: 'func', func: 'to_int32', args: [rhs.sql]},
       },
       joins: [...lhs.joins, ...rhs.joins],
     };
@@ -981,25 +897,12 @@ function compileBinaryExpr(
     const lhsNullRhsNull: BinarySql = {
       type: 'binary',
       op: 'and',
-      lhs: {
-        type: 'unary',
-        op: 'is_null',
-        inner: lhs.sql,
-      },
-      rhs: {
-        type: 'unary',
-        op: 'is_null',
-        inner: rhs.sql,
-      },
+      lhs: {type: 'unary', op: 'is_null', inner: lhs.sql},
+      rhs: {type: 'unary', op: 'is_null', inner: rhs.sql},
     };
 
     return {
-      sql: {
-        type: 'binary',
-        op: 'or',
-        lhs: lhsNullRhsNull,
-        rhs: naiveSql,
-      },
+      sql: {type: 'binary', op: 'or', lhs: lhsNullRhsNull, rhs: naiveSql},
       joins: [...lhs.joins, ...rhs.joins],
     };
   }
@@ -1009,18 +912,10 @@ function compileBinaryExpr(
       type: 'binary',
       op: 'and',
       lhs: lhsProj.scalarType.nullable
-        ? {
-            type: 'unary',
-            op: 'is_null',
-            inner: lhs.sql,
-          }
+        ? {type: 'unary', op: 'is_null', inner: lhs.sql}
         : falseLiteral,
       rhs: rhsProj.scalarType.nullable
-        ? {
-            type: 'unary',
-            op: 'is_not_null',
-            inner: rhs.sql,
-          }
+        ? {type: 'unary', op: 'is_not_null', inner: rhs.sql}
         : trueLiteral,
     };
 
@@ -1028,18 +923,10 @@ function compileBinaryExpr(
       type: 'binary',
       op: 'and',
       lhs: lhsProj.scalarType.nullable
-        ? {
-            type: 'unary',
-            op: 'is_not_null',
-            inner: lhs.sql,
-          }
+        ? {type: 'unary', op: 'is_not_null', inner: lhs.sql}
         : trueLiteral,
       rhs: rhsProj.scalarType.nullable
-        ? {
-            type: 'unary',
-            op: 'is_null',
-            inner: rhs.sql,
-          }
+        ? {type: 'unary', op: 'is_null', inner: rhs.sql}
         : falseLiteral,
     };
 
@@ -1059,10 +946,7 @@ function compileBinaryExpr(
     };
   }
 
-  return {
-    sql: naiveSql,
-    joins: [...lhs.joins, ...rhs.joins],
-  };
+  return {sql: naiveSql, joins: [...lhs.joins, ...rhs.joins]};
 }
 
 function compileUnaryExpr(
@@ -1071,11 +955,7 @@ function compileUnaryExpr(
 ): ExprCompilationResult {
   const {sql: inner, joins} = _compileExpr(expr.inner, ctx);
 
-  let resultSql: ExprSql = {
-    type: 'unary',
-    inner,
-    op: expr.op,
-  };
+  let resultSql: ExprSql = {type: 'unary', inner, op: expr.op};
 
   const proj = expr.inner.projection();
   assert(
@@ -1087,19 +967,12 @@ function compileUnaryExpr(
     resultSql = {
       type: 'binary',
       op: 'or',
-      lhs: {
-        type: 'unary',
-        op: 'is_null',
-        inner: inner,
-      },
+      lhs: {type: 'unary', op: 'is_null', inner: inner},
       rhs: resultSql,
     };
   }
 
-  return {
-    sql: resultSql,
-    joins,
-  };
+  return {sql: resultSql, joins};
 }
 
 function compileCaseExpr(
@@ -1150,10 +1023,7 @@ function compileObjectLocatorExpr(
   for (const part of locator.path) {
     const ref = rollingRefs.find(x => arrayEqual(x.path, part));
     assert(ref !== undefined);
-    const parentAlias = new QuerySource({
-      type: 'query',
-      query: ref.parent(),
-    });
+    const parentAlias = new QuerySource({type: 'query', query: ref.parent()});
     const condition = _compileExpr(
       Expr.from(
         ref.condition(createHandle(parentAlias), createHandle(childAlias))
@@ -1171,18 +1041,14 @@ function compileObjectLocatorExpr(
       condition: condition.sql,
     });
 
-    rollingRefs = ref.parent().projection.visit({
-      scalar: () => [],
-      object: x => x.refs,
-    });
+    rollingRefs = ref
+      .parent()
+      .projection.visit({scalar: () => [], object: x => x.refs});
 
     childAlias = parentAlias;
   }
 
-  return {
-    sql: {type: 'alias', name: ctx.getAlias(childAlias)},
-    joins,
-  };
+  return {sql: {type: 'alias', name: ctx.getAlias(childAlias)}, joins};
 }
 
 function compileScalarLocatorExpr(
@@ -1193,10 +1059,7 @@ function compileScalarLocatorExpr(
     return {
       sql: {
         type: 'lookup',
-        subject: {
-          type: 'alias',
-          name: ctx.getAlias(locator.root),
-        },
+        subject: {type: 'alias', name: ctx.getAlias(locator.root)},
         prop: SCALAR_COLUMN_ALIAS,
       },
       joins: [],
@@ -1259,11 +1122,7 @@ function compileFuncExpr(
               },
             },
           ],
-          fallback: {
-            type: 'func',
-            func: expr.func,
-            args: args.map(x => x.sql),
-          },
+          fallback: {type: 'func', func: expr.func, args: args.map(x => x.sql)},
           subject: args[0].sql,
         },
         joins: args.flatMap(x => x.joins),
@@ -1286,11 +1145,7 @@ function compileFuncExpr(
   }
 
   return {
-    sql: {
-      type: 'func',
-      func: expr.func,
-      args: args.map(x => x.sql),
-    },
+    sql: {type: 'func', func: expr.func, args: args.map(x => x.sql)},
     joins: args.flatMap(x => x.joins),
   };
 }
@@ -1300,11 +1155,7 @@ function compileLiteralExpr(
   ctx: CompilationContext
 ): CompilationResult<LiteralSql> {
   return {
-    sql: {
-      type: 'literal',
-      literal: expr.literal,
-      parameter: ctx.parameters,
-    },
+    sql: {type: 'literal', literal: expr.literal, parameter: ctx.parameters},
     joins: [],
   };
 }
@@ -1328,11 +1179,7 @@ function compileSqlExpr(
     };
   });
   return {
-    sql: {
-      type: 'raw',
-      src: expr.sql.src,
-      args: args.map(x => x.sql),
-    },
+    sql: {type: 'raw', src: expr.sql.src, args: args.map(x => x.sql)},
     joins: args.flatMap(x => x.joins),
   };
 }
@@ -1357,7 +1204,6 @@ export const aggregationFuncs = ['avg', 'min', 'max', 'sum', 'count'] as const;
 
 function compileAggregationTerminator(
   query: Query<any>,
-  // nit: move to separate type
   func: (typeof aggregationFuncs)[number],
   ctx: CompilationContext
 ): QueryCompilationResult {
@@ -1378,17 +1224,10 @@ function compileAggregationTerminator(
             func,
             args: [
               func === 'count'
-                ? {
-                    type: 'literal',
-                    literal: inferLiteral(1),
-                    parameter: false,
-                  }
+                ? {type: 'literal', literal: inferLiteral(1), parameter: false}
                 : {
                     type: 'lookup',
-                    subject: {
-                      type: 'alias',
-                      name: ctx.getAlias(alias),
-                    },
+                    subject: {type: 'alias', name: ctx.getAlias(alias)},
                     prop: SCALAR_COLUMN_ALIAS,
                   },
             ],
@@ -1396,11 +1235,7 @@ function compileAggregationTerminator(
           as: SCALAR_COLUMN_ALIAS,
         },
       ],
-      from: {
-        type: 'query',
-        as: ctx.getAlias(alias),
-        query: querySql,
-      },
+      from: {type: 'query', as: ctx.getAlias(alias), query: querySql},
       joins: [],
       distinct: undefined,
       groupBy: undefined,
@@ -1461,16 +1296,7 @@ function compileEmptyTerminator(
   return {
     sql: {
       type: 'select',
-      columns: [
-        {
-          as: 'value',
-          expr: {
-            type: 'unary',
-            op: 'not_exists',
-            inner,
-          },
-        },
-      ],
+      columns: [{as: 'value', expr: {type: 'unary', op: 'not_exists', inner}}],
       distinct: undefined,
       from: undefined,
       groupBy: undefined,
@@ -1494,16 +1320,7 @@ function compileSomeTerminator(
   return {
     sql: {
       type: 'select',
-      columns: [
-        {
-          as: 'value',
-          expr: {
-            type: 'unary',
-            op: 'exists',
-            inner,
-          },
-        },
-      ],
+      columns: [{as: 'value', expr: {type: 'unary', op: 'exists', inner}}],
       distinct: undefined,
       from: undefined,
       groupBy: undefined,
